@@ -19,7 +19,7 @@ export default async function ShopPage() {
             SHOW FILTERS
         </Button>
         <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground uppercase text-xs">SORT BY</span>
+            <span className="text-sm text-muted-foreground uppercase">SORT BY</span>
             <Select defaultValue="featured">
                 <SelectTrigger className="w-auto border-0 text-sm focus:ring-0 focus:ring-offset-0 gap-1 bg-transparent hover:bg-transparent p-0 h-auto font-medium">
                     <SelectValue/>

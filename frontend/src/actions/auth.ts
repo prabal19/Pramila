@@ -2,6 +2,8 @@
 
 import * as z from 'zod';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
 const registerSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
@@ -9,18 +11,16 @@ const registerSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
-export async function registerUser(values: z.infer<typeof registerSchema>) {
+export async function registerAndSendOtp(values: z.infer<typeof registerSchema>) {
   try {
     const validatedValues = registerSchema.safeParse(values);
     if (!validatedValues.success) {
         return { success: false, message: 'Invalid input.' };
     }
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`, {
+    const res = await fetch(`${API_URL}/api/auth/register`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(validatedValues.data),
       cache: 'no-store',
     });
@@ -30,12 +30,61 @@ export async function registerUser(values: z.infer<typeof registerSchema>) {
         return { success: false, message: errorData.errors[0]?.msg || 'Registration failed.' };
     }
 
-    return { success: true, message: 'You have successfully signed up.' };
+    return { success: true, message: 'OTP sent to your email.' };
   } catch (error) {
     console.error(error);
     return { success: false, message: 'An unexpected error occurred. Please ensure the backend is running.' };
   }
 }
+
+export async function verifyOtp(email: string, otp: string) {
+    try {
+        if (!email || !otp) {
+            return { success: false, message: 'Email and OTP are required.' };
+        }
+
+        const res = await fetch(`${API_URL}/api/auth/verify-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, otp }),
+            cache: 'no-store',
+        });
+
+        if (!res.ok) {
+            const errorData = await res.json();
+            return { success: false, message: errorData.errors[0]?.msg || 'OTP verification failed.' };
+        }
+
+        return { success: true, message: 'You have successfully signed up.' };
+    } catch (error) {
+        console.error(error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
+export async function resendOtp(email: string) {
+    try {
+        if (!email) {
+            return { success: false, message: 'Email is required.' };
+        }
+        const res = await fetch(`${API_URL}/api/auth/resend-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+            cache: 'no-store',
+        });
+
+        if (!res.ok) {
+            const errorData = await res.json();
+            return { success: false, message: errorData.errors[0]?.msg || 'Failed to resend OTP.' };
+        }
+        return { success: true, message: 'A new OTP has been sent.' };
+    } catch (error) {
+        console.error(error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
 
 const loginSchema = z.object({
     email: z.string().email('Invalid email address'),
@@ -49,11 +98,9 @@ export async function loginUser(values: z.infer<typeof loginSchema>) {
             return { success: false, message: 'Invalid input.' };
         }
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
+        const res = await fetch(`${API_URL}/api/auth/login`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(validatedValues.data),
             cache: 'no-store',
         });
@@ -83,7 +130,7 @@ export async function updateUser(userId: string, values: z.infer<typeof updateSc
             return { success: false, message: 'Invalid input.' };
         }
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${userId}`, {
+        const res = await fetch(`${API_URL}/api/users/${userId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -127,7 +174,7 @@ export async function addAddress(userId: string, values: z.infer<typeof addressS
         
         const fullAddress = formatAddress(validatedValues.data);
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${userId}/addresses`, {
+        const res = await fetch(`${API_URL}/api/users/${userId}/addresses`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ fullAddress }),
@@ -153,7 +200,7 @@ export async function updateAddress(userId: string, addressId: string, values: z
         
         const fullAddress = formatAddress(validatedValues.data);
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${userId}/addresses/${addressId}`, {
+        const res = await fetch(`${API_URL}/api/users/${userId}/addresses/${addressId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ fullAddress }),
@@ -172,7 +219,7 @@ export async function updateAddress(userId: string, addressId: string, values: z
 
 export async function deleteAddress(userId: string, addressId: string) {
     try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${userId}/addresses/${addressId}`, {
+        const res = await fetch(`${API_URL}/api/users/${userId}/addresses/${addressId}`, {
             method: 'DELETE',
             cache: 'no-store',
         });
@@ -189,7 +236,7 @@ export async function deleteAddress(userId: string, addressId: string) {
 
 export async function deleteUser(userId: string) {
     try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${userId}`, {
+        const res = await fetch(`${API_URL}/api/users/${userId}`, {
             method: 'DELETE',
             cache: 'no-store',
         });
@@ -200,6 +247,76 @@ export async function deleteUser(userId: string) {
         }
 
         return { success: true, message: 'Account deleted successfully.' };
+    } catch (error) {
+        console.error(error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
+
+export async function sendPasswordResetOtp(email: string) {
+  try {
+    const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+      cache: 'no-store',
+    });
+    if (!res.ok) {
+      const errorData = await res.json();
+      return { success: false, message: errorData.errors[0]?.msg || 'Failed to send OTP.' };
+    }
+    return { success: true, message: 'OTP sent to your email.' };
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: 'An unexpected error occurred.' };
+  }
+}
+
+export async function verifyPasswordResetOtp(email: string, otp: string) {
+  try {
+    const res = await fetch(`${API_URL}/api/auth/verify-password-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, otp }),
+      cache: 'no-store',
+    });
+    if (!res.ok) {
+      const errorData = await res.json();
+      return { success: false, message: errorData.errors[0]?.msg || 'OTP verification failed.' };
+    }
+    return { success: true, message: 'OTP verified.' };
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: 'An unexpected error occurred.' };
+  }
+}
+
+const resetPasswordSchema = z.object({
+    email: z.string().email(),
+    otp: z.string().length(6),
+    password: z.string().min(6, 'Password must be at least 6 characters'),
+});
+
+export async function resetPassword(values: z.infer<typeof resetPasswordSchema>) {
+    try {
+        const validatedValues = resetPasswordSchema.safeParse(values);
+        if (!validatedValues.success) {
+            return { success: false, message: 'Invalid input.' };
+        }
+        const res = await fetch(`${API_URL}/api/auth/reset-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(validatedValues.data),
+            cache: 'no-store',
+        });
+
+        if (!res.ok) {
+            const errorData = await res.json();
+            return { success: false, message: errorData.errors[0]?.msg || 'Failed to reset password.' };
+        }
+
+        return { success: true, message: 'Password has been reset successfully.' };
     } catch (error) {
         console.error(error);
         return { success: false, message: 'An unexpected error occurred.' };

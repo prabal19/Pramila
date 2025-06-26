@@ -10,7 +10,7 @@ import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { registerUser } from '@/actions/auth';
+import { registerAndSendOtp } from '@/actions/auth';
 
 const formSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -34,13 +34,13 @@ export default function RegisterPage() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const result = await registerUser(values);
+    const result = await registerAndSendOtp(values);
     if (result.success) {
       toast({
-        title: 'Success!',
-        description: 'You have successfully signed up.',
+        title: 'OTP Sent!',
+        description: 'An OTP has been sent to your email address.',
       });
-      router.push('/login');
+      router.push(`/register/otp-verification?email=${encodeURIComponent(values.email)}`);
     } else {
       toast({
         variant: 'destructive',
