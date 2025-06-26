@@ -110,7 +110,7 @@ export default function ForgotPasswordPage() {
               </FormItem>
             )}
           />
-          <div className="flex items-center justify-start mt-12">
+          <div className="flex items-center justify-center mt-12">
             <Button type="submit" className="rounded-none px-10 tracking-widest font-semibold" disabled={isLoading}>
               {isLoading ? 'SENDING...' : 'VERIFY EMAIL ADDRESS'}
             </Button>
@@ -187,7 +187,7 @@ export default function ForgotPasswordPage() {
               </FormItem>
             )}
           />
-          <div className="flex items-center justify-start mt-12">
+          <div className="flex items-center justify-center mt-12">
             <Button type="submit" className="rounded-none px-10 tracking-widest font-semibold" disabled={isLoading}>
               {isLoading ? 'SAVING...' : 'CHANGE MY PASSWORD'}
             </Button>

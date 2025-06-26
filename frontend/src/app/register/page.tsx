@@ -110,7 +110,7 @@ export default function RegisterPage() {
                 </FormItem>
               )}
             />
-            <div className="flex items-center justify-start mt-12">
+            <div className="flex items-center justify-center mt-12">
                <Button type="submit" className="rounded-none px-10 tracking-widest font-semibold" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting ? 'CREATING...' : 'CREATE'}
               </Button>
