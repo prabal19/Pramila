@@ -32,12 +32,12 @@ const Footer = () => {
           <div>
             <h3 className="font-semibold text-base mb-5 tracking-wide">Help</h3>
             <ul className="space-y-3 text-gray-600">
-              <li><Link href="#" className="hover:text-black transition-colors">Search</Link></li>
-              <li><Link href="#" className="hover:text-black transition-colors">Contact Us</Link></li>
-              <li><Link href="#" className="hover:text-black transition-colors">Customer Reviews</Link></li>
-              <li><Link href="#" className="hover:text-black transition-colors">FAQ</Link></li>
-              <li><Link href="#" className="hover:text-black transition-colors">Privacy Policy</Link></li>
-              <li><Link href="#" className="hover:text-black transition-colors">Terms of Service</Link></li>
+              <li><Link href="/about" className="hover:text-black transition-colors">About Us</Link></li>
+              <li><Link href="/contact" className="hover:text-black transition-colors">Contact Us</Link></li>
+              <li><Link href="/#customer-reviews" className="hover:text-black transition-colors">Customer Reviews</Link></li>
+              <li><Link href="/faq" className="hover:text-black transition-colors">FAQ</Link></li>
+              <li><Link href="/privacy-policy" className="hover:text-black transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/terms-of-service" className="hover:text-black transition-colors">Terms of Service</Link></li>
             </ul>
           </div>
 

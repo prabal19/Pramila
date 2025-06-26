@@ -8,11 +8,13 @@ import { useState } from 'react';
 import SearchOverlay from './SearchOverlay';
 import { useCart } from '@/hooks/use-cart';
 import CartSheet from './CartSheet';
+import { useAuth } from '@/hooks/use-auth';
 
 const Header = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { cartCount } = useCart();
+  const { user } = useAuth();
 
   const navItems = [
     { href: '/', label: 'Home' },
@@ -82,7 +84,7 @@ const Header = () => {
 
             <div className="flex items-center justify-end gap-2 w-48">
               <Button asChild variant="ghost" size="icon">
-                <Link href="/login">
+                <Link href={user ? "/account" : "/login"}>
                   <User className="w-6 h-6" />
                 </Link>
               </Button>

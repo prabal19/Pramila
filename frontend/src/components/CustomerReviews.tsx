@@ -72,7 +72,7 @@ const CustomerReviews = () => {
   })
 
   return (
-    <section className="bg-white py-20">
+    <section id="customer-reviews" className="bg-white py-20 scroll-mt-28">
       <div className="container mx-auto px-4">
         <h2 className="text-4xl font-headline text-center mb-12" style={{fontFamily: "'Cormorant Garamond', serif"}}>
           Customer Reviews
