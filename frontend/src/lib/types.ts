@@ -9,6 +9,7 @@ export type Product = {
   bestseller?: boolean;
   sizes?: string[];
   specifications?: string;
+  createdAt: string;
 };
 
 export type CartItem = {
@@ -50,4 +51,32 @@ export type Review = {
   text: string;
   imageUrl?: string;
   createdAt: string;
+};
+
+export type PopulatedUser = {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+};
+
+export type OrderItem = {
+  productId: string;
+  name: string;
+  quantity: number;
+  price: number;
+  _id: string;
+};
+
+export type OrderStatus = 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
+
+export type Order = {
+  _id: string;
+  userId: PopulatedUser;
+  items: OrderItem[];
+  totalAmount: number;
+  shippingAddress: string;
+  status: OrderStatus;
+  createdAt: string;
+  updatedAt: string;
 };

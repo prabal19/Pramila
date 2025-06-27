@@ -4,10 +4,11 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 // Helper to map backend product to frontend product type
 const mapProduct = (backendProduct: any): Product => {
-  const { productId, ...rest } = backendProduct;
+  const { productId, createdAt, ...rest } = backendProduct;
   return {
     ...rest,
     id: productId,
+    createdAt: createdAt,
   };
 };
 
