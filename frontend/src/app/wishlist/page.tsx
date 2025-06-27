@@ -50,7 +50,7 @@ export default function WishlistPage() {
   
   if (products.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-8 text-center">
+      <div className="container mx-auto px-4 py-16 text-center min-h-[50vh] flex items-center justify-center">
         <div className="max-w-md mx-auto">
             <HeartCrack className="mx-auto h-16 w-16 text-muted-foreground/50" />
             <h1 className="mt-4 text-3xl font-bold tracking-tight">Your Wishlist is Empty</h1>

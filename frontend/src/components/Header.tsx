@@ -2,55 +2,95 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingBag, Search, User } from 'lucide-react';
+import { ShoppingBag, Search, User, Menu } from 'lucide-react';
 import { Button } from './ui/button';
 import { useState } from 'react';
 import SearchOverlay from './SearchOverlay';
 import { useCart } from '@/hooks/use-cart';
 import CartSheet from './CartSheet';
 import { useAuth } from '@/hooks/use-auth';
+import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+
+const navItems = [
+  { href: '/', label: 'Home' },
+  {
+    href: '/shop',
+    label: 'Shop',
+    dropdown: [
+      { href: '/shop', label: 'All products' },
+      { href: '/shop/sharara-set', label: 'Sharara set' },
+      { href: '/shop/saree', label: 'Saree' },
+      { href: '/shop/draped-sets', label: 'Draped Sets' },
+    ],
+  },
+  {
+    href: '/collections/indian-clothing',
+    label: 'Collections'
+  },
+  { href: '/faq', label: 'FAQ' },
+  { href: '/contact', label: 'Contact' },
+  { href: '/about', label: 'About Us' },
+];
 
 const Header = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { cartCount } = useCart();
   const { user } = useAuth();
 
-  const navItems = [
-    { href: '/', label: 'Home' },
-    {
-      href: '/shop',
-      label: 'Shop',
-      dropdown: [
-        { href: '/shop', label: 'All products' },
-        { href: '/shop/sharara-set', label: 'Sharara set' },
-        { href: '/shop/saree', label: 'Saree' },
-        { href: '/shop/draped-sets', label: 'Draped Sets' },
-      ],
-    },
-    {
-      href: '/collections',
-      label: 'Collections',
-      dropdown: [{ href: '/collections/indian-clothing', label: 'Indian clothing' }],
-    },
-    { href: '/faq', label: 'FAQ' },
-    { href: '/contact', label: 'Contact' },
-    { href: '/about', label: 'About Us' },
-  ];
-
   return (
     <>
-      <div className="bg-[#4a454b] text-white/90 text-center text-xs py-2.5 font-light tracking-wider">
+      <div className="bg-[#DDE2D3] text-black/90 text-center text-xs py-2 font-light tracking-wider">
         <span>Shipping worldwide</span>
         <span className="mx-2">|</span>
         <span>Handcrafted Luxury</span>
       </div>
+      <div className="bg-[#E45757] text-white text-center text-sm py-2.5 font-medium tracking-wider">
+        <Link href="/shop" className="hover:underline">
+          20% Off Sitewide - Shop Now!
+        </Link>
+      </div>
       <header className="bg-background/80 backdrop-blur-sm sticky top-0 z-40 border-b">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-20">
-            <div className="w-48">
+            <div className="flex items-center gap-2">
+              <div className="md:hidden">
+                 <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                    <SheetTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <Menu className="w-6 h-6" />
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent side="left" className="w-full max-w-sm p-6">
+                      <nav className="flex flex-col gap-2 text-lg font-medium">
+                        {navItems.map((item) => (
+                          !item.dropdown ? (
+                            <SheetClose asChild key={item.label}>
+                               <Link href={item.href} className="py-3 border-b">{item.label}</Link>
+                            </SheetClose>
+                          ) : (
+                            <Accordion type="single" collapsible key={item.label} className="w-full border-b">
+                              <AccordionItem value={item.label} className="border-none">
+                                <AccordionTrigger className="py-3 hover:no-underline">{item.label}</AccordionTrigger>
+                                <AccordionContent className="pl-4">
+                                  {item.dropdown.map((link) => (
+                                    <SheetClose asChild key={link.href}>
+                                      <Link href={link.href} className="block py-2 text-base text-muted-foreground">{link.label}</Link>
+                                    </SheetClose>
+                                  ))}
+                                </AccordionContent>
+                              </AccordionItem>
+                            </Accordion>
+                          )
+                        ))}
+                      </nav>
+                    </SheetContent>
+                  </Sheet>
+              </div>
               <Link href="/" className="flex items-center gap-2">
-                <span className="text-3xl font-bold tracking-widest" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+                <span className="text-2xl md:text-3xl font-bold tracking-widest" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
                   PRAMILA
                 </span>
               </Link>
@@ -82,7 +122,7 @@ const Header = () => {
               ))}
             </nav>
 
-            <div className="flex items-center justify-end gap-2 w-48">
+            <div className="flex items-center justify-end gap-1">
               <Button asChild variant="ghost" size="icon">
                 <Link href={user ? "/account" : "/login"}>
                   <User className="w-6 h-6" />

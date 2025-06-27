@@ -8,6 +8,6 @@ const PasswordResetSchema = new mongoose.Schema({
     default: Date.now,
     expires: 600, // Document will be automatically deleted after 10 minutes
   },
-});
+},{timestamps:true});
 
 module.exports = mongoose.model('passwordReset', PasswordResetSchema);

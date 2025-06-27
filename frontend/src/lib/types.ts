@@ -3,9 +3,12 @@ export type Product = {
   name: string;
   description: string;
   price: number;
+  strikeoutPrice?: number;
   images: string[];
   category: string;
   bestseller?: boolean;
+  sizes?: string[];
+  specifications?: string;
 };
 
 export type CartItem = {

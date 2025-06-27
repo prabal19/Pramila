@@ -5,12 +5,14 @@ const VerificationSchema = new mongoose.Schema({
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
   password: { type: String, required: true }, // This will be the hashed password
-  otp: { type: String, required: true }, // This will be the hashed OTP
+  otp: { type: String, required: true }, 
+  // This will be the hashed OTP
   createdAt: {
     type: Date,
     default: Date.now,
     expires: 600, // Document will be automatically deleted after 10 minutes
   },
-});
+
+},{timestamps:true});
 
 module.exports = mongoose.model('verification', VerificationSchema);

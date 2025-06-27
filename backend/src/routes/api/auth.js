@@ -34,14 +34,14 @@ router.post('/register', async (req, res) => {
       lowerCaseAlphabets: false,
     });
     
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-    const hashedOtp = await bcrypt.hash(otp, salt);
+    // const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password);
+    const hashedOtp = await bcrypt.hash(otp);
 
     await Verification.findOneAndUpdate(
       { email },
-      { firstName, lastName, password: hashedPassword, otp: hashedOtp, createdAt: new Date() },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+    {$set:{ firstName, lastName, password: hashedPassword, otp: hashedOtp },},
+      { upsert: true, new: true }
     );
 
     await resend.emails.send({

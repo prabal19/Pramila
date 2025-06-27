@@ -28,7 +28,7 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
         {collectionName}
       </h1>
 
-      <div className="flex justify-between items-center mb-8 border-y py-3">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-8 border-y py-3 gap-4">
         <Button variant="ghost" className="text-sm font-medium gap-2">
             <Filter className="w-4 h-4" />
             SHOW FILTERS
@@ -49,7 +49,7 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
         {products.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}

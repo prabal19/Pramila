@@ -43,13 +43,13 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         {categoryName}
       </h1>
 
-      <div className="flex justify-between items-center mb-8 border-y py-3">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-8 border-y py-3 gap-4">
         <Button variant="ghost" className="text-sm font-medium gap-2">
             <Filter className="w-4 h-4" />
             SHOW FILTERS
         </Button>
         <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground uppercase">SORT BY</span>
+            <span className="text-sm text-muted-foreground uppercase text-xs">SORT BY</span>
             <Select defaultValue="featured">
                 <SelectTrigger className="w-auto border-0 text-sm focus:ring-0 focus:ring-offset-0 gap-1 bg-transparent hover:bg-transparent p-0 h-auto font-medium">
                     <SelectValue/>
@@ -65,7 +65,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       </div>
 
       {products.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
             {products.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}

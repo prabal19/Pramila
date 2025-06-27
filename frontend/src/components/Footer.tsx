@@ -26,7 +26,7 @@ const WhatsAppIcon = () => (
 const Footer = () => {
   return (
     <footer className="bg-[#F9F9F7] text-gray-800 font-body">
-      <div className="container mx-auto px-4 py-20">
+      <div className="container mx-auto px-4 py-16 md:py-20">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 text-sm">
           {/* Help Column */}
           <div>
@@ -87,7 +87,7 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="border-t border-gray-200 mt-20 pt-8">
+        <div className="border-t border-gray-200 mt-16 md:mt-20 pt-8">
              <div className="flex flex-col md:flex-row items-center justify-between gap-8">
                 <div className="flex items-center gap-x-6">
                     <div className="flex items-center gap-x-4 text-gray-500">

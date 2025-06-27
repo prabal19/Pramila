@@ -14,7 +14,9 @@ const FeaturedProducts = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       const allProducts = await getProducts();
-      setProducts(allProducts.slice(0, 5));
+      // Simple shuffle and take 5
+      const featured = allProducts.sort(() => 0.5 - Math.random()).slice(0, 5);
+      setProducts(featured);
       setIsLoading(false);
     }
     fetchProducts();
