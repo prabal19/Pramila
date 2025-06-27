@@ -1,6 +1,6 @@
 'use client';
 
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -17,7 +17,9 @@ export default function NewsletterPopup({ open, onOpenChange }: NewsletterPopupP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
+      
       <DialogContent className="max-w-lg p-10 text-center bg-white shadow-2xl rounded-none">
+        <DialogTitle className="sr-only">Join Our Newsletter</DialogTitle>
         <div className="flex flex-col items-center justify-center">
           <p className="text-xs tracking-[0.2em] text-muted-foreground mb-6">NEWSLETTER</p>
           <h2 className="font-headline text-5xl mb-3" style={{fontFamily: "'Cormorant Garamond', serif"}}>Come Join Us</h2>

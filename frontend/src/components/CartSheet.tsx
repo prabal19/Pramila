@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/hooks/use-cart';
 import { getProductsByIds } from '@/lib/products';
-import type { Product } from '@/lib/types';
+import type { Product, CartItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -13,7 +13,11 @@ import { Separator } from '@/components/ui/separator';
 import { Minus, Plus, X } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 
-type ProductInCart = Product & { quantity: number };
+type EnrichedCartItem = Product & { 
+  quantity: number; 
+  size: string;
+  cartItemId: string;
+};
 
 interface CartSheetProps {
   open: boolean;
@@ -21,24 +25,29 @@ interface CartSheetProps {
 }
 
 export default function CartSheet({ open, onOpenChange }: CartSheetProps) {
-  const { cart, cartCount, updateQuantity, removeFromCart } = useCart();
-  const [products, setProducts] = useState<ProductInCart[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const { cart, cartCount, updateQuantity, removeFromCart, isLoading: isCartLoading } = useCart();
+  const [products, setProducts] = useState<EnrichedCartItem[]>([]);
+  const [isProductLoading, setIsProductLoading] = useState(false);
 
   useEffect(() => {
     const fetchCartProducts = async () => {
       if (cart.length > 0) {
-        setIsLoading(true);
-        const productIds = cart.map(item => item.id);
+        setIsProductLoading(true);
+        const productIds = cart.map(item => item.productId);
         const fetchedProducts = await getProductsByIds(productIds);
         
-        const productsInCart = cart.map(cartItem => {
-          const product = fetchedProducts.find(p => p.id === cartItem.id);
-          return { ...product!, quantity: cartItem.quantity };
+        const enrichedItems = cart.map(cartItem => {
+          const product = fetchedProducts.find(p => p.id === cartItem.productId);
+          return { 
+            ...product!, 
+            quantity: cartItem.quantity,
+            size: cartItem.size,
+            cartItemId: cartItem._id
+          };
         }).filter(item => item.id); // Filter out any items that might not have been found
 
-        setProducts(productsInCart);
-        setIsLoading(false);
+        setProducts(enrichedItems);
+        setIsProductLoading(false);
       } else {
         setProducts([]);
       }
@@ -48,6 +57,8 @@ export default function CartSheet({ open, onOpenChange }: CartSheetProps) {
   }, [cart]);
 
   const subtotal = products.reduce((acc, item) => acc + item.price * item.quantity, 0);
+
+  const isLoading = isCartLoading || isProductLoading;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -72,7 +83,7 @@ export default function CartSheet({ open, onOpenChange }: CartSheetProps) {
                   ))
                 ) : (
                   products.map(item => (
-                    <div key={item.id} className="flex items-start justify-between gap-4">
+                    <div key={item.cartItemId} className="flex items-start justify-between gap-4">
                       <div className="flex items-start gap-4">
                         <Image
                           src={item.images[0]}
@@ -85,21 +96,24 @@ export default function CartSheet({ open, onOpenChange }: CartSheetProps) {
                           <Link href={`/product/${item.id}`} className="font-medium hover:underline text-sm" onClick={() => onOpenChange(false)}>
                             {item.name}
                           </Link>
+                          <p className="text-xs text-muted-foreground mt-1">
+                             Size: {item.size}
+                          </p>
                           <p className="text-sm text-muted-foreground mt-1">
                              Rs. {item.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </p>
                           <div className="mt-4 flex items-center border w-fit">
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.id, item.quantity - 1)}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.cartItemId, item.quantity - 1)}>
                               <Minus className="h-4 w-4" />
                             </Button>
                             <span className="px-2 text-sm">{item.quantity}</span>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.id, item.quantity + 1)}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)}>
                               <Plus className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>
                       </div>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground shrink-0" onClick={() => removeFromCart(item.id)}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground shrink-0" onClick={() => removeFromCart(item.cartItemId)}>
                         <X className="h-4 w-4" />
                       </Button>
                     </div>
@@ -133,5 +147,4 @@ export default function CartSheet({ open, onOpenChange }: CartSheetProps) {
         )}
       </SheetContent>
     </Sheet>
-  );
-}
+  )}

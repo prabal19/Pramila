@@ -2,80 +2,78 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from '@/hooks/use-auth';
+import { getCart, addItemToCart, updateCartItemQuantity, removeItemFromCart } from '@/actions/cart';
 import type { CartItem } from '@/lib/types';
 
-const CART_KEY = 'pramila-cart';
-
 export const useCart = () => {
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchCart = useCallback(async () => {
+    if (user) {
+      setIsLoading(true);
+      const cart = await getCart(user._id);
+      setCartItems(cart?.items || []);
+      setIsLoading(false);
+    } else {
+      setCartItems([]);
+      setIsLoading(false);
+    }
+  }, [user]);
 
   useEffect(() => {
-    try {
-      const storedCart = localStorage.getItem(CART_KEY);
-      if (storedCart) {
-        setCart(JSON.parse(storedCart));
-      }
-    } catch (error) {
-      console.error("Failed to parse cart from localStorage", error);
+    if (!authLoading) {
+      fetchCart();
     }
-  }, []);
-
-  const updateLocalStorage = (updatedCart: CartItem[]) => {
-    try {
-      localStorage.setItem(CART_KEY, JSON.stringify(updatedCart));
-    } catch (error) {
-      console.error("Failed to save cart to localStorage", error);
-    }
-  };
-
-  const addToCart = useCallback((productId: string, quantity: number = 1) => {
-    setCart(prev => {
-      const existingItem = prev.find(item => item.id === productId);
-      let newCart;
-      if (existingItem) {
-        newCart = prev.map(item =>
-          item.id === productId ? { ...item, quantity: item.quantity + quantity } : item
-        );
-      } else {
-        newCart = [...prev, { id: productId, quantity }];
-      }
-      updateLocalStorage(newCart);
-      toast({ title: "Added to cart!", description: `${quantity} item(s) added.` });
-      return newCart;
-    });
-  }, [toast]);
-
-  const removeFromCart = useCallback((productId: string) => {
-    setCart(prev => {
-      const newCart = prev.filter(item => item.id !== productId);
-      updateLocalStorage(newCart);
-      toast({ title: "Removed from cart." });
-      return newCart;
-    });
-  }, [toast]);
-
-  const updateQuantity = useCallback((productId: string, quantity: number) => {
-    setCart(prev => {
-      let newCart;
-      if (quantity <= 0) {
-        newCart = prev.filter(item => item.id !== productId);
-      } else {
-        newCart = prev.map(item =>
-          item.id === productId ? { ...item, quantity } : item
-        );
-      }
-      updateLocalStorage(newCart);
-      return newCart;
-    });
-  }, []);
-
-  const clearCart = useCallback(() => {
-      setCart([]);
-      updateLocalStorage([]);
-  }, []);
+  }, [user, authLoading, fetchCart]);
   
-  const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
+  const addToCart = useCallback(async (productId: string, quantity: number = 1, size: string) => {
+    if (!user) {
+        toast({
+            variant: "destructive",
+            title: "Please log in",
+            description: "You must be logged in to add items to the cart.",
+        });
+        return;
+    }
+    const updatedCart = await addItemToCart(user._id, productId, quantity, size);
+    if (updatedCart) {
+        setCartItems(updatedCart.items);
+        toast({ title: "Added to cart!", description: `Item added to your cart.` });
+    } else {
+        toast({ variant: 'destructive', title: "Error", description: 'Failed to add item to cart.'});
+    }
+  }, [user, toast]);
 
-  return { cart, cartCount, addToCart, removeFromCart, updateQuantity, clearCart };
+  const removeFromCart = useCallback(async (itemId: string) => {
+    if (!user) return;
+    const updatedCart = await removeItemFromCart(user._id, itemId);
+     if (updatedCart) {
+        setCartItems(updatedCart.items);
+        toast({ title: "Removed from cart." });
+    } else {
+        toast({ variant: 'destructive', title: "Error", description: 'Failed to remove item from cart.'});
+    }
+  }, [user, toast]);
+
+  const updateQuantity = useCallback(async (itemId: string, quantity: number) => {
+    if (!user) return;
+    if (quantity <= 0) {
+      await removeFromCart(itemId);
+    } else {
+      const updatedCart = await updateCartItemQuantity(user._id, itemId, quantity);
+       if (updatedCart) {
+          setCartItems(updatedCart.items);
+      } else {
+          toast({ variant: 'destructive', title: "Error", description: 'Failed to update quantity.'});
+      }
+    }
+  }, [user, removeFromCart, toast]);
+  
+  const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+
+  return { cart: cartItems, cartCount, isLoading, addToCart, removeFromCart, updateQuantity };
 };

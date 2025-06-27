@@ -12,8 +12,18 @@ export type Product = {
 };
 
 export type CartItem = {
-  id: string;
+  _id: string;
+  productId: string;
   quantity: number;
+  size: string;
+};
+
+export type Cart = {
+  _id: string;
+  userId: string;
+  items: CartItem[];
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type Address = {
@@ -28,4 +38,16 @@ export type User = {
     email: string;
     date: string;
     addresses: Address[];
+};
+
+export type Review = {
+  _id: string;
+  productId: string;
+  name: string;
+  email: string;
+  rating: number;
+  title: string;
+  text: string;
+  imageUrl?: string;
+  createdAt: string;
 };

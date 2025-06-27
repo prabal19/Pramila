@@ -1,8 +1,5 @@
 const Product = require('../models/Product');
 
-const generateImagePaths = (category, start, count = 5) => 
-    Array.from({ length: count }, (_, i) => `/category/${category}/image${start + i}.webp`);
-
 const allSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', 'CUSTOM SIZE'];
 
 const products = [
@@ -13,7 +10,12 @@ const products = [
     description: 'Elegant Mocha Sharara Set, perfect for festive occasions and celebrations. Features intricate embroidery.',
     price: 19700,
     strikeoutPrice: 22000,
-    images: generateImagePaths('sharara-set', 1),
+    images: [
+      '/category/sharara-set/image1.webp',
+      '/category/sharara-set/image2.webp',
+      '/category/sharara-set/image1.webp',
+      '/category/sharara-set/image2.webp',
+    ],
     category: 'sharara-set',
     bestseller: true,
     sizes: allSizes,
@@ -24,7 +26,12 @@ const products = [
     name: 'Black Sharara Set',
     description: 'A stunning Black Sharara Set that combines traditional design with a modern silhouette.',
     price: 21500,
-    images: generateImagePaths('sharara-set', 6),
+    images: [
+      '/category/sharara-set/image3.webp',
+      '/category/sharara-set/image4.webp',
+      '/category/sharara-set/image3.webp',
+      '/category/sharara-set/image4.webp',
+    ],
     category: 'sharara-set',
     sizes: allSizes,
     specifications: 'Fabric: Velvet; Work: Zari and Thread Work; Occasion: Evening, Party; Fit: Flared; Includes: Kurta, Sharara, Dupatta.'
@@ -35,7 +42,12 @@ const products = [
     name: 'Black Draped Set',
     description: 'Sophisticated Black Draped Set, designed to offer a graceful and flattering look.',
     price: 18500,
-    images: generateImagePaths('draped-sets', 1),
+    images: [
+       '/category/draped-sets/image1.webp',
+       '/category/draped-sets/image2.webp', 
+       '/category/draped-sets/image1.webp', 
+       '/category/draped-sets/image2.webp', 
+      ],
     category: 'draped-sets',
     sizes: allSizes,
     specifications: 'Fabric: Crepe Silk; Work: Hand Embellishment; Occasion: Cocktail, Reception; Fit: Asymmetric; Includes: Draped Tunic, Trousers.'
@@ -46,7 +58,12 @@ const products = [
     description: 'Rich Brunette Brown Draped Set, a unique and stylish choice for any special event.',
     price: 19200,
     strikeoutPrice: 21000,
-    images: generateImagePaths('draped-sets', 6),
+    images: [
+        '/category/draped-sets/image3.webp',
+        '/category/draped-sets/image4.webp',
+        '/category/draped-sets/image3.webp',
+        '/category/draped-sets/image4.webp',
+    ],
     category: 'draped-sets',
     sizes: allSizes,
     specifications: 'Fabric: Satin Georgette; Work: Crystal and Bead Work; Occasion: Formal, Party; Fit: Draped Silhouette; Includes: Draped Top, Skirt.'
@@ -56,7 +73,12 @@ const products = [
     name: 'Aurora Draped Set',
     description: 'The Aurora Draped Set features a celestial design, perfect for making a statement.',
     price: 23000,
-    images: generateImagePaths('draped-sets', 11),
+    images: [
+        '/category/draped-sets/image5.webp',
+        '/category/draped-sets/image6.webp',
+        '/category/draped-sets/image5.webp',
+        '/category/draped-sets/image6.webp',
+    ],
     category: 'draped-sets',
     bestseller: true,
     sizes: allSizes,
@@ -68,7 +90,12 @@ const products = [
     name: 'Plum Corset Saree',
     description: 'A modern take on the classic saree, this Plum Corset Saree is both bold and beautiful.',
     price: 13200,
-    images: generateImagePaths('saree', 1),
+    images: [
+        '/category/saree/image1.webp',
+        '/category/saree/image2.webp',
+        '/category/saree/image1.webp',
+        '/category/saree/image2.webp',
+    ],
     category: 'saree',
     sizes: allSizes,
     specifications: 'Fabric: Satin; Work: Corset Bodice with Pleating; Occasion: Cocktail, Sangeet; Fit: Structured; Includes: Saree with Stitched Corset Blouse.'
@@ -78,7 +105,12 @@ const products = [
     name: 'Velvet Royale Saree',
     description: 'Experience luxury with the Velvet Royale Saree, crafted from the finest velvet fabric.',
     price: 25500,
-    images: generateImagePaths('saree', 6),
+    images: [
+        '/category/saree/image3.webp',
+        '/category/saree/image4.webp',
+        '/category/saree/image3.webp',
+        '/category/saree/image4.webp',
+    ],
     category: 'saree',
     sizes: allSizes,
     specifications: 'Fabric: Micro Velvet; Work: Plain with Zari Border; Occasion: Royal Gatherings, Winter Weddings; Fit: Traditional Drape; Includes: Saree, Unstitched Blouse Piece.'
@@ -89,7 +121,12 @@ const products = [
     description: 'Deep and mysterious, the Midnight Velvet Saree is perfect for evening events.',
     price: 26000,
     strikeoutPrice: 28500,
-    images: generateImagePaths('saree', 11),
+    images: [
+        '/category/saree/image5.webp',
+        '/category/saree/image6.webp',
+        '/category/saree/image5.webp',
+        '/category/saree/image6.webp',
+    ],
     category: 'saree',
     sizes: allSizes,
     specifications: 'Fabric: Premium Velvet; Work: Sequin and Zari Border; Occasion: Receptions, Grand Events; Fit: Slim Drape; Includes: Saree, Unstitched Blouse Piece.'
@@ -99,7 +136,12 @@ const products = [
     name: 'Gilded Corset Saree',
     description: 'This Gilded Corset Saree features exquisite gold detailing for a truly opulent look.',
     price: 17800,
-    images: generateImagePaths('saree', 16),
+    images: [
+        '/category/saree/image7.webp',
+        '/category/saree/image8.webp',
+        '/category/saree/image7.webp',
+        '/category/saree/image8.webp',
+    ],
     category: 'saree',
     sizes: allSizes,
     specifications: 'Fabric: Organza Silk; Work: Gilded Embroidery, Corset Blouse; Occasion: Parties, Engagements; Fit: Modern Silhouette; Includes: Saree with Stitched Corset.'
@@ -109,7 +151,12 @@ const products = [
     name: 'Embroidered Black Luxe Saree',
     description: 'A masterpiece of craftsmanship, the Embroidered Black Luxe Saree showcases detailed embroidery.',
     price: 16600,
-    images: generateImagePaths('saree', 21),
+    images: [
+        '/category/saree/image9.webp',
+        '/category/saree/image10.webp',
+        '/category/saree/image9.webp',
+        '/category/saree/image10.webp',
+    ],
     category: 'saree',
     bestseller: true,
     sizes: allSizes,
@@ -120,7 +167,12 @@ const products = [
     name: 'Satin Silk Saree',
     description: 'Smooth and lustrous, this Satin Silk Saree drapes beautifully for an elegant finish.',
     price: 14500,
-    images: generateImagePaths('saree', 26),
+    images: [
+        '/category/saree/image11.webp',
+        '/category/saree/image12.webp',
+        '/category/saree/image11.webp',
+        '/category/saree/image12.webp',
+    ],
     category: 'saree',
     sizes: allSizes,
     specifications: 'Fabric: Pure Satin Silk; Work: Minimalist, Solid Color; Occasion: Casual, Formal; Fit: Fluid Drape; Includes: Saree, Unstitched Blouse Piece.'

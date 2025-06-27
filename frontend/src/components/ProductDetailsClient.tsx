@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useViewedProducts } from '@/hooks/use-viewed-products';
 import { useCart } from '@/hooks/use-cart';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Shirt, ChevronDown, MessageCircle } from 'lucide-react';
+import { Shirt, MessageCircle } from 'lucide-react';
 import { SizeChartDialog } from './SizeChartDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RelatedProducts from './RelatedProducts';
@@ -36,7 +36,7 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
   }, [product, addViewedProduct, availableSizes]);
 
   const handleAddToCart = () => {
-    addToCart(product.id, quantity);
+    addToCart(product.id, quantity, selectedSize);
   };
 
   function getCategoryTitle(slug: string): string {
@@ -160,7 +160,7 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
         </div>
       </div>
       <RelatedProducts currentProductId={product.id} />
-      <ProductReviews />
+      <ProductReviews productId={product.id} />
     </>
   );
 };
