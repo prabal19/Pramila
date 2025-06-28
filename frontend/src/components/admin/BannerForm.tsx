@@ -27,12 +27,12 @@ const bannerSchema = z.object({
   title: z.string().optional(),
   subtitle: z.string().optional(),
   description: z.string().optional(),
-  imageUrl: z.string().url({ message: "Please enter a valid image URL." }),
+  imageUrl: z.string().url({ message: "Please enter a valid image URL." }).optional().or(z.literal('')),
   buttonText: z.string().optional(),
   buttonLink: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
   backgroundColor: z.string().optional(),
   textColor: z.string().optional(),
-  position: z.enum(['top-of-page', 'after-section', 'bottom-of-page']),
+  position: z.enum(['above-header', 'top-of-page', 'after-section', 'bottom-of-page']),
   targetPages: z.array(z.string()).min(1, { message: "Select at least one page." }),
   sectionIdentifier: z.string().optional(),
   order: z.coerce.number().optional(),
@@ -52,10 +52,14 @@ const bannerSchema = z.object({
 });
 
 const pageOptions = [
+    { id: 'all', label: 'All Pages' },
     { id: 'home', label: 'Home Page' },
     { id: 'about', label: 'About Page' },
     { id: 'contact', label: 'Contact Page' },
-    { id: 'shop', label: 'All Products Page' },
+    { id: 'shop', label: 'Shop (All Products) Page' },
+    { id: 'sharara-set', label: 'Shop (Sharara Sets) Page' },
+    { id: 'saree', label: 'Shop (Sarees) Page' },
+    { id: 'draped-sets', label: 'Shop (Draped Sets) Page' },
 ]
 
 interface BannerFormProps {
@@ -73,6 +77,19 @@ export default function BannerForm({ open, onOpenChange, onFormSubmit, banner }:
         resolver: zodResolver(bannerSchema),
         defaultValues: banner ? {
             ...banner,
+            title: banner.title ?? '',
+            subtitle: banner.subtitle ?? '',
+            description: banner.description ?? '',
+            imageUrl: banner.imageUrl ?? '',
+            buttonText: banner.buttonText ?? '',
+            buttonLink: banner.buttonLink ?? '',
+            backgroundColor: banner.backgroundColor ?? '#ffffff',
+            textColor: banner.textColor ?? '#000000',
+            sectionIdentifier: banner.sectionIdentifier ?? '',
+            order: banner.order ?? 0,
+            isActive: banner.isActive ?? false,
+            animation: banner.animation ?? 'none',
+            clickableImage: banner.clickableImage ?? false,
             startDate: banner.startDate ? new Date(banner.startDate) : undefined,
             endDate: banner.endDate ? new Date(banner.endDate) : undefined,
         } : {
@@ -146,8 +163,9 @@ export default function BannerForm({ open, onOpenChange, onFormSubmit, banner }:
                                         <div className="space-y-4">
                                             <FormField name="imageUrl" control={form.control} render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Image URL*</FormLabel>
+                                                    <FormLabel>Image URL</FormLabel>
                                                     <FormControl><Input placeholder="https://example.com/image.jpg" {...field} /></FormControl>
+                                                    <FormDescription>Leave empty for announcement bars without images.</FormDescription>
                                                     <FormMessage />
                                                 </FormItem>
                                             )} />
@@ -184,6 +202,7 @@ export default function BannerForm({ open, onOpenChange, onFormSubmit, banner }:
                                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                     <FormControl><SelectTrigger><SelectValue placeholder="Select where the banner appears" /></SelectTrigger></FormControl>
                                                     <SelectContent>
+                                                        <SelectItem value="above-header">Above Header (Announcement)</SelectItem>
                                                         <SelectItem value="top-of-page">Top of page</SelectItem>
                                                         <SelectItem value="after-section">After specific section</SelectItem>
                                                         <SelectItem value="bottom-of-page">Bottom of page</SelectItem>
@@ -199,7 +218,7 @@ export default function BannerForm({ open, onOpenChange, onFormSubmit, banner }:
                                         <FormField name="targetPages" control={form.control} render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>Target Pages*</FormLabel>
-                                                <div className="grid grid-cols-2 gap-4 rounded-md border p-4">
+                                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 rounded-md border p-4 max-h-60 overflow-y-auto">
                                                     {pageOptions.map((item) => (
                                                         <FormField key={item.id} control={form.control} name="targetPages"
                                                             render={({ field }) => (
@@ -209,7 +228,7 @@ export default function BannerForm({ open, onOpenChange, onFormSubmit, banner }:
                                                                             checked={field.value?.includes(item.id)}
                                                                             onCheckedChange={(checked) => {
                                                                                 return checked
-                                                                                    ? field.onChange([...field.value, item.id])
+                                                                                    ? field.onChange([...(field.value || []), item.id])
                                                                                     : field.onChange(field.value?.filter((value) => value !== item.id))
                                                                             }}
                                                                         />
@@ -242,7 +261,7 @@ export default function BannerForm({ open, onOpenChange, onFormSubmit, banner }:
                                         <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm"><div className="space-y-0.5"><FormLabel>Active</FormLabel><FormDescription>Make the banner live.</FormDescription></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange}/></FormControl></FormItem>
                                     )} />
                                     <FormField control={form.control} name="clickableImage" render={({ field }) => (
-                                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm"><div className="space-y-0.5"><FormLabel>Clickable Image</FormLabel><FormDescription>Image redirects to button link.</FormDescription></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange}/></FormControl></FormItem>
+                                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm"><div className="space-y-0.5"><FormLabel>Clickable Banner</FormLabel><FormDescription>Entire banner redirects to link.</FormDescription></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange}/></FormControl></FormItem>
                                     )} />
                                     <FormField name="animation" control={form.control} render={({ field }) => (
                                         <FormItem><FormLabel>Animation</FormLabel>

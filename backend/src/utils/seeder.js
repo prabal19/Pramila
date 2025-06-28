@@ -1,4 +1,5 @@
 const Product = require('../models/Product');
+const Banner = require('../models/Banner');
 
 const allSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', 'CUSTOM SIZE'];
 
@@ -179,17 +180,62 @@ const products = [
   }
 ];
 
+const banners = [
+  {
+    title: "Modern Indian Wear",
+    description: "Where tradition meets style.",
+    imageUrl: "/images/image0.webp",
+    buttonText: "SHOP NOW",
+    buttonLink: "/shop",
+    backgroundColor: "#000000",
+    textColor: "#ffffff",
+    position: 'top-of-page',
+    targetPages: ['home'],
+    order: -1,
+    isActive: true,
+    animation: 'fade',
+    clickableImage: false,
+  },
+    {
+    description: "Shipping worldwide | Handcrafted Luxury",
+    backgroundColor: "#DDE2D3",
+    textColor: "#000000",
+    position: 'above-header',
+    targetPages: ['all'],
+    order: 1,
+    isActive: true,
+  },
+    {
+    description: "20% Off Sitewide - Shop Now!",
+    buttonLink: "/shop",
+    backgroundColor: "#8B0000",
+    textColor: "#ffffff",
+    position: 'above-header',
+    targetPages: ['all'],
+    order: 1,
+    isActive: true,
+    clickableImage: true,
+  }
+];
 
-const seedProducts = async () => {
+
+const seedDatabase = async () => {
     try {
         await Product.deleteMany({});
         console.log('Existing products cleared.');
         
         await Product.insertMany(products);
         console.log('Products seeded successfully!');
+        
+        await Banner.deleteMany({});
+        console.log('Existing banners cleared.');
+        
+        await Banner.insertMany(banners);
+        console.log('Banners seeded successfully!');
+
     } catch (err) {
-        console.error('Error seeding products:', err.message);
+        console.error('Error seeding database:', err.message);
     }
 };
 
-module.exports = seedProducts;
+module.exports = seedDatabase;

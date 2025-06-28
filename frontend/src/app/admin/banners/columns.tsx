@@ -1,3 +1,4 @@
+
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
@@ -79,15 +80,22 @@ export const columns = ({ onEdit, onRefresh }: { onEdit: (banner: Banner) => voi
   {
     accessorKey: "imageUrl",
     header: "Image",
-    cell: ({ row }) => (
-      <Image
-        alt={row.original.title || "Banner Image"}
-        className="aspect-video rounded-md object-cover"
-        height="40"
-        src={row.original.imageUrl}
-        width="80"
-      />
-    ),
+    cell: ({ row }) => {
+        const imageUrl = row.original.imageUrl;
+        return imageUrl ? (
+            <Image
+                alt={row.original.title || "Banner Image"}
+                className="aspect-video rounded-md object-cover"
+                height="40"
+                src={imageUrl}
+                width="80"
+            />
+        ) : (
+            <div className="aspect-video w-[80px] h-[40px] bg-muted rounded-md flex items-center justify-center">
+                <span className="text-xs text-muted-foreground">No Image</span>
+            </div>
+        )
+    },
   },
   {
     accessorKey: "title",

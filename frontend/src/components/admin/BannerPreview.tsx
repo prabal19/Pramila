@@ -63,7 +63,7 @@ const BannerPreview = ({ banner }: { banner: BannerPreviewData }) => {
 
     return (
         <div
-            className="relative w-full aspect-video overflow-hidden rounded-lg border flex items-center justify-center"
+            className="relative w-full aspect-[16/6] overflow-hidden rounded-lg border flex items-center justify-center"
             style={{ backgroundColor: backgroundColor, color: textColor }}
         >
             {isValidImageUrl && (
@@ -71,7 +71,7 @@ const BannerPreview = ({ banner }: { banner: BannerPreviewData }) => {
                     src={imageUrl}
                     alt={title || 'Banner image preview'}
                     fill
-                    className="object-cover opacity-30"
+                    className="object-cover object-top opacity-30"
                 />
             )}
             <div className="absolute inset-0 bg-black/10" />

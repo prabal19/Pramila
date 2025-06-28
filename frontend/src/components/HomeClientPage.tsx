@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import NewsletterPopup from '@/components/NewsletterPopup';
-import HeroSection from '@/components/HeroSection';
 import CollectionsSection from '@/components/CollectionsSection';
 import FeaturedProducts from '@/components/FeaturedProducts';
 import CelebrationSection from '@/components/CelebrationSection';
@@ -33,7 +32,6 @@ export default function HomeClientPage({ topBanners, bottomBanners, afterCelebra
     <div className="bg-white">
       {topBanners}
       <NewsletterPopup open={showPopup} onOpenChange={handlePopupChange} />
-      <HeroSection />
       <CelebrationSection />
       {afterCelebrationBanners}
       <CollectionsSection />

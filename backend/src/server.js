@@ -2,17 +2,19 @@ const express = require('express');
 const connectDB = require('./config/db');
 const cors = require('cors');
 require('dotenv').config({ path: './.env' });
-const seedProducts = require('./utils/seeder');
+const seedDatabase = require('./utils/seeder');
 
 const app = express();
 
 // Connect Database
-connectDB().then(() => {
-  // Seed database after connection is established
-  if (process.env.NODE_ENV !== 'production') {
-    seedProducts();
-  }
-});
+// connectDB().then(() => {
+//   // Seed database after connection is established
+//   if (process.env.NODE_ENV !== 'production') {
+//     seedDatabase();
+//   }
+// });
+
+connectDB();
 
 
 // Init Middleware

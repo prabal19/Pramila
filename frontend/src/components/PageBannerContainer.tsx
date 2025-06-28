@@ -3,7 +3,7 @@ import BannerDisplay from './BannerDisplay';
 
 interface PageBannerContainerProps {
   page: string;
-  position: 'top-of-page' | 'after-section' | 'bottom-of-page';
+  position: 'top-of-page' | 'after-section' | 'bottom-of-page' | 'above-header';
   sectionIdentifier?: string;
 }
 
@@ -13,7 +13,7 @@ export default async function PageBannerContainer({ page, position, sectionIdent
 
   const filteredBanners = allBanners
     .filter(banner => {
-      const isPageMatch = banner.targetPages.includes(page);
+      const isPageMatch = banner.targetPages.includes('all') || banner.targetPages.includes(page);
       const isPositionMatch = banner.position === position;
       const isSectionMatch = position !== 'after-section' || banner.sectionIdentifier === sectionIdentifier;
       const isDateValid = 
@@ -29,7 +29,7 @@ export default async function PageBannerContainer({ page, position, sectionIdent
   }
 
   return (
-    <div className="container mx-auto px-2">
+    <div className="w-full">
       {filteredBanners.map(banner => (
         <BannerDisplay key={banner._id} banner={banner} />
       ))}

@@ -86,12 +86,12 @@ export type Banner = {
   title?: string;
   subtitle?: string;
   description?: string;
-  imageUrl: string;
+  imageUrl?: string;
   buttonText?: string;
   buttonLink?: string;
   backgroundColor?: string;
   textColor?: string;
-  position: 'top-of-page' | 'after-section' | 'bottom-of-page';
+  position:  'above-header' |'top-of-page' | 'after-section' | 'bottom-of-page';
   targetPages: string[];
   sectionIdentifier?: string;
   order?: number;

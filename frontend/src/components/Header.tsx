@@ -42,16 +42,6 @@ const Header = () => {
 
   return (
     <>
-      <div className="bg-[#DDE2D3] text-black/90 text-center text-xs py-2 font-light tracking-wider">
-        <span>Shipping worldwide</span>
-        <span className="mx-2">|</span>
-        <span>Handcrafted Luxury</span>
-      </div>
-      <div className="bg-[#E45757] text-white text-center text-sm py-2.5 font-medium tracking-wider">
-        <Link href="/shop" className="hover:underline">
-          20% Off Sitewide - Shop Now!
-        </Link>
-      </div>
       <header className="bg-background/80 backdrop-blur-sm sticky top-0 z-40 border-b">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-20">
