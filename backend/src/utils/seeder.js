@@ -197,7 +197,7 @@ const banners = [
     clickableImage: false,
   },
     {
-    description: "Shipping worldwide | Handcrafted Luxury",
+    title: "Shipping worldwide | Handcrafted Luxury",
     backgroundColor: "#DDE2D3",
     textColor: "#000000",
     position: 'above-header',
@@ -206,7 +206,7 @@ const banners = [
     isActive: true,
   },
     {
-    description: "20% Off Sitewide - Shop Now!",
+    title: "20% Off Sitewide - Shop Now!",
     buttonLink: "/shop",
     backgroundColor: "#8B0000",
     textColor: "#ffffff",
