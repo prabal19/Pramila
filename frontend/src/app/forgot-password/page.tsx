@@ -102,9 +102,9 @@ export default function ForgotPasswordPage() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm font-medium text-gray-500">Email</FormLabel>
+                <FormLabel className="text-sm font-medium text-muted-foreground">Email</FormLabel>
                 <FormControl>
-                  <Input {...field} className="bg-transparent border-0 border-b border-gray-300 rounded-none px-0 h-auto py-2 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-primary" />
+                  <Input {...field} className="bg-transparent border-0 border-b border-input rounded-none px-0 h-auto py-2 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-primary" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -166,9 +166,9 @@ export default function ForgotPasswordPage() {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm font-medium text-gray-500">New Password</FormLabel>
+                <FormLabel className="text-sm font-medium text-muted-foreground">New Password</FormLabel>
                 <FormControl>
-                  <Input type="password" {...field} className="bg-transparent border-0 border-b border-gray-300 rounded-none px-0 h-auto py-2 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-primary" />
+                  <Input type="password" {...field} className="bg-transparent border-0 border-b border-input rounded-none px-0 h-auto py-2 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-primary" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -179,9 +179,9 @@ export default function ForgotPasswordPage() {
             name="confirmPassword"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm font-medium text-gray-500">Confirm New Password</FormLabel>
+                <FormLabel className="text-sm font-medium text-muted-foreground">Confirm New Password</FormLabel>
                 <FormControl>
-                  <Input type="password" {...field} className="bg-transparent border-0 border-b border-gray-300 rounded-none px-0 h-auto py-2 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-primary" />
+                  <Input type="password" {...field} className="bg-transparent border-0 border-b border-input rounded-none px-0 h-auto py-2 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-primary" />
                 </FormControl>
                 <FormMessage />
               </FormItem>

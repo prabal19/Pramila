@@ -54,7 +54,7 @@ router.post('/batch', async (req, res) => {
 // @desc    Create a product (for admin purposes)
 // @access  Private (should be secured later)
 router.post('/', async (req, res) => {
-    const { productId, name, description, category, price, strikeoutPrice, images, bestseller } = req.body;
+    const { productId, name, description, category, price, strikeoutPrice, images, bestseller, sizes, specifications } = req.body;
     try {
         let product = await Product.findOne({ productId });
         if(product) {
@@ -69,7 +69,9 @@ router.post('/', async (req, res) => {
             price,
             strikeoutPrice,
             images,
-            bestseller
+            bestseller,
+            sizes,
+            specifications
         });
 
         await product.save();
