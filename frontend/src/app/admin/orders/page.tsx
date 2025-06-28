@@ -1,81 +1,52 @@
+'use client'
+
+import { useState, useEffect } from 'react';
 import { getOrders } from '@/lib/orders';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
-import type { OrderStatus } from '@/lib/types';
+import { Order } from "@/lib/types";
+import { columns } from "./columns";
+import { DataTable } from "@/components/ui/data-table";
+import { Skeleton } from '@/components/ui/skeleton';
 
-function getStatusVariant(status: OrderStatus) {
-    switch (status) {
-        case 'Delivered':
-            return 'bg-green-100 text-green-800 border-green-200 hover:bg-green-100';
-        case 'Shipped':
-            return 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100';
-        case 'Processing':
-            return 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100';
-        case 'Cancelled':
-            return 'bg-red-100 text-red-800 border-red-200 hover:bg-red-100';
-        case 'Pending':
-        default:
-            return 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100';
+export default function AdminOrdersPage() {
+    const [data, setData] = useState<Order[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const orders = await getOrders();
+            setData(orders);
+            setLoading(false);
+        }
+        fetchData();
+    }, [])
+
+    const renderSkeleton = () => (
+        <div className="space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-48 w-full" />
+            <Skeleton className="h-10 w-full" />
+        </div>
+    );
+
+    if (loading) {
+       return (
+            <div className="space-y-8">
+                <div>
+                    <h1 className="text-3xl font-bold">Manage Orders</h1>
+                    <p className="text-muted-foreground">A list of all orders placed in your store.</p>
+                </div>
+                {renderSkeleton()}
+            </div>
+       )
     }
-}
-
-
-export default async function AdminOrdersPage() {
-    const orders = await getOrders();
 
     return (
-        <div>
-            <h1 className="text-3xl font-bold mb-8">Manage Orders</h1>
-            <Card>
-                <CardHeader>
-                    <CardTitle>All Orders</CardTitle>
-                    <CardDescription>A list of all orders placed in your store.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Order ID</TableHead>
-                                <TableHead>Customer</TableHead>
-                                <TableHead>Date</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="text-right">Total</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {orders.length > 0 ? (
-                                orders.map((order) => (
-                                    <TableRow key={order._id}>
-                                        <TableCell className="font-medium text-xs">#{order._id.slice(-6).toUpperCase()}</TableCell>
-                                        <TableCell>
-                                            <div className="font-medium">{order.userId.firstName} {order.userId.lastName}</div>
-                                            <div className="text-xs text-muted-foreground">{order.userId.email}</div>
-                                        </TableCell>
-                                        <TableCell>{format(new Date(order.createdAt), 'MMM d, yyyy')}</TableCell>
-                                        <TableCell>
-                                             <Badge variant="outline" className={cn('capitalize', getStatusVariant(order.status))}>
-                                                {order.status}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            Rs. {order.totalAmount.toLocaleString('en-IN')}
-                                        </TableCell>
-                                    </TableRow>
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell colSpan={5} className="text-center h-24">
-                                        No orders found.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
+        <div className="space-y-8">
+            <div>
+                <h1 className="text-3xl font-bold">Manage Orders</h1>
+                <p className="text-muted-foreground">A list of all orders placed in your store.</p>
+            </div>
+            <DataTable columns={columns} data={data} searchKey="userId" searchPlaceholder="Search by customer..." dateFilterKey="createdAt" />
         </div>
     );
 }

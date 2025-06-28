@@ -1,25 +1,25 @@
 'use client'
 
 import { useState, useEffect } from 'react';
-import { getProducts } from '@/lib/products';
-import { Product } from "@/lib/types";
+import { getUsers } from '@/lib/users';
+import { User } from "@/lib/types";
 import { columns } from "./columns";
 import { DataTable } from "@/components/ui/data-table";
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function AdminProductsPage() {
-    const [data, setData] = useState<Product[]>([]);
+export default function AdminUsersPage() {
+    const [data, setData] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchData = async () => {
-            const products = await getProducts();
-            setData(products);
+            const users = await getUsers();
+            setData(users);
             setLoading(false);
         }
         fetchData();
     }, [])
-
+    
     const renderSkeleton = () => (
         <div className="space-y-4">
             <Skeleton className="h-10 w-full" />
@@ -32,8 +32,8 @@ export default function AdminProductsPage() {
        return (
             <div className="space-y-8">
                 <div>
-                    <h1 className="text-3xl font-bold">Manage Products</h1>
-                    <p className="text-muted-foreground">A list of all products in your store.</p>
+                    <h1 className="text-3xl font-bold">Manage Users</h1>
+                    <p className="text-muted-foreground">A list of all registered users.</p>
                 </div>
                 {renderSkeleton()}
             </div>
@@ -43,10 +43,10 @@ export default function AdminProductsPage() {
     return (
         <div className="space-y-8">
             <div>
-                <h1 className="text-3xl font-bold">Manage Products</h1>
-                <p className="text-muted-foreground">A list of all products in your store.</p>
+                <h1 className="text-3xl font-bold">Manage Users</h1>
+                <p className="text-muted-foreground">A list of all registered users.</p>
             </div>
-            <DataTable columns={columns} data={data} searchKey="name" searchPlaceholder="Search by name..." dateFilterKey="createdAt" />
+            <DataTable columns={columns} data={data} searchKey="email" searchPlaceholder="Search by email..." dateFilterKey="date"/>
         </div>
     );
 }

@@ -2,8 +2,9 @@
 
 import { AdminAuthProvider } from '@/context/AdminAuthContext';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
-import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter } from '@/components/ui/sidebar';
-import { LayoutDashboard, ShoppingBag, CreditCard, LogOut } from 'lucide-react';
+import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset } from '@/components/ui/sidebar';
+import { Button } from '@/components/ui/button';
+import { LayoutDashboard, ShoppingBag, CreditCard, LogOut, Users, PictureInPicture } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -16,71 +17,88 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
     }
 
     if (!isAdmin && pathname !== '/admin') {
+        // The auth context will redirect. In the meantime, show nothing.
         return null;
     }
     
+    // The /admin route is the login page, which doesn't have the sidebar layout.
     if (pathname === '/admin') {
         return <>{children}</>;
     }
 
+    // All other authenticated admin routes get the full layout.
     return (
-        <SidebarProvider>
-            <div className="flex min-h-screen bg-muted/40">
-                <Sidebar className="border-r">
-                    <SidebarHeader>
-                         <h2 className="text-xl font-semibold px-2">PRAMILA</h2>
-                    </SidebarHeader>
-                    <SidebarContent>
-                        <SidebarMenu>
-                            <SidebarMenuItem>
-                                <Link href="/admin/dashboard" legacyBehavior passHref>
-                                    <SidebarMenuButton isActive={pathname === '/admin/dashboard'}>
-                                        <LayoutDashboard />
-                                        Dashboard
-                                    </SidebarMenuButton>
+        <SidebarProvider className="bg-muted/40">
+            <Sidebar className="border-r">
+                <SidebarHeader>
+                     <h2 className="text-xl font-semibold px-2">PRAMILA</h2>
+                </SidebarHeader>
+                <SidebarContent>
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild isActive={pathname === '/admin/dashboard'}>
+                                <Link href="/admin/dashboard">
+                                    <LayoutDashboard />
+                                    Dashboard
                                 </Link>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <Link href="/admin/products" legacyBehavior passHref>
-                                    <SidebarMenuButton isActive={pathname.startsWith('/admin/products')}>
-                                        <ShoppingBag />
-                                        Products
-                                    </SidebarMenuButton>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild isActive={pathname.startsWith('/admin/products')}>
+                                <Link href="/admin/products">
+                                    <ShoppingBag />
+                                    Products
                                 </Link>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <Link href="/admin/orders" legacyBehavior passHref>
-                                     <SidebarMenuButton isActive={pathname.startsWith('/admin/orders')}>
-                                        <ShoppingBag />
-                                        Orders
-                                    </SidebarMenuButton>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                         <SidebarMenuItem>
+                             <SidebarMenuButton asChild isActive={pathname.startsWith('/admin/users')}>
+                                <Link href="/admin/users">
+                                    <Users />
+                                    Users
                                 </Link>
-                            </SidebarMenuItem>
-                             <SidebarMenuItem>
-                                <Link href="/admin/payments" legacyBehavior passHref>
-                                     <SidebarMenuButton isActive={pathname.startsWith('/admin/payments')}>
-                                        <CreditCard />
-                                        Payments
-                                    </SidebarMenuButton>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild isActive={pathname.startsWith('/admin/orders')}>
+                                 <Link href="/admin/orders">
+                                    <ShoppingBag />
+                                    Orders
+                                 </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                             <SidebarMenuButton asChild isActive={pathname.startsWith('/admin/banners')}>
+                                <Link href="/admin/banners">
+                                    <PictureInPicture />
+                                    Banners
                                 </Link>
-                            </SidebarMenuItem>
-                        </SidebarMenu>
-                    </SidebarContent>
-                    <SidebarFooter>
-                         <SidebarMenu>
-                             <SidebarMenuItem>
-                                <SidebarMenuButton onClick={logout}>
-                                    <LogOut />
-                                    Logout
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                        </SidebarMenu>
-                    </SidebarFooter>
-                </Sidebar>
-                <main className="flex-1 p-6 sm:p-8">
-                    {children}
-                </main>
-            </div>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                         <SidebarMenuItem>
+                             <SidebarMenuButton asChild isActive={pathname.startsWith('/admin/payments')}>
+                                 <Link href="/admin/payments">
+                                    <CreditCard />
+                                    Payments
+                                 </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarContent>
+                <SidebarFooter>
+                     <SidebarMenu>
+                         <SidebarMenuItem>
+                            <SidebarMenuButton onClick={logout}>
+                                <LogOut />
+                                Logout
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarFooter>
+            </Sidebar>
+            <SidebarInset className="flex-1 p-6 sm:p-8">
+                {children}
+            </SidebarInset>
         </SidebarProvider>
     );
 }

@@ -29,7 +29,7 @@ app.use('/api/reviews', require('./routes/api/reviews'));
 app.use('/api/cart', require('./routes/api/cart'));
 app.use('/api/admin', require('./routes/api/admin'));
 app.use('/api/orders', require('./routes/api/orders'));
-
+app.use('/api/banners', require('./routes/api/banners'));
 
 const PORT = process.env.PORT || 5000;
 

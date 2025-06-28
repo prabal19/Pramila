@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Product = require('../../models/Product');
 const Order = require('../../models/Order');
+const User = require('../../models/User');
 
 // @route   POST api/admin/login
 // @desc    Admin login
@@ -35,6 +36,19 @@ router.get('/stats', async (req, res) => {
             productCount,
             orderCount,
         });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// @route   GET api/admin/users
+// @desc    Get all users
+// @access  Private (should be secured)
+router.get('/users', async (req, res) => {
+    try {
+        const users = await User.find().select('-password').sort({ date: -1 });
+        res.json(users);
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');

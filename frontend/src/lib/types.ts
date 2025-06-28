@@ -80,3 +80,26 @@ export type Order = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type Banner = {
+  _id: string;
+  title?: string;
+  subtitle?: string;
+  description?: string;
+  imageUrl: string;
+  buttonText?: string;
+  buttonLink?: string;
+  backgroundColor?: string;
+  textColor?: string;
+  position: 'top-of-page' | 'after-section' | 'bottom-of-page';
+  targetPages: string[];
+  sectionIdentifier?: string;
+  order?: number;
+  isActive: boolean;
+  startDate?: string;
+  endDate?: string;
+  animation?: 'none' | 'fade' | 'slide' | 'zoom';
+  clickableImage?: boolean;
+  createdAt: string;
+  updatedAt: string;
+};

@@ -1,10 +1,12 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import { Button } from './ui/button';
 
 const CelebrationSection = () => {
   return (
-    <section className="bg-stone-50 py-20 text-center">
+    <section id="celebration-section" className="bg-stone-50 py-20 text-center">
       <div className="container mx-auto px-4">
         <h2 className="text-3xl md:text-4xl font-headline mb-4" style={{fontFamily: "'Cormorant Garamond', serif"}}>
           A celebration of tradition & modern elegance
