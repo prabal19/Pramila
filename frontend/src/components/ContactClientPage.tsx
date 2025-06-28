@@ -63,15 +63,6 @@ export default function ContactClientPage() {
                   />
               </div>
               
-              <div>
-                  <p className="text-sm font-medium text-gray-500 mb-2">Optional</p>
-                  <div className="flex items-center space-x-2">
-                      <Checkbox id="isUrgent" checked={isUrgent} onCheckedChange={(checked) => setIsUrgent(Boolean(checked))} />
-                      <Label htmlFor="isUrgent" className="text-sm font-medium text-gray-700">
-                          This is urgent
-                      </Label>
-                  </div>
-              </div>
 
               <div className="flex flex-col items-center">
                   <Button type="submit" className="rounded-none px-12 py-3 h-auto tracking-widest font-semibold w-full max-w-xs">
