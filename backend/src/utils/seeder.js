@@ -212,7 +212,7 @@ const banners = [
     textColor: "#ffffff",
     position: 'above-header',
     targetPages: ['all'],
-    order: 1,
+    order: 2,
     isActive: true,
     clickableImage: true,
   }

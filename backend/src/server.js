@@ -7,12 +7,14 @@ const seedDatabase = require('./utils/seeder');
 const app = express();
 
 // Connect Database
-connectDB().then(() => {
-  // Seed database after connection is established
-  if (process.env.NODE_ENV !== 'production') {
-    seedDatabase();
-  }
-});
+// connectDB().then(() => {
+//   // Seed database after connection is established
+//   if (process.env.NODE_ENV !== 'production') {
+//     seedDatabase();
+//   }
+// });
+
+connectDB();
 
 
 
