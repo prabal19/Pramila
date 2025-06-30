@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -50,7 +50,11 @@ export default function NewsletterPopup({ open, onOpenChange }: NewsletterPopupP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg p-10 text-center bg-white shadow-2xl rounded-none">
+      <DialogContent className="max-w-lg p-10 text-center bg-white shadow-2xl rounded-none">      
+        <DialogHeader className="sr-only">
+          <DialogTitle>Newsletter: Come Join Us</DialogTitle>
+          <DialogDescription>Get 10% off on your first purchase by subscribing to our newsletter.</DialogDescription>
+        </DialogHeader>
         <div className="flex flex-col items-center justify-center">
           <p className="text-xs tracking-[0.2em] text-muted-foreground mb-6">NEWSLETTER</p>
           <h2 className="font-headline text-5xl mb-3" style={{fontFamily: "'Cormorant Garamond', serif"}}>Come Join Us</h2>
