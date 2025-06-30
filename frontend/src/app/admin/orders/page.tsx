@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getOrders } from '@/lib/orders';
 import { Order } from "@/lib/types";
 import { columns } from "./columns";
@@ -11,14 +11,16 @@ export default function AdminOrdersPage() {
     const [data, setData] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const fetchData = useCallback(async () => {
+        setLoading(true);
+        const orders = await getOrders();
+        setData(orders);
+        setLoading(false);
+    }, []);
+
     useEffect(() => {
-        const fetchData = async () => {
-            const orders = await getOrders();
-            setData(orders);
-            setLoading(false);
-        }
         fetchData();
-    }, [])
+    }, [fetchData])
 
     const renderSkeleton = () => (
         <div className="space-y-4">
@@ -28,7 +30,7 @@ export default function AdminOrdersPage() {
         </div>
     );
 
-    if (loading) {
+    if (loading && data.length === 0) {
        return (
             <div className="space-y-8">
                 <div>
@@ -46,7 +48,13 @@ export default function AdminOrdersPage() {
                 <h1 className="text-3xl font-bold">Manage Orders</h1>
                 <p className="text-muted-foreground">A list of all orders placed in your store.</p>
             </div>
-            <DataTable columns={columns} data={data} searchKey="userId" searchPlaceholder="Search by customer..." dateFilterKey="createdAt" />
+            <DataTable 
+              columns={columns({ onRefresh: fetchData })} 
+              data={data} 
+              searchKey="userId" 
+              searchPlaceholder="Search by customer..." 
+              dateFilterKey="createdAt" 
+            />
         </div>
     );
 }

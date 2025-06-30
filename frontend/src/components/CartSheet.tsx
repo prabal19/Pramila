@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -129,7 +130,14 @@ export default function CartSheet({ open, onOpenChange }: CartSheetProps) {
                         <span className="font-semibold"> Rs. {subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     </div>
                 </div>
-                <Button className="w-full rounded-none bg-black hover:bg-gray-800 text-white tracking-widest font-semibold" size="lg">PROCEED TO CHECKOUT</Button>
+                 <div className="space-y-3">
+                    <Button asChild className="w-full rounded-none bg-black hover:bg-gray-800 text-white tracking-widest font-semibold" size="lg" onClick={() => onOpenChange(false)}>
+                        <Link href="/checkout">QUICK CHECKOUT</Link>
+                    </Button>
+                     <Button asChild variant="outline" className="w-full rounded-none tracking-widest font-semibold" size="lg" onClick={() => onOpenChange(false)}>
+                        <Link href="/cart">VIEW CART</Link>
+                    </Button>
+                </div>
             </div>
           </>
         ) : (
@@ -147,4 +155,5 @@ export default function CartSheet({ open, onOpenChange }: CartSheetProps) {
         )}
       </SheetContent>
     </Sheet>
-  )}
+  );
+}

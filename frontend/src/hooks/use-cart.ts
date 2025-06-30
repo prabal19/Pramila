@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -11,6 +12,7 @@ export const useCart = () => {
   const { toast } = useToast();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasUnseenItems, setHasUnseenItems] = useState(false);
 
   const fetchCart = useCallback(async () => {
     if (user) {
@@ -42,6 +44,7 @@ export const useCart = () => {
     const updatedCart = await addItemToCart(user._id, productId, quantity, size);
     if (updatedCart) {
         setCartItems(updatedCart.items);
+        setHasUnseenItems(true);
         toast({ title: "Added to cart!", description: `Item added to your cart.` });
     } else {
         toast({ variant: 'destructive', title: "Error", description: 'Failed to add item to cart.'});
@@ -53,6 +56,7 @@ export const useCart = () => {
     const updatedCart = await removeItemFromCart(user._id, itemId);
      if (updatedCart) {
         setCartItems(updatedCart.items);
+        setHasUnseenItems(true);
         toast({ title: "Removed from cart." });
     } else {
         toast({ variant: 'destructive', title: "Error", description: 'Failed to remove item from cart.'});
@@ -67,13 +71,18 @@ export const useCart = () => {
       const updatedCart = await updateCartItemQuantity(user._id, itemId, quantity);
        if (updatedCart) {
           setCartItems(updatedCart.items);
+          setHasUnseenItems(true);
       } else {
           toast({ variant: 'destructive', title: "Error", description: 'Failed to update quantity.'});
       }
     }
   }, [user, removeFromCart, toast]);
   
+  const markCartAsViewed = useCallback(() => {
+    setHasUnseenItems(false);
+  }, []);
+  
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
-  return { cart: cartItems, cartCount, isLoading, addToCart, removeFromCart, updateQuantity };
+  return { cart: cartItems, cartCount, isLoading, addToCart, removeFromCart, updateQuantity, hasUnseenItems, markCartAsViewed };
 };

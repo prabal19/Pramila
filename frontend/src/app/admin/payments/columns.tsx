@@ -8,28 +8,35 @@ import { cn } from '@/lib/utils'
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
 
 function getStatusVariant(status: OrderStatus) {
-    // Assuming payment status mirrors order status for this implementation
     switch (status) {
         case 'Delivered':
-        case 'Shipped':
-        case 'Processing':
             return 'bg-green-100 text-green-800 border-green-200 hover:bg-green-100';
+        case 'Out for Delivery':
+             return 'bg-sky-100 text-sky-800 border-sky-200 hover:bg-sky-100';
+        case 'Shipped':
+            return 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100';
+        case 'Confirmed / Processing':
+            return 'bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-100';
         case 'Cancelled':
+        case 'Returned':
             return 'bg-red-100 text-red-800 border-red-200 hover:bg-red-100';
         case 'Pending':
         default:
-            return 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100';
+            return 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100';
     }
 }
 
 function getPaymentStatusText(status: OrderStatus) {
     switch (status) {
-         case 'Delivered':
+        case 'Delivered':
         case 'Shipped':
-        case 'Processing':
+        case 'Out for Delivery':
+        case 'Confirmed / Processing':
             return 'Paid';
-        case 'Cancelled':
+        case 'Returned':
             return 'Refunded';
+        case 'Cancelled':
+            return 'Cancelled';
         case 'Pending':
         default:
             return 'Pending';

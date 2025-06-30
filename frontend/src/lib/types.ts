@@ -68,7 +68,7 @@ export type OrderItem = {
   _id: string;
 };
 
-export type OrderStatus = 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
+export type OrderStatus = 'Pending' | 'Confirmed / Processing' | 'Shipped' | 'Out for Delivery' | 'Delivered' | 'Cancelled' | 'Returned';
 
 export type Order = {
   _id: string;
@@ -102,4 +102,14 @@ export type Banner = {
   clickableImage?: boolean;
   createdAt: string;
   updatedAt: string;
+};
+
+export type PaymentMethod = {
+  _id: string;
+  userId: string;
+  email: string;
+  methodType: 'card';
+  cardLast4: string;
+  cardBrand: string;
+  cardExpiry: string;
 };

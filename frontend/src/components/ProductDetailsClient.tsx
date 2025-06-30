@@ -13,11 +13,12 @@ import { SizeChartDialog } from './SizeChartDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RelatedProducts from './RelatedProducts';
 import ProductReviews from './ProductReviews';
+import { useRouter } from 'next/navigation';
 
 const ProductDetailsClient = ({ product }: { product: Product }) => {
   const { addViewedProduct } = useViewedProducts();
   const { addToCart } = useCart();
-  
+  const router = useRouter(); 
   const availableSizes = product.sizes && product.sizes.length > 0
     ? product.sizes
     : ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', 'CUSTOM SIZE'];
@@ -26,6 +27,7 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
   const [selectedSize, setSelectedSize] = useState(availableSizes[0]);
   const [quantity, setQuantity] = useState(1);
   const [isSizeChartOpen, setIsSizeChartOpen] = useState(false);
+
 
   useEffect(() => {
     addViewedProduct(product.id);
@@ -37,6 +39,11 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
 
   const handleAddToCart = () => {
     addToCart(product.id, quantity, selectedSize);
+  };
+
+    const handleBuyNow = () => {
+    addToCart(product.id, quantity, selectedSize);
+    router.push('/checkout');
   };
 
   function getCategoryTitle(slug: string): string {
@@ -134,7 +141,7 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
                 </Button>
               </div>
               
-              <Button size="lg" className="w-full rounded-sm bg-primary text-primary-foreground tracking-widest font-semibold hover:bg-primary/90">BUY NOW</Button>
+               <Button size="lg" className="w-full rounded-sm bg-primary text-primary-foreground tracking-widest font-semibold hover:bg-primary/90" onClick={handleBuyNow}>BUY NOW</Button>
               
               <p className="text-xs text-muted-foreground">Disclaimer: This product will be shipped to you within 5-6 work from the date of order placed.</p>
               

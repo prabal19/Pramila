@@ -1,29 +1,59 @@
 "use client"
 
+import { useState } from "react"
 import { ColumnDef } from "@tanstack/react-table"
-import type { Order, OrderStatus, PopulatedUser } from '@/lib/types'
 import { format } from 'date-fns'
-import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
+import type { Order, OrderStatus, PopulatedUser } from '@/lib/types'
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
+import { useToast } from "@/hooks/use-toast"
+import { updateOrderStatus } from "@/actions/orders"
 
-function getStatusVariant(status: OrderStatus) {
-    switch (status) {
-        case 'Delivered':
-            return 'bg-green-100 text-green-800 border-green-200 hover:bg-green-100';
-        case 'Shipped':
-            return 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100';
-        case 'Processing':
-            return 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100';
-        case 'Cancelled':
-            return 'bg-red-100 text-red-800 border-red-200 hover:bg-red-100';
-        case 'Pending':
-        default:
-            return 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100';
-    }
-}
 
-export const columns: ColumnDef<Order>[] = [
+const StatusUpdater = ({ order, onRefresh }: { order: Order; onRefresh: () => void }) => {
+    const [currentStatus, setCurrentStatus] = useState<OrderStatus>(order.status);
+    const [isSaving, setIsSaving] = useState(false);
+    const { toast } = useToast();
+
+    const orderStatuses: OrderStatus[] = ['Pending', 'Confirmed / Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled', 'Returned'];
+
+    const handleSave = async () => {
+        setIsSaving(true);
+        const result = await updateOrderStatus(order._id, currentStatus);
+        setIsSaving(false);
+        if (result.success) {
+            toast({ title: "Success", description: "Order status updated." });
+            onRefresh();
+        } else {
+            toast({ variant: "destructive", title: "Error", description: result.message });
+            setCurrentStatus(order.status); // Revert on failure
+        }
+    };
+
+    return (
+        <div className="flex items-center gap-2">
+            <Select value={currentStatus} onValueChange={(value) => setCurrentStatus(value as OrderStatus)}>
+                <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                    {orderStatuses.map(status => (
+                        <SelectItem key={status} value={status}>
+                            {status}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+            <Button size="sm" onClick={handleSave} disabled={isSaving || currentStatus === order.status}>
+                {isSaving ? 'Saving...' : 'Save'}
+            </Button>
+        </div>
+    );
+};
+
+
+export const columns = ({ onRefresh }: { onRefresh: () => void }): ColumnDef<Order>[] => [
   {
     accessorKey: "_id",
     header: "Order ID",
@@ -84,14 +114,7 @@ export const columns: ColumnDef<Order>[] = [
     header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Status" />
     ),
-    cell: ({ row }) => {
-        const status = row.getValue("status") as OrderStatus
-        return (
-            <Badge variant="outline" className={cn('capitalize', getStatusVariant(status))}>
-                {status}
-            </Badge>
-        )
-    },
+    cell: ({ row }) => <StatusUpdater order={row.original} onRefresh={onRefresh} />,
   },
   {
     accessorKey: "totalAmount",

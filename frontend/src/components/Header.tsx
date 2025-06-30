@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingBag, Search, User, Menu } from 'lucide-react';
+import { ShoppingBag, Search, User, Menu, Heart } from 'lucide-react';
 import { Button } from './ui/button';
 import { useState } from 'react';
 import SearchOverlay from './SearchOverlay';
@@ -11,6 +11,8 @@ import CartSheet from './CartSheet';
 import { useAuth } from '@/hooks/use-auth';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import WishlistIcon from './WishlistIcon';
+import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/', label: 'Home' },
@@ -37,8 +39,15 @@ const Header = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { cartCount } = useCart();
+  const { cartCount, hasUnseenItems, markCartAsViewed } = useCart();
   const { user } = useAuth();
+
+  const handleCartClick = () => {
+    if (hasUnseenItems) {
+      markCartAsViewed();
+    }
+    setIsCartOpen(true);
+  };
 
   return (
     <>
@@ -118,13 +127,17 @@ const Header = () => {
                   <User className="w-6 h-6" />
                 </Link>
               </Button>
+              <WishlistIcon />
               <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(true)}>
                 <Search className="w-6 h-6" />
               </Button>
-              <Button variant="ghost" size="icon" className="relative" onClick={() => setIsCartOpen(true)}>
+              <Button variant="ghost" size="icon" className="relative" onClick={handleCartClick}>
                 <ShoppingBag className="w-6 h-6" />
                  {cartCount > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs">
+                    <span className={cn(
+                        "absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-primary-foreground text-xs transition-colors",
+                        hasUnseenItems ? 'bg-destructive' : 'bg-primary'
+                    )}>
                         {cartCount}
                     </span>
                  )}
