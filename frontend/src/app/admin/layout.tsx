@@ -4,7 +4,7 @@ import { AdminAuthProvider } from '@/context/AdminAuthContext';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, ShoppingBag, CreditCard, LogOut, Users, PictureInPicture } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, CreditCard, LogOut, Users, PictureInPicture , MessageSquareQuestion} from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -63,8 +63,16 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
                             <SidebarMenuButton asChild isActive={pathname.startsWith('/admin/orders')}>
                                  <Link href="/admin/orders">
                                     <ShoppingBag />
-                                    Orders
+                                    Orders                                 
                                  </Link>
+                        </SidebarMenuButton>
+                        </SidebarMenuItem>
+                         <SidebarMenuItem>
+                             <SidebarMenuButton asChild isActive={pathname.startsWith('/admin/requests')}>
+                                <Link href="/admin/requests">
+                                    <MessageSquareQuestion />
+                                    Requests
+                                </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                         <SidebarMenuItem>

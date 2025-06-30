@@ -113,3 +113,26 @@ export type PaymentMethod = {
   cardBrand: string;
   cardExpiry: string;
 };
+
+export type SupportMessage = {
+  _id: string;
+  sender: 'user' | 'support';
+  senderName: string;
+  message: string;
+  timestamp: string;
+};
+
+export type SupportTicketStatus = 'Open' | 'Pending' | 'Closed';
+
+export type SupportTicket = {
+  _id: string;
+  ticketId: number;
+  userId: string | PopulatedUser; // Can be populated
+  subject: string;
+  category: string;
+  orderId?: string;
+  status: SupportTicketStatus;
+  messages: SupportMessage[];
+  createdAt: string;
+  updatedAt: string;
+};

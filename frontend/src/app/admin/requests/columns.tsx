@@ -1,0 +1,77 @@
+"use client"
+
+import { ColumnDef } from "@tanstack/react-table"
+import { format } from 'date-fns'
+import type { SupportTicket, PopulatedUser, SupportTicketStatus } from '@/lib/types'
+import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
+import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { ArrowRight } from "lucide-react"
+import Link from "next/link"
+
+function getStatusVariant(status: SupportTicketStatus) {
+    switch (status) {
+        case 'Open': return 'bg-green-100 text-green-800 border-green-200';
+        case 'Pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        case 'Closed': return 'bg-gray-100 text-gray-800 border-gray-200';
+        default: return 'secondary';
+    }
+}
+
+export const columns: ColumnDef<SupportTicket>[] = [
+  {
+    accessorKey: "ticketId",
+    header: "Ticket ID",
+    cell: ({ row }) => <span className="font-medium">#{row.getValue("ticketId")}</span>
+  },
+  {
+    accessorKey: "userId",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Customer" />,
+    cell: ({ row }) => {
+        const user = row.getValue("userId") as PopulatedUser;
+        return (
+             <div>
+                <div className="font-medium">{user?.firstName} {user?.lastName}</div>
+                <div className="text-xs text-muted-foreground">{user?.email}</div>
+            </div>
+        )
+    },
+    filterFn: (row, id, value) => {
+        const user = row.getValue("userId") as PopulatedUser;
+        const searchTerm = (value as string).toLowerCase();
+        if (!user) return false;
+        return user.firstName?.toLowerCase().includes(searchTerm) || 
+               user.lastName?.toLowerCase().includes(searchTerm) || 
+               user.email?.toLowerCase().includes(searchTerm);
+    },
+  },
+  {
+    accessorKey: "subject",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Subject" />,
+    cell: ({ row }) => <div className="max-w-xs truncate">{row.getValue("subject")}</div>
+  },
+   {
+    accessorKey: "status",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+    cell: ({ row }) => {
+        const status = row.getValue("status") as SupportTicketStatus;
+        return <Badge variant="outline" className={cn('capitalize', getStatusVariant(status))}>{status}</Badge>
+    },
+  },
+  {
+    accessorKey: "updatedAt",
+    header: ({ column }) => <div className="text-right"><DataTableColumnHeader column={column} title="Last Updated" /></div>,
+    cell: ({ row }) => <div className="text-right">{format(new Date(row.getValue("updatedAt") as string), 'MMM d, yyyy')}</div>,
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => (
+        <Button asChild variant="ghost" size="sm">
+            <Link href={`/admin/requests/${row.original._id}`}>
+                View <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+        </Button>
+    )
+  },
+]

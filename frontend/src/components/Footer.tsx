@@ -34,6 +34,7 @@ const Footer = () => {
             <ul className="space-y-3 text-gray-600">
               <li><Link href="/about" className="hover:text-black transition-colors">About Us</Link></li>
               <li><Link href="/contact" className="hover:text-black transition-colors">Contact Us</Link></li>
+              <li><Link href="/support" className="hover:text-black transition-colors">Support</Link></li>
               <li><Link href="/#customer-reviews" className="hover:text-black transition-colors">Customer Reviews</Link></li>
               <li><Link href="/faq" className="hover:text-black transition-colors">FAQ</Link></li>
               <li><Link href="/privacy-policy" className="hover:text-black transition-colors">Privacy Policy</Link></li>
@@ -69,12 +70,12 @@ const Footer = () => {
                 <Input
                   type="text"
                   placeholder="Name"
-                  className="bg-transparent border-0 border-b border-gray-300 rounded-none px-0 py-2 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-black placeholder:text-gray-500"
+                  className="bg-transparent border-0 border-b border-input rounded-none px-0 py-2 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-black placeholder:text-gray-500"
                 />
                 <Input
                   type="email"
                   placeholder="Email"
-                  className="bg-transparent border-0 border-b border-gray-300 rounded-none px-0 py-2 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-black placeholder:text-gray-500"
+                  className="bg-transparent border-0 border-b border-input rounded-none px-0 py-2 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-black placeholder:text-gray-500"
                 />
               </div>
               <Button type="submit" className="w-full mt-8 bg-black text-white hover:bg-gray-800 rounded-none py-3 text-sm tracking-widest font-semibold h-auto">

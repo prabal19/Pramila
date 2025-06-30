@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingBag, Search, User, Menu, Heart } from 'lucide-react';
+import { ShoppingBag, Search, User, Menu, Heart, LifeBuoy } from 'lucide-react';
 import { Button } from './ui/button';
 import { useState } from 'react';
 import SearchOverlay from './SearchOverlay';
@@ -31,8 +31,9 @@ const navItems = [
     label: 'Collections'
   },
   { href: '/faq', label: 'FAQ' },
-  { href: '/contact', label: 'Contact' },
   { href: '/about', label: 'About Us' },
+  { href: '/support', label: 'Support' },
+
 ];
 
 const Header = () => {
