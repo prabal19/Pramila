@@ -1,7 +1,9 @@
 const Product = require('../models/Product');
 const Banner = require('../models/Banner');
+const connectDB = require('../config/db');
 
 const allSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', 'CUSTOM SIZE'];
+const accessorySizes = ['One Size'];
 
 const products = [
   // Sharara Sets (2 products)
@@ -177,6 +179,374 @@ const products = [
     category: 'saree',
     sizes: allSizes,
     specifications: 'Fabric: Pure Satin Silk; Work: Minimalist, Solid Color; Occasion: Casual, Formal; Fit: Fluid Drape; Includes: Saree, Unstitched Blouse Piece.'
+     },
+  // Ethnic Sets (3 products)
+  {
+    productId: '12',
+    name: 'Rose Gold Anarkali Set',
+    description: 'A beautiful Anarkali set in rose gold, perfect for weddings.',
+    price: 28000,
+    images: [
+      '/category/ethnic-sets/image1.jpg',
+      '/category/ethnic-sets/image2.jpg',
+      '/category/ethnic-sets/image3.jpg',
+      '/category/ethnic-sets/image4.jpg',
+    ],
+    category: 'ethnic-sets',
+    sizes: allSizes,
+    specifications: 'Fabric: Silk; Includes: Anarkali, Churidar, Dupatta.'
+  },
+  {
+    productId: '13',
+    name: 'Indigo Palazzo Set',
+    description: 'Comfortable and stylish palazzo set in a deep indigo hue.',
+    price: 15500,
+    images: [
+      '/category/ethnic-sets/image5.webp',
+      '/category/ethnic-sets/image6.webp',
+      '/category/ethnic-sets/image7.webp',
+      '/category/ethnic-sets/image8.webp',
+    ],
+    category: 'ethnic-sets',
+    sizes: allSizes,
+    specifications: 'Fabric: Cotton; Includes: Kurta, Palazzo, Dupatta.'
+  },
+  {
+    productId: '14',
+    name: 'Mustard Yellow Kurta Set',
+    description: 'A vibrant mustard yellow kurta set for a cheerful look.',
+    price: 12300,
+    images: [
+      '/category/ethnic-sets/image9.webp',
+      '/category/ethnic-sets/image10.webp',
+      '/category/ethnic-sets/image11.webp',
+      '/category/ethnic-sets/image12.webp',
+    ],
+    category: 'ethnic-sets',
+    sizes: allSizes,
+    specifications: 'Fabric: Rayon; Includes: Kurta, Trousers.'
+  },
+  // Dresses (3 products)
+  {
+    productId: '15',
+    name: 'Crimson Red Maxi Dress',
+    description: 'A flowing maxi dress in a bold crimson red.',
+    price: 19800,
+    images: [
+      '/category/dresses/image1.webp',
+      '/category/dresses/image2.webp',
+      '/category/dresses/image3.webp',
+      '/category/dresses/image4.webp',
+    ],
+    category: 'dresses',
+    sizes: allSizes,
+    specifications: 'Fabric: Georgette; Fit: Maxi.'
+  },
+  {
+    productId: '16',
+    name: 'Emerald Green Cocktail Dress',
+    description: 'A chic cocktail dress in a stunning emerald green.',
+    price: 21000,
+    images: [
+      '/category/dresses/image5.webp',
+      '/category/dresses/image6.webp',
+      '/category/dresses/image5.webp',
+      '/category/dresses/image6.webp',
+    ],
+    category: 'dresses',
+    sizes: allSizes,
+    specifications: 'Fabric: Satin; Fit: Sheath.'
+  },
+  {
+    productId: '17',
+    name: 'Lavender Midi Dress',
+    description: 'A sweet and simple lavender midi dress.',
+    price: 14000,
+    images: [
+      '/category/dresses/image7.jpg',
+      '/category/dresses/image8.jpg',
+      '/category/dresses/image9.jpg',
+      '/category/dresses/image10.jpg',
+    ],
+    category: 'dresses',
+    sizes: allSizes,
+    specifications: 'Fabric: Linen; Fit: A-Line.'
+  },
+  // Pre-drape Sarees (3 products)
+  {
+    productId: '18',
+    name: 'Sequined Pre-draped Saree',
+    description: 'Dazzle in this easy-to-wear sequined pre-draped saree.',
+    price: 25000,
+    images: [
+      '/category/pre-drape-sarees/image1.webp',
+      '/category/pre-drape-sarees/image2.webp',
+      '/category/pre-drape-sarees/image3.jpg',
+      '/category/pre-drape-sarees/image4.jpg',
+    ],
+    category: 'pre-drape-sarees',
+    sizes: allSizes,
+    specifications: 'Fabric: Georgette with Sequins; Includes: Saree, Blouse.'
+  },
+  {
+    productId: '19',
+    name: 'Ruffled Pre-draped Saree',
+    description: 'A modern and trendy ruffled pre-draped saree.',
+    price: 23500,
+    images: [
+      '/category/pre-drape-sarees/image5.webp',
+      '/category/pre-drape-sarees/image6.jpg',
+      '/category/pre-drape-sarees/image7.jpg',
+      '/category/pre-drape-sarees/image5.webp',
+    ],
+    category: 'pre-drape-sarees',
+    sizes: allSizes,
+    specifications: 'Fabric: Chiffon; Includes: Saree, Blouse.'
+  },
+  {
+    productId: '20',
+    name: 'Pastel Blue Pre-draped Saree',
+    description: 'An elegant pastel blue saree, pre-draped for convenience.',
+    price: 22000,
+    images: [
+      '/category/pre-drape-sarees/image8.jpg',
+      '/category/pre-drape-sarees/image9.webp',
+      '/category/pre-drape-sarees/image10.jpg',
+      '/category/pre-drape-sarees/image9.webp',
+    ],
+    category: 'pre-drape-sarees',
+    sizes: allSizes,
+    specifications: 'Fabric: Crepe; Includes: Saree, Blouse.'
+  },
+  // Chains (3 products)
+  {
+    productId: '21',
+    name: 'Gold Plated Link Chain',
+    description: 'A classic gold plated link chain for everyday wear.',
+    price: 3500,
+    images: [
+      '/category/chains/image1.webp',
+      '/category/chains/image1.webp',
+      '/category/chains/image1.webp',
+      '/category/chains/image1.webp',
+    ],
+    category: 'chains',
+    sizes: accessorySizes,
+    specifications: 'Material: Brass; Plating: Gold.'
+  },
+  {
+    productId: '22',
+    name: 'Silver Delicate Chain',
+    description: 'A delicate silver chain with a minimalist pendant.',
+    price: 2800,
+    images: [
+      '/category/chains/image2.jpeg',
+      '/category/chains/image2.jpeg',
+      '/category/chains/image2.jpeg',
+      '/category/chains/image2.jpeg',
+    ],
+    category: 'chains',
+    sizes: accessorySizes,
+    specifications: 'Material: Sterling Silver.'
+  },
+  {
+    productId: '23',
+    name: 'Rose Gold Chain',
+    description: 'A beautiful rose gold chain to add a touch of color.',
+    price: 3800,
+    images: [
+      '/category/chains/image3.jpeg',
+      '/category/chains/image3.jpeg',
+      '/category/chains/image3.jpeg',
+      '/category/chains/image3.jpeg',
+    ],
+    category: 'chains',
+    sizes: accessorySizes,
+    specifications: 'Material: Copper Alloy; Plating: Rose Gold.'
+  },
+  // Studs (3 products)
+  {
+    productId: '24',
+    name: 'Diamond Look Studs',
+    description: 'Elegant studs that give the look of real diamonds.',
+    price: 4500,
+    images: [
+      '/category/studs/image1.jpeg',
+      '/category/studs/image1.jpeg',
+      '/category/studs/image1.jpeg',
+      '/category/studs/image1.jpeg',
+    ],
+    category: 'studs',
+    sizes: accessorySizes,
+    specifications: 'Material: Cubic Zirconia, Alloy.'
+  },
+  {
+    productId: '25',
+    name: 'Pearl Stud Earrings',
+    description: 'Classic pearl studs for a timeless look.',
+    price: 3200,
+    images: [
+      '/category/studs/image2.jpeg',
+      '/category/studs/image2.jpeg',
+      '/category/studs/image2.jpeg',
+      '/category/studs/image2.jpeg',
+    ],
+    category: 'studs',
+    sizes: accessorySizes,
+    specifications: 'Material: Faux Pearl, Stainless Steel.'
+  },
+  {
+    productId: '26',
+    name: 'Kundan Flower Studs',
+    description: 'Traditional kundan studs in a floral design.',
+    price: 5500,
+    images: [
+      '/category/studs/image3.jpeg',
+      '/category/studs/image3.jpeg',
+      '/category/studs/image3.jpeg',
+      '/category/studs/image3.jpeg',
+    ],
+    category: 'studs',
+    sizes: accessorySizes,
+    specifications: 'Material: Kundan, Brass.'
+  },
+  // Anklets (3 products)
+  {
+    productId: '27',
+    name: 'Oxidised Silver Anklet',
+    description: 'A traditional oxidised silver anklet with ghungroos.',
+    price: 2500,
+    images: [
+      '/category/anklets/image1.jpeg',
+      '/category/anklets/image1.jpeg',
+      '/category/anklets/image1.jpeg',
+      '/category/anklets/image1.jpeg',
+    ],
+    category: 'anklets',
+    sizes: accessorySizes,
+    specifications: 'Material: German Silver.'
+  },
+  {
+    productId: '28',
+    name: 'Gold Beaded Anklet',
+    description: 'A simple and elegant gold beaded anklet.',
+    price: 2100,
+    images: [
+       '/category/anklets/image2.jpeg',
+       '/category/anklets/image2.jpeg',
+       '/category/anklets/image2.jpeg',
+       '/category/anklets/image2.jpeg',
+    ],
+    category: 'anklets',
+    sizes: accessorySizes,
+    specifications: 'Material: Brass, Gold Plating.'
+  },
+  {
+    productId: '29',
+    name: 'Evil Eye Anklet',
+    description: 'A trendy evil eye anklet to ward off negativity.',
+    price: 1800,
+    images: [
+      '/category/anklets/image3.jpeg',
+      '/category/anklets/image3.jpeg',
+      '/category/anklets/image3.jpeg',
+      '/category/anklets/image3.jpeg',
+    ],
+    category: 'anklets',
+    sizes: accessorySizes,
+    specifications: 'Material: Thread, Glass Beads.'
+  },
+  // Bracelets (3 products)
+  {
+    productId: '30',
+    name: 'American Diamond Bracelet',
+    description: 'A sparkling American diamond bracelet for special occasions.',
+    price: 6500,
+    images: [
+      '/category/bracelets/image1.jpeg',
+      '/category/bracelets/image1.jpeg',
+      '/category/bracelets/image1.jpeg',
+      '/category/bracelets/image1.jpeg',
+    ],
+    category: 'bracelets',
+    sizes: accessorySizes,
+    specifications: 'Material: Cubic Zirconia, Rhodium Plating.'
+  },
+  {
+    productId: '31',
+    name: 'Charm Bracelet',
+    description: 'A fun and quirky charm bracelet.',
+    price: 3800,
+    images: [
+      '/category/bracelets/image2.jpeg',
+      '/category/bracelets/image2.jpeg',
+      '/category/bracelets/image2.jpeg',
+      '/category/bracelets/image2.jpeg',
+    ],
+    category: 'bracelets',
+    sizes: accessorySizes,
+    specifications: 'Material: Mixed Metal Alloys.'
+  },
+  {
+    productId: '32',
+    name: 'Meenakari Kada Bracelet',
+    description: 'A traditional meenakari kada bracelet.',
+    price: 7200,
+    images: [
+      '/category/bracelets/image3.jpeg',
+      '/category/bracelets/image3.jpeg',
+      '/category/bracelets/image3.jpeg',
+      '/category/bracelets/image3.jpeg',
+    ],
+    category: 'bracelets',
+    sizes: accessorySizes,
+    specifications: 'Material: Brass, Enamel Work.'
+  },
+  // Danglers (3 products)
+  {
+    productId: '33',
+    name: 'Jhumka Danglers',
+    description: 'Classic jhumka style danglers for a traditional look.',
+    price: 4800,
+    images: [
+     '/category/danglers/image1.jpeg',
+     '/category/danglers/image1.jpeg',
+     '/category/danglers/image1.jpeg',
+     '/category/danglers/image1.jpeg', 
+    ],
+    category: 'danglers',
+    sizes: accessorySizes,
+    specifications: 'Material: Alloy, Faux Pearls.'
+  },
+  {
+    productId: '34',
+    name: 'Crystal Waterfall Danglers',
+    description: 'Stunning crystal waterfall danglers for a glamorous look.',
+    price: 6800,
+    images: [
+      '/category/danglers/image2.jpeg',
+      '/category/danglers/image2.jpeg',
+      '/category/danglers/image2.jpeg',
+      '/category/danglers/image2.jpeg',
+    ],
+    category: 'danglers',
+    sizes: accessorySizes,
+    specifications: 'Material: High-quality Crystals, Metal Alloy.'
+  },
+  {
+    productId: '35',
+    name: 'Bohemian Tassel Danglers',
+    description: 'Boho-chic tassel danglers to complete your look.',
+    price: 2900,
+    images: [
+      '/category/danglers/image3.jpeg',
+      '/category/danglers/image3.jpeg',
+      '/category/danglers/image3.jpeg',
+      '/category/danglers/image3.jpeg',
+    ],
+    category: 'danglers',
+    sizes: accessorySizes,
+    specifications: 'Material: Thread Tassels, Mixed Metal.'
   }
 ];
 
@@ -218,24 +588,35 @@ const banners = [
   }
 ];
 
-
 const seedDatabase = async () => {
     try {
         await Product.deleteMany({});
         console.log('Existing products cleared.');
         
         await Product.insertMany(products);
-        console.log('Products seeded successfully!');
+        console.log(`${products.length} products seeded successfully!`);
         
         await Banner.deleteMany({});
         console.log('Existing banners cleared.');
         
         await Banner.insertMany(banners);
-        console.log('Banners seeded successfully!');
+        console.log(`${banners.length} banners seeded successfully!`);
 
     } catch (err) {
         console.error('Error seeding database:', err.message);
+        process.exit(1);
+    } finally {
+        console.log('Seeding complete. Closing DB connection.');
+        process.exit(0);
     }
 };
+
+// This allows the script to be executed directly
+if (require.main === module) {
+    console.log('Connecting to DB to run seeder...');
+    connectDB().then(() => {
+        seedDatabase();
+    });
+}
 
 module.exports = seedDatabase;
