@@ -550,43 +550,7 @@ const products = [
   }
 ];
 
-const banners = [
-  {
-    title: "Modern Indian Wear",
-    description: "Where tradition meets style.",
-    imageUrl: "/images/image0.webp",
-    buttonText: "SHOP NOW",
-    buttonLink: "/shop",
-    backgroundColor: "#000000",
-    textColor: "#ffffff",
-    position: 'top-of-page',
-    targetPages: ['home'],
-    order: -1,
-    isActive: true,
-    animation: 'fade',
-    clickableImage: false,
-  },
-    {
-    title: "Shipping worldwide | Handcrafted Luxury",
-    backgroundColor: "#DDE2D3",
-    textColor: "#000000",
-    position: 'above-header',
-    targetPages: ['all'],
-    order: 1,
-    isActive: true,
-  },
-    {
-    title: "20% Off Sitewide - Shop Now!",
-    buttonLink: "/shop",
-    backgroundColor: "#8B0000",
-    textColor: "#ffffff",
-    position: 'above-header',
-    targetPages: ['all'],
-    order: 2,
-    isActive: true,
-    clickableImage: true,
-  }
-];
+
 
 const seedDatabase = async () => {
     try {
