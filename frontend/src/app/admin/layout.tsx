@@ -31,7 +31,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
         <SidebarProvider className="bg-muted/40">
             <Sidebar className="border-r">
                 <SidebarHeader>
-                     <h2 className="text-xl font-semibold px-2">PRAMILA</h2>
+                     <h2 className="text-xl font-semibold p-2">PRAMILA</h2>
                 </SidebarHeader>
                 <SidebarContent>
                     <SidebarMenu>

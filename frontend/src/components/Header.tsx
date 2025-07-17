@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingBag, Search, User, Menu, Heart, LifeBuoy } from 'lucide-react';
+import { ShoppingBag, Search, User, Menu, Heart, LifeBuoy, Instagram, ChevronDown } from 'lucide-react';
 import { Button } from './ui/button';
 import { useState } from 'react';
 import SearchOverlay from './SearchOverlay';
@@ -14,26 +14,33 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import WishlistIcon from './WishlistIcon';
 import { cn } from '@/lib/utils';
 
+
 const navItems = [
   { href: '/', label: 'Home' },
+  { href: '/new-in', label: 'New In' },
+  { href: '/bestsellers', label: 'Bestsellers' },
   {
     href: '/shop',
-    label: 'Shop',
+    label: 'Collections',
     dropdown: [
-      { href: '/shop', label: 'All products' },
-      { href: '/shop/sharara-set', label: 'Sharara set' },
-      { href: '/shop/saree', label: 'Saree' },
+      { href: '/shop/ethnic-sets', label: 'Ethnic Sets' },
+      { href: '/shop/dresses', label: 'Dresses' },
+      { href: '/shop/pre-drape-sarees', label: 'Pre-drape Sarees' },
       { href: '/shop/draped-sets', label: 'Draped Sets' },
     ],
   },
   {
-    href: '/collections/indian-clothing',
-    label: 'Collections'
+    href: '/shop/accessories',
+    label: 'Accessories',
+    dropdown: [
+        { href: '/shop/chains', label: 'Chains' },
+        { href: '/shop/studs', label: 'Studs' },
+        { href: '/shop/anklets', label: 'Anklets' },
+        { href: '/shop/bracelets', label: 'Bracelets' },
+        { href: '/shop/danglers', label: 'Danglers' },
+    ],
   },
-  { href: '/faq', label: 'FAQ' },
   { href: '/about', label: 'About Us' },
-  { href: '/support', label: 'Support' },
-
 ];
 
 const Header = () => {
@@ -99,9 +106,10 @@ const Header = () => {
             <nav className="hidden md:flex items-center justify-center gap-8 text-sm font-medium">
               {navItems.map((item) => (
                 <div key={item.label} className="group relative">
-                  <Link href={item.href} className="text-foreground hover:text-primary transition-colors py-2">
-                    {item.label}
-                  </Link>
+                    <Link href={item.href} className="text-foreground hover:text-primary transition-colors py-2 flex items-center gap-1">
+                      {item.label}
+                      {item.dropdown && <ChevronDown className="w-4 h-4 transition-transform duration-200 group-hover:rotate-180" />}
+                    </Link>
                   <div className="absolute bottom-0 left-0 w-full h-px bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform origin-center duration-300"></div>
                   {item.dropdown && (
                     <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 hidden group-hover:block z-50">
@@ -122,18 +130,23 @@ const Header = () => {
               ))}
             </nav>
 
-            <div className="flex items-center justify-end gap-1">
+            <div className="flex items-center justify-end gap-2 md:gap-3">
+              <Button asChild variant="ghost" size="icon" className="hidden md:inline-flex">
+                <a href="https:/instagram.com/" target="_blank" rel="noopener noreferrer">
+                  <Instagram className="w-5 h-5" />
+                </a>
+              </Button>
               <Button asChild variant="ghost" size="icon">
                 <Link href={user ? "/account" : "/login"}>
-                  <User className="w-6 h-6" />
+                  <User className="w-5 h-5" />
                 </Link>
               </Button>
               <WishlistIcon />
               <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(true)}>
-                <Search className="w-6 h-6" />
+                <Search className="w-5 h-5" />
               </Button>
               <Button variant="ghost" size="icon" className="relative" onClick={handleCartClick}>
-                <ShoppingBag className="w-6 h-6" />
+                <ShoppingBag className="w-5 h-5" />
                  {cartCount > 0 && (
                     <span className={cn(
                         "absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-primary-foreground text-xs transition-colors",

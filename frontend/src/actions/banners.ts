@@ -1,6 +1,8 @@
+
 'use server';
 
 import * as z from 'zod';
+import { revalidatePath } from 'next/cache';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -8,12 +10,12 @@ const bannerSchema = z.object({
   title: z.string().optional(),
   subtitle: z.string().optional(),
   description: z.string().optional(),
-  imageUrl: z.string().url(),
+  imageUrl: z.string().url({ message: "Please enter a valid image URL." }).optional().or(z.literal('')),
   buttonText: z.string().optional(),
-  buttonLink: z.string().url().optional().or(z.literal('')),
+  buttonLink: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
   backgroundColor: z.string().optional(),
   textColor: z.string().optional(),
-  position: z.enum(['top-of-page', 'after-section', 'bottom-of-page']),
+  position: z.enum(['above-header', 'top-of-page', 'after-section', 'bottom-of-page']),
   targetPages: z.array(z.string()).min(1),
   sectionIdentifier: z.string().optional(),
   order: z.number().optional(),
@@ -29,7 +31,8 @@ export async function addBanner(values: z.infer<typeof bannerSchema>) {
     try {
         const validatedValues = bannerSchema.safeParse(values);
         if (!validatedValues.success) {
-            return { success: false, message: 'Invalid input.' };
+            console.error(validatedValues.error.flatten().fieldErrors);
+            return { success: false, message: 'Invalid input. Please check the form fields.' };
         }
 
         const res = await fetch(`${API_URL}/api/banners`, {
@@ -44,7 +47,7 @@ export async function addBanner(values: z.infer<typeof bannerSchema>) {
         if (!res.ok) {
             return { success: false, message: data.message || 'Failed to create banner.' };
         }
-
+        revalidatePath('/admin/banners');
         return { success: true, message: 'Banner created successfully', data };
     } catch (error) {
         console.error(error);
@@ -57,7 +60,8 @@ export async function updateBanner(id: string, values: Partial<z.infer<typeof ba
         // Since this is a partial update, we use .partial() on the schema
         const validatedValues = bannerSchema.partial().safeParse(values);
         if (!validatedValues.success) {
-            return { success: false, message: 'Invalid input.' };
+            console.error(validatedValues.error.flatten().fieldErrors);
+            return { success: false, message: 'Invalid input. Please check the form fields.' };
         }
 
         const res = await fetch(`${API_URL}/api/banners/${id}`, {
@@ -72,7 +76,7 @@ export async function updateBanner(id: string, values: Partial<z.infer<typeof ba
         if (!res.ok) {
             return { success: false, message: data.message || 'Failed to update banner.' };
         }
-
+        revalidatePath('/admin/banners');
         return { success: true, message: 'Banner updated successfully', data };
     } catch (error) {
         console.error(error);
@@ -92,6 +96,7 @@ export async function deleteBanner(id: string) {
             const data = await res.json();
             return { success: false, message: data.message || 'Failed to delete banner.' };
         }
+        revalidatePath('/admin/banners');
         return { success: true, message: 'Banner deleted successfully' };
     } catch (error) {
         console.error(error);

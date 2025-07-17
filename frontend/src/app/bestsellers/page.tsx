@@ -1,47 +1,21 @@
+
 import { getProducts } from '@/lib/products';
 import ProductCard from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Filter } from 'lucide-react';
-import { notFound } from 'next/navigation';
 import PageBannerContainer from '@/components/PageBannerContainer';
 
-
-function getCategoryTitle(slug: string): string {
-  if (!slug) return 'Products';
-  // Example: 'pre-drape-sarees' -> 'Pre Drape Sarees'
-  return slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-}
-
-// Add all valid categories here, including accessories
-const validCategories = [
-    'sharara-set', 'saree', 'draped-sets', 'ethnic-sets', 'dresses', 'pre-drape-sarees',
-    'accessories', 'chains', 'studs', 'anklets', 'bracelets', 'danglers'
-];
-
-type CategoryPageProps = {
-  params: {
-    category: string;
-  };
-};
-
-export default async function CategoryPage({ params }: CategoryPageProps) {
-  const { category } = params;
-
-  if (!validCategories.includes(category)) {
-      notFound();
-  }
-
+export default async function BestsellersPage() {
   const allProducts = await getProducts();
-  const products = allProducts.filter(p => p.category === category);
-  const categoryName = getCategoryTitle(category);
+  const products = allProducts.filter(p => p.bestseller);
 
   return (
     <>
-      <PageBannerContainer page={category} position="top-of-page" />
+      <PageBannerContainer page="bestsellers" position="top-of-page" />
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl md:text-4xl font-headline text-center mb-8" style={{fontFamily: "'Cormorant Garamond', serif"}}>
-          {categoryName}
+          Bestsellers
         </h1>
 
         <div className="flex flex-col sm:flex-row justify-between items-center mb-8 border-y py-3 gap-4">
@@ -73,12 +47,12 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
           </div>
         ) : (
           <div className="text-center py-20">
-              <h2 className="text-2xl font-headline mb-4">No products found</h2>
-              <p className="text-muted-foreground">There are no products in this category yet.</p>
+              <h2 className="text-2xl font-headline mb-4">No Bestsellers Found</h2>
+              <p className="text-muted-foreground">Check back soon to see our most popular items!</p>
           </div>
         )}
       </div>
-      <PageBannerContainer page={category} position="bottom-of-page" />
+      <PageBannerContainer page="bestsellers" position="bottom-of-page" />
     </>
   );
 }

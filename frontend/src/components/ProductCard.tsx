@@ -27,7 +27,7 @@ const ProductCard = ({ product, className, imageClassName, textAlign = 'center' 
           />
         </Link>
       </CardHeader>
-      <CardContent className={cn("p-4", `text-${textAlign}`)}>
+      <CardContent className={cn("px-4 py-6", `text-${textAlign}`)}>
           <Link href={`/product/${product.id}`}>
             <h3 className="font-headline text-lg leading-tight hover:text-primary transition-colors">{product.name}</h3>
           </Link>
