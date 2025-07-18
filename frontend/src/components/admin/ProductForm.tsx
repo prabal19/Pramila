@@ -321,14 +321,14 @@ export default function ProductForm({ open, onOpenChange, onFormSubmit, product 
                                             </Button>
                                         </div>
                                     ))}
-                                    <div className="aspect-square rounded-md border-2 border-dashed border-muted-foreground/30 flex items-center justify-center relative bg-muted/20">
+                                    <div className="aspect-square rounded-md border-2 border-dashed border-muted-foreground/30 flex items-center justify-center relative bg-muted/20 cursor-pointer">
                                         {isUploading ? <Skeleton className="w-full h-full" /> : (
                                             <div className="text-center text-muted-foreground p-2">
                                                 <Upload className="mx-auto h-6 w-6" />
                                                 <p className="text-xs">Add Image</p>
-                                                <Input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileChange} accept="image/*" />
                                             </div>
                                         )}
+                                        <Input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileChange} accept="image/*" />
                                     </div>
                                 </div>
                                 <FormMessage />

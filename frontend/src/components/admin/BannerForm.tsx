@@ -187,7 +187,7 @@ export default function BannerForm({ open, onOpenChange, onFormSubmit, banner }:
                                                 <FormItem>
                                                     <FormLabel>Banner Image</FormLabel>
                                                     <FormControl>
-                                                        <div className="w-full aspect-video rounded-md border-2 border-dashed border-muted-foreground/30 flex items-center justify-center relative bg-muted/20">
+                                                        <div className="w-full h-60 rounded-md border-2 border-dashed border-muted-foreground/30 flex items-center justify-center relative bg-muted/20 cursor-pointer">
                                                             {isUploading ? (
                                                                 <Skeleton className="w-full h-full" />
                                                             ) : field.value ? (
@@ -201,9 +201,9 @@ export default function BannerForm({ open, onOpenChange, onFormSubmit, banner }:
                                                                 <div className="text-center text-muted-foreground">
                                                                     <Upload className="mx-auto h-8 w-8" />
                                                                     <p>Click to upload or drag & drop</p>
-                                                                    <Input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileChange} accept="image/*" />
                                                                 </div>
                                                             )}
+                                                             <Input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileChange} accept="image/*" />
                                                         </div>
                                                     </FormControl>
                                                     <FormMessage />
