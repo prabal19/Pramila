@@ -84,4 +84,45 @@ router.post('/', async (req, res) => {
 });
 
 
+// @route   PUT api/products/:id
+// @desc    Update a product by productId
+// @access  Private
+router.put('/:id', async (req, res) => {
+    try {
+        let product = await Product.findOne({ productId: req.params.id });
+        if (!product) {
+            return res.status(404).json({ msg: 'Product not found' });
+        }
+        
+        product = await Product.findOneAndUpdate(
+            { productId: req.params.id }, 
+            { $set: req.body }, 
+            { new: true }
+        );
+        res.json(product);
+
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// @route   DELETE api/products/:id
+// @desc    Delete a product by productId
+// @access  Private
+router.delete('/:id', async (req, res) => {
+    try {
+        const product = await Product.findOne({ productId: req.params.id });
+        if (!product) {
+            return res.status(404).json({ msg: 'Product not found' });
+        }
+        await Product.findOneAndDelete({ productId: req.params.id });
+        res.json({ msg: 'Product removed' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+
 module.exports = router;

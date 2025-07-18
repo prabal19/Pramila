@@ -47,6 +47,53 @@ export async function addProduct(values: z.infer<typeof productSchema>) {
 
 
 
+export async function updateProduct(id: string, values: z.infer<typeof productSchema>) {
+    try {
+        const validatedValues = productSchema.safeParse(values);
+        if (!validatedValues.success) {
+            return { success: false, message: 'Invalid input.' };
+        }
+
+        const res = await fetch(`${API_URL}/api/products/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(validatedValues.data),
+            cache: 'no-store',
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            return { success: false, message: data.msg || 'Failed to update product.' };
+        }
+        revalidatePath('/admin/products');
+        return { success: true, message: 'Product updated successfully', data };
+    } catch (error) {
+        console.error(error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
+export async function deleteProduct(id: string) {
+    try {
+        const res = await fetch(`${API_URL}/api/products/${id}`, {
+            method: 'DELETE',
+            cache: 'no-store',
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            return { success: false, message: data.msg || 'Failed to delete product.' };
+        }
+        revalidatePath('/admin/products');
+        return { success: true, message: 'Product deleted successfully' };
+    } catch (error) {
+        console.error(error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
 const categorySchema = z.object({
     name: z.string().min(1, 'Category name is required.'),
     parent: z.enum(['collection', 'accessory']),
@@ -77,6 +124,47 @@ export async function addCategory(values: z.infer<typeof categorySchema>) {
         revalidatePath('/');
 
         return { success: true, message: 'Category created successfully', data };
+    } catch (error) {
+        console.error(error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
+
+export async function updateCategory(id: string, values: { name: string }) {
+    try {
+        const res = await fetch(`${API_URL}/api/categories/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(values),
+            cache: 'no-store',
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            return { success: false, message: data.msg || 'Failed to update category.' };
+        }
+        revalidatePath('/admin/products');
+        revalidatePath('/');
+        return { success: true, message: 'Category updated.', data };
+    } catch (error) {
+        console.error(error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
+export async function deleteCategory(id: string) {
+    try {
+        const res = await fetch(`${API_URL}/api/categories/${id}`, {
+            method: 'DELETE',
+            cache: 'no-store',
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            return { success: false, message: data.msg || 'Failed to delete category.' };
+        }
+        revalidatePath('/admin/products');
+        revalidatePath('/');
+        return { success: true, message: 'Category deleted.' };
     } catch (error) {
         console.error(error);
         return { success: false, message: 'An unexpected error occurred.' };

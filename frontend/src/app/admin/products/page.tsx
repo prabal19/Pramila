@@ -14,6 +14,7 @@ export default function AdminProductsPage() {
     const [data, setData] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [isFormOpen, setIsFormOpen] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
     const fetchProducts = async () => {
         setLoading(true);
@@ -23,20 +24,20 @@ export default function AdminProductsPage() {
     }
 
     useEffect(() => {
-        fetchData();
+        fetchProducts();
     }, [])
+    
+    const handleOpenForm = (product: Product | null = null) => {
+        setSelectedProduct(product);
+        setIsFormOpen(true);
+    }
 
     const handleFormClose = (refresh: boolean) => {
         setIsFormOpen(false);
+        setSelectedProduct(null);
         if (refresh) {
             fetchProducts();
         }
-    }
-
-    const fetchData = async () => {
-        const products = await getProducts();
-        setData(products);
-        setLoading(false);
     }
 
     const renderSkeleton = () => (
@@ -69,16 +70,17 @@ export default function AdminProductsPage() {
                     <h1 className="text-3xl font-bold">Manage Products</h1>
                     <p className="text-muted-foreground">A list of all products in your store.</p>
                 </div>
-                <Button onClick={() => setIsFormOpen(true)}>
+                <Button onClick={() => handleOpenForm()}>
                     <PlusCircle className="mr-2 h-4 w-4" /> Add Product
                 </Button>
             </div>
-            <DataTable columns={columns} data={data} searchKey="name" searchPlaceholder="Search by name..." dateFilterKey="createdAt" />
+            <DataTable columns={columns({ onEdit: handleOpenForm, onRefresh: fetchProducts })} data={data} searchKey="name" searchPlaceholder="Search by name..." dateFilterKey="createdAt" />
             {isFormOpen && (
                 <ProductForm
                     open={isFormOpen}
                     onOpenChange={setIsFormOpen}
                     onFormSubmit={handleFormClose}
+                    product={selectedProduct}
                 />
             )}
         </div>

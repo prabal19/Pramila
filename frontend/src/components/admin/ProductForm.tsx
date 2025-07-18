@@ -13,10 +13,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { addProduct, addCategory } from "@/actions/products";
+import { addProduct, updateProduct, addCategory, updateCategory, deleteCategory } from "@/actions/products";
 import type { Product, Category } from "@/lib/types";
 import { getCategories } from "@/lib/categories";
-import { Plus, Check as CheckIcon } from "lucide-react";
+import { Plus, Check as CheckIcon, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const productSchema = z.object({
   productId: z.string().min(1, 'Product ID is required'),
@@ -105,23 +107,44 @@ export default function ProductForm({ open, onOpenChange, onFormSubmit, product 
             specifications: '',
         },
     });
+    
+    const selectedCategorySlug = useWatch({ control: form.control, name: 'category' });
+
+    const fetchCategories = async () => {
+        const fetchedCategories = await getCategories();
+        setCategories(fetchedCategories.sort((a,b) => a.name.localeCompare(b.name)));
+    };
 
     useEffect(() => {
-        getCategories().then(setCategories);
+        fetchCategories();
     }, []);
 
     const handleCategoryAdded = (newCategory: Category) => {
-        const updatedCategories = [...categories, newCategory].sort((a, b) => a.name.localeCompare(b.name));
-        setCategories(updatedCategories);
+        setCategories(prev => [...prev, newCategory].sort((a,b) => a.name.localeCompare(b.name)));
         form.setValue('category', newCategory.slug);
         setShowAddCategory(false);
     };
+    
+    const handleCategoryEdited = async () => {
+        // Just refetch all categories to get the latest names
+        await fetchCategories();
+    }
+
+    const handleCategoryDeleted = (deletedSlug: string) => {
+        setCategories(prev => prev.filter(c => c.slug !== deletedSlug));
+        if (form.getValues('category') === deletedSlug) {
+            form.setValue('category', '');
+        }
+    };
+
 
     async function onSubmit(values: z.infer<typeof productSchema>) {
         const imageArray = values.images.split(',').map(url => url.trim()).filter(url => url);
         const finalValues = { ...values, images: imageArray };
 
-        const result = await addProduct(finalValues);
+        const result = product 
+            ? await updateProduct(product.id, finalValues)
+            : await addProduct(finalValues);
 
         if(result.success) {
             toast({ title: "Success!", description: `Product ${product ? 'updated' : 'created'} successfully.` });
@@ -130,6 +153,85 @@ export default function ProductForm({ open, onOpenChange, onFormSubmit, product 
             toast({ variant: 'destructive', title: "Error", description: result.message });
             onFormSubmit(false);
         }
+    }
+    
+    const CategoryActions = () => {
+        const selectedCategory = categories.find(c => c.slug === selectedCategorySlug);
+        const [isEditOpen, setIsEditOpen] = useState(false);
+        const [newName, setNewName] = useState(selectedCategory?.name || '');
+    
+        const handleEdit = async () => {
+            if (!selectedCategory) return;
+            const result = await updateCategory(selectedCategory._id, { name: newName });
+            if (result.success) {
+                toast({ title: "Category updated" });
+                setIsEditOpen(false);
+                await handleCategoryEdited();
+            } else {
+                toast({ variant: 'destructive', title: 'Error', description: result.message });
+            }
+        };
+
+        const handleDelete = async () => {
+            if (!selectedCategory) return;
+            const result = await deleteCategory(selectedCategory._id);
+             if (result.success) {
+                toast({ title: "Category deleted" });
+                handleCategoryDeleted(selectedCategory.slug);
+            } else {
+                toast({ variant: 'destructive', title: 'Error', description: result.message });
+            }
+        };
+        
+        if (!selectedCategory) return null;
+
+        return (
+            <>
+                <AlertDialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Edit Category Name</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Current name: "{selectedCategory.name}". Changing this will update it everywhere.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <Input value={newName} onChange={e => setNewName(e.target.value)} />
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleEdit}>Save Changes</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+                
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                        <DropdownMenuItem onSelect={() => { setNewName(selectedCategory.name); setIsEditOpen(true);}}>
+                            <Pencil className="mr-2 h-4 w-4"/> Edit
+                        </DropdownMenuItem>
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <DropdownMenuItem onSelect={e => e.preventDefault()} className="text-destructive focus:text-destructive">
+                                    <Trash2 className="mr-2 h-4 w-4"/> Delete
+                                </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete "{selectedCategory.name}"?</AlertDialogTitle>
+                                    <AlertDialogDescription>This cannot be undone. Products in this category will need to be reassigned.</AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Delete Category</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </>
+        )
     }
 
     return (
@@ -141,7 +243,7 @@ export default function ProductForm({ open, onOpenChange, onFormSubmit, product 
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto p-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <FormField name="productId" control={form.control} render={({ field }) => (<FormItem><FormLabel>Product ID*</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                            <FormField name="productId" control={form.control} render={({ field }) => (<FormItem><FormLabel>Product ID*</FormLabel><FormControl><Input {...field} disabled={!!product} /></FormControl><FormMessage /></FormItem>)} />
                             <FormField name="name" control={form.control} render={({ field }) => (<FormItem><FormLabel>Name*</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
                         </div>
                         <FormField name="description" control={form.control} render={({ field }) => (<FormItem><FormLabel>Description*</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>)} />
@@ -160,6 +262,7 @@ export default function ProductForm({ open, onOpenChange, onFormSubmit, product 
                                 <Button type="button" variant="outline" size="icon" onClick={() => setShowAddCategory(!showAddCategory)}>
                                     <Plus className="h-4 w-4" />
                                 </Button>
+                                <CategoryActions/>
                                 </div>
                                 <FormMessage />
                                 </FormItem>

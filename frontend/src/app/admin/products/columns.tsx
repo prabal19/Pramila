@@ -6,8 +6,87 @@ import { format } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
 import Image from 'next/image'
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
+import { MoreHorizontal, Trash2, Edit } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { deleteProduct } from "@/actions/products"
+import { useToast } from "@/hooks/use-toast"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
-export const columns: ColumnDef<Product>[] = [
+const ActionsCell = ({ product, onEdit, onRefresh }: { product: Product, onEdit: (product: Product) => void, onRefresh: () => void }) => {
+    const { toast } = useToast();
+
+    const handleDelete = async () => {
+        const result = await deleteProduct(product.id);
+        if(result.success) {
+            toast({ title: "Success", description: "Product deleted successfully." });
+            onRefresh();
+        } else {
+            toast({ variant: 'destructive', title: "Error", description: result.message });
+        }
+    }
+
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                    <span className="sr-only">Open menu</span>
+                    <MoreHorizontal className="h-4 w-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => onEdit(product)}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    <span>Edit</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                 <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                       <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600 focus:text-red-600 focus:bg-red-50">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            <span>Delete</span>
+                        </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete the product from the database.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+                                Yes, delete product
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
+};
+
+
+export const columns = ({ onEdit, onRefresh }: { onEdit: (product: Product) => void, onRefresh: () => void }): ColumnDef<Product>[] => [
   {
     id: "image",
     header: "Image",
@@ -92,5 +171,9 @@ export const columns: ColumnDef<Product>[] = [
       const amount = row.getValue("price") as number
       return <div className="text-right font-medium">Rs. {amount.toLocaleString('en-IN')}</div>
     },
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => <ActionsCell product={row.original} onEdit={onEdit} onRefresh={onRefresh} />,
   },
 ]
