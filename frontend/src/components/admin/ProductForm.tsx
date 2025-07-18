@@ -20,8 +20,7 @@ import { Plus, Check as CheckIcon, MoreVertical, Pencil, Trash2 } from "lucide-r
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
-const productSchema = z.object({
-  productId: z.string().min(1, 'Product ID is required'),
+const addProductSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().min(1, 'Description is required'),
   category: z.string().min(1, 'Category is required'),
@@ -31,6 +30,10 @@ const productSchema = z.object({
   bestseller: z.boolean().default(false),
   sizes: z.array(z.string()).optional(),
   specifications: z.string().optional(),
+});
+
+const updateProductSchema = addProductSchema.extend({
+  productId: z.string().min(1, 'Product ID is required'),
 });
 
 const categorySchema = z.object({
@@ -88,24 +91,26 @@ export default function ProductForm({ open, onOpenChange, onFormSubmit, product 
     const [categories, setCategories] = useState<Category[]>([]);
     const [showAddCategory, setShowAddCategory] = useState(false);
 
-    const form = useForm<z.infer<typeof productSchema>>({
-        resolver: zodResolver(productSchema),
-        defaultValues: product ? {
-            ...product,
-            productId: product.id,
-            images: product.images.join(', '),
-        } : {
-            productId: '',
-            name: '',
-            description: '',
-            category: '',
-            price: 0,
-            strikeoutPrice: undefined,
-            images: '',
-            bestseller: false,
-            sizes: allSizes,
-            specifications: '',
-        },
+    const formSchema = product ? updateProductSchema : addProductSchema;
+
+    const form = useForm<z.infer<typeof formSchema>>({
+        resolver: zodResolver(formSchema),
+        defaultValues: product
+            ? {
+                ...product,
+                images: product.images.join(', '),
+            }
+            : {
+                name: '',
+                description: '',
+                category: '',
+                price: 0,
+                strikeoutPrice: undefined,
+                images: '',
+                bestseller: false,
+                sizes: allSizes,
+                specifications: '',
+            },
     });
     
     const selectedCategorySlug = useWatch({ control: form.control, name: 'category' });
@@ -126,7 +131,6 @@ export default function ProductForm({ open, onOpenChange, onFormSubmit, product 
     };
     
     const handleCategoryEdited = async () => {
-        // Just refetch all categories to get the latest names
         await fetchCategories();
     }
 
@@ -138,20 +142,29 @@ export default function ProductForm({ open, onOpenChange, onFormSubmit, product 
     };
 
 
-    async function onSubmit(values: z.infer<typeof productSchema>) {
+    async function onSubmit(values: z.infer<typeof formSchema>) {
         const imageArray = values.images.split(',').map(url => url.trim()).filter(url => url);
-        const finalValues = { ...values, images: imageArray };
-
-        const result = product 
-            ? await updateProduct(product.id, finalValues)
-            : await addProduct(finalValues);
-
-        if(result.success) {
-            toast({ title: "Success!", description: `Product ${product ? 'updated' : 'created'} successfully.` });
-            onFormSubmit(true);
+        
+        if (product) {
+            const finalValues = { ...(values as z.infer<typeof updateProductSchema>), images: imageArray };
+            const result = await updateProduct(product.id, finalValues);
+            if(result.success) {
+                toast({ title: "Success!", description: `Product updated successfully.` });
+                onFormSubmit(true);
+            } else {
+                toast({ variant: 'destructive', title: "Error", description: result.message });
+                onFormSubmit(false);
+            }
         } else {
-            toast({ variant: 'destructive', title: "Error", description: result.message });
-            onFormSubmit(false);
+            const finalValues = { ...(values as z.infer<typeof addProductSchema>), images: imageArray };
+            const result = await addProduct(finalValues);
+            if(result.success) {
+                toast({ title: "Success!", description: `Product created successfully.` });
+                onFormSubmit(true);
+            } else {
+                toast({ variant: 'destructive', title: "Error", description: result.message });
+                onFormSubmit(false);
+            }
         }
     }
     
@@ -243,7 +256,12 @@ export default function ProductForm({ open, onOpenChange, onFormSubmit, product 
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto p-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <FormField name="productId" control={form.control} render={({ field }) => (<FormItem><FormLabel>Product ID*</FormLabel><FormControl><Input {...field} disabled={!!product} /></FormControl><FormMessage /></FormItem>)} />
+                            {product && (
+                                <FormItem>
+                                    <FormLabel>Product ID</FormLabel>
+                                    <FormControl><Input value={product.id} disabled /></FormControl>
+                                </FormItem>
+                            )}
                             <FormField name="name" control={form.control} render={({ field }) => (<FormItem><FormLabel>Name*</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
                         </div>
                         <FormField name="description" control={form.control} render={({ field }) => (<FormItem><FormLabel>Description*</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>)} />

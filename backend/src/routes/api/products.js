@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Product = require('../../models/Product');
+const { customAlphabet } = require('nanoid');
 
 // @route   GET api/products
 // @desc    Get all products
@@ -54,14 +55,13 @@ router.post('/batch', async (req, res) => {
 // @desc    Create a product (for admin purposes)
 // @access  Private (should be secured later)
 router.post('/', async (req, res) => {
-    const { productId, name, description, category, price, strikeoutPrice, images, bestseller, sizes, specifications } = req.body;
+    const { name, description, category, price, strikeoutPrice, images, bestseller, sizes, specifications } = req.body;
     try {
-        let product = await Product.findOne({ productId });
-        if(product) {
-            return res.status(400).json({ msg: 'Product with this ID already exists.' });
-        }
-        
-        product = new Product({
+        // Generate a unique product ID
+        const nanoid = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 8);
+        const productId = nanoid();
+
+        let product = new Product({
             productId,
             name,
             description,
@@ -83,7 +83,6 @@ router.post('/', async (req, res) => {
     }
 });
 
-
 // @route   PUT api/products/:id
 // @desc    Update a product by productId
 // @access  Private
@@ -94,9 +93,12 @@ router.put('/:id', async (req, res) => {
             return res.status(404).json({ msg: 'Product not found' });
         }
         
+        // Exclude productId from being updated
+        const { productId, ...updateData } = req.body;
+
         product = await Product.findOneAndUpdate(
             { productId: req.params.id }, 
-            { $set: req.body }, 
+            { $set: updateData }, 
             { new: true }
         );
         res.json(product);

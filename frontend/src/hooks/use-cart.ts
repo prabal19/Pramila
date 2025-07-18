@@ -5,69 +5,131 @@ import { useState, useEffect, useCallback } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/hooks/use-auth';
 import { getCart, addItemToCart, updateCartItemQuantity, removeItemFromCart } from '@/actions/cart';
-import type { CartItem } from '@/lib/types';
+import type { CartItem as ApiCartItem } from '@/lib/types'; // This is the type from the DB
+
+// We'll use a slightly different type for local state to handle guest carts
+type LocalCartItem = {
+    _id: string; // For local identification
+    productId: string;
+    quantity: number;
+    size: string;
+}
+
+const GUEST_CART_KEY = 'pramila-guest-cart';
 
 export const useCart = () => {
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartItems, setCartItems] = useState<LocalCartItem[] | ApiCartItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasUnseenItems, setHasUnseenItems] = useState(false);
 
-  const fetchCart = useCallback(async () => {
-    if (user) {
-      setIsLoading(true);
-      const cart = await getCart(user._id);
-      setCartItems(cart?.items || []);
-      setIsLoading(false);
-    } else {
-      setCartItems([]);
-      setIsLoading(false);
+  // Function to sync local guest cart with the backend after login
+  const syncGuestCart = useCallback(async (guestCart: LocalCartItem[], userId: string) => {
+    if (guestCart.length === 0) return;
+    
+    // Use a loop to add items one by one to handle potential duplicates on the backend
+    let finalCart: ApiCartItem[] = [];
+    for (const item of guestCart) {
+      const updatedCart = await addItemToCart(userId, item.productId, item.quantity, item.size);
+      if (updatedCart) {
+        finalCart = updatedCart.items;
+      }
     }
-  }, [user]);
+    setCartItems(finalCart);
+    localStorage.removeItem(GUEST_CART_KEY);
+    toast({ title: "Cart Synced", description: "Your items have been moved to your account." });
+  }, [toast]);
 
+  // Main effect to handle cart loading and syncing
   useEffect(() => {
+    const loadCart = async () => {
+        setIsLoading(true);
+        if (user) {
+            // User is logged in
+            const guestCartData = localStorage.getItem(GUEST_CART_KEY);
+            const guestCart: LocalCartItem[] = guestCartData ? JSON.parse(guestCartData) : [];
+            
+            if (guestCart.length > 0) {
+                // Sync first, then load the final cart state
+                await syncGuestCart(guestCart, user._id);
+            } else {
+                // Just load the user's cart from DB
+                const cart = await getCart(user._id);
+                setCartItems(cart?.items || []);
+            }
+        } else {
+            // User is a guest, load from localStorage
+            const guestCartData = localStorage.getItem(GUEST_CART_KEY);
+            setCartItems(guestCartData ? JSON.parse(guestCartData) : []);
+        }
+        setIsLoading(false);
+    }
+    
     if (!authLoading) {
-      fetchCart();
+        loadCart();
     }
-  }, [user, authLoading, fetchCart]);
+  }, [user, authLoading, syncGuestCart]);
   
-  const addToCart = useCallback(async (productId: string, quantity: number = 1, size: string) => {
-    if (!user) {
-        toast({
-            variant: "destructive",
-            title: "Please log in",
-            description: "You must be logged in to add items to the cart.",
-        });
-        return;
-    }
-    const updatedCart = await addItemToCart(user._id, productId, quantity, size);
-    if (updatedCart) {
-        setCartItems(updatedCart.items);
-        setHasUnseenItems(true);
-        toast({ title: "Added to cart!", description: `Item added to your cart.` });
+  const addToCart = useCallback(async (productId: string, quantity: number, size: string) => {
+    if (user) {
+        // Logged-in user: use API
+        const updatedCart = await addItemToCart(user._id, productId, quantity, size);
+        if (updatedCart) {
+            setCartItems(updatedCart.items);
+            setHasUnseenItems(true);
+            toast({ title: "Added to cart!", description: `Item added to your cart.` });
+        } else {
+            toast({ variant: 'destructive', title: "Error", description: 'Failed to add item to cart.'});
+        }
     } else {
-        toast({ variant: 'destructive', title: "Error", description: 'Failed to add item to cart.'});
+        // Guest user: use localStorage
+        setCartItems(prev => {
+            const typedPrev = prev as LocalCartItem[];
+            const existingItemIndex = typedPrev.findIndex(item => item.productId === productId && item.size === size);
+            let newCart: LocalCartItem[];
+
+            if (existingItemIndex > -1) {
+                newCart = [...typedPrev];
+                newCart[existingItemIndex].quantity += quantity;
+            } else {
+                newCart = [...typedPrev, { _id: new Date().toISOString(), productId, quantity, size }];
+            }
+            localStorage.setItem(GUEST_CART_KEY, JSON.stringify(newCart));
+            setHasUnseenItems(true);
+            toast({ title: "Added to cart!" });
+            return newCart;
+        });
     }
   }, [user, toast]);
 
-  const removeFromCart = useCallback(async (itemId: string) => {
-    if (!user) return;
-    const updatedCart = await removeItemFromCart(user._id, itemId);
-     if (updatedCart) {
-        setCartItems(updatedCart.items);
-        setHasUnseenItems(true);
-        toast({ title: "Removed from cart." });
+  const removeFromCart = useCallback(async (itemId: string) => { // itemId can be _id from DB or local ID
+    if (user) {
+        const updatedCart = await removeItemFromCart(user._id, itemId);
+        if (updatedCart) {
+            setCartItems(updatedCart.items);
+            setHasUnseenItems(true);
+            toast({ title: "Removed from cart." });
+        } else {
+            toast({ variant: 'destructive', title: "Error", description: 'Failed to remove item from cart.'});
+        }
     } else {
-        toast({ variant: 'destructive', title: "Error", description: 'Failed to remove item from cart.'});
+        setCartItems(prev => {
+            const newCart = (prev as LocalCartItem[]).filter(item => item._id !== itemId);
+            localStorage.setItem(GUEST_CART_KEY, JSON.stringify(newCart));
+            setHasUnseenItems(true);
+            toast({ title: "Removed from cart." });
+            return newCart;
+        });
     }
   }, [user, toast]);
 
   const updateQuantity = useCallback(async (itemId: string, quantity: number) => {
-    if (!user) return;
     if (quantity <= 0) {
       await removeFromCart(itemId);
-    } else {
+      return;
+    }
+    if (user) {
       const updatedCart = await updateCartItemQuantity(user._id, itemId, quantity);
        if (updatedCart) {
           setCartItems(updatedCart.items);
@@ -75,6 +137,13 @@ export const useCart = () => {
       } else {
           toast({ variant: 'destructive', title: "Error", description: 'Failed to update quantity.'});
       }
+    } else {
+        setCartItems(prev => {
+            const newCart = (prev as LocalCartItem[]).map(item => item._id === itemId ? { ...item, quantity } : item);
+            localStorage.setItem(GUEST_CART_KEY, JSON.stringify(newCart));
+            setHasUnseenItems(true);
+            return newCart;
+        });
     }
   }, [user, removeFromCart, toast]);
   
@@ -83,10 +152,14 @@ export const useCart = () => {
   }, []);
   
   const clearCart = useCallback(() => {
+    if (user) {
+      // Backend cart is cleared server-side upon order creation. We just sync the local state.
       setCartItems([]);
-      // The backend cart is cleared server-side upon order creation.
-      // This just clears the local state.
-  }, []);
+    } else {
+      setCartItems([]);
+      localStorage.removeItem(GUEST_CART_KEY);
+    }
+  }, [user]);
   
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 

@@ -1,3 +1,4 @@
+
 'use server';
 
 import * as z from 'zod';
@@ -5,8 +6,7 @@ import { revalidatePath } from 'next/cache';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
-const productSchema = z.object({
-  productId: z.string().min(1, 'Product ID is required'),
+const addProductSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().min(1, 'Description is required'),
   category: z.string().min(1, 'Category is required'),
@@ -18,9 +18,14 @@ const productSchema = z.object({
   specifications: z.string().optional(),
 });
 
-export async function addProduct(values: z.infer<typeof productSchema>) {
+const updateProductSchema = addProductSchema.extend({
+  productId: z.string().min(1, 'Product ID is required'),
+});
+
+
+export async function addProduct(values: z.infer<typeof addProductSchema>) {
     try {
-        const validatedValues = productSchema.safeParse(values);
+        const validatedValues = addProductSchema.safeParse(values);
         if (!validatedValues.success) {
             return { success: false, message: 'Invalid input.' };
         }
@@ -45,19 +50,15 @@ export async function addProduct(values: z.infer<typeof productSchema>) {
     }
 }
 
-
-
-export async function updateProduct(id: string, values: z.infer<typeof productSchema>) {
+export async function updateProduct(id: string, values: z.infer<typeof updateProductSchema>) {
     try {
-        const validatedValues = productSchema.safeParse(values);
-        if (!validatedValues.success) {
-            return { success: false, message: 'Invalid input.' };
-        }
+        // Here we parse with a schema that doesn't include the ID, then pass it separately.
+        const productData = addProductSchema.parse(values);
 
         const res = await fetch(`${API_URL}/api/products/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(validatedValues.data),
+            body: JSON.stringify(productData),
             cache: 'no-store',
         });
 
@@ -70,6 +71,9 @@ export async function updateProduct(id: string, values: z.infer<typeof productSc
         return { success: true, message: 'Product updated successfully', data };
     } catch (error) {
         console.error(error);
+        if (error instanceof z.ZodError) {
+             return { success: false, message: 'Invalid input for update.' };
+        }
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
@@ -93,6 +97,7 @@ export async function deleteProduct(id: string) {
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
+
 
 const categorySchema = z.object({
     name: z.string().min(1, 'Category name is required.'),
@@ -119,7 +124,6 @@ export async function addCategory(values: z.infer<typeof categorySchema>) {
             return { success: false, message: data.msg || 'Failed to create category.' };
         }
 
-        // Revalidate paths to update navigation and forms
         revalidatePath('/admin/products');
         revalidatePath('/');
 
@@ -129,7 +133,6 @@ export async function addCategory(values: z.infer<typeof categorySchema>) {
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
-
 
 export async function updateCategory(id: string, values: { name: string }) {
     try {
@@ -170,4 +173,3 @@ export async function deleteCategory(id: string) {
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
-

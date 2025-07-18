@@ -1,24 +1,26 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { useViewedProducts } from '@/hooks/use-viewed-products';
 import { useCart } from '@/hooks/use-cart';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Shirt, MessageCircle } from 'lucide-react';
+import { Shirt, MessageCircle, Minus, Plus } from 'lucide-react';
 import { SizeChartDialog } from './SizeChartDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RelatedProducts from './RelatedProducts';
 import ProductReviews from './ProductReviews';
-import { useRouter } from 'next/navigation';
+import { Input } from '@/components/ui/input';
 
 const ProductDetailsClient = ({ product }: { product: Product }) => {
   const { addViewedProduct } = useViewedProducts();
   const { addToCart } = useCart();
-  const router = useRouter(); 
+  const router = useRouter();
+  
   const availableSizes = product.sizes && product.sizes.length > 0
     ? product.sizes
     : ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', 'CUSTOM SIZE'];
@@ -27,7 +29,6 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
   const [selectedSize, setSelectedSize] = useState(availableSizes[0]);
   const [quantity, setQuantity] = useState(1);
   const [isSizeChartOpen, setIsSizeChartOpen] = useState(false);
-
 
   useEffect(() => {
     addViewedProduct(product.id);
@@ -41,10 +42,19 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
     addToCart(product.id, quantity, selectedSize);
   };
 
-    const handleBuyNow = () => {
+  const handleBuyNow = () => {
     addToCart(product.id, quantity, selectedSize);
     router.push('/checkout');
   };
+
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value, 10);
+    if (!isNaN(value) && value >= 1) {
+      setQuantity(value);
+    } else if (e.target.value === '') {
+      setQuantity(1);
+    }
+  }
 
   function getCategoryTitle(slug: string): string {
      if (!slug) return '';
@@ -61,7 +71,13 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
           <div className="flex flex-row md:flex-row gap-4">
             <div className="flex-col gap-3 shrink-0 order-first hidden sm:flex">
               {product.images.map((img, index) => (
-                <button key={index} onClick={() => setSelectedImage(img)} className={`w-20 h-28 relative rounded-sm overflow-hidden border-2 ${selectedImage === img ? 'border-primary' : 'border-transparent'} transition-colors`}>
+                <button
+                  key={index}
+                  onClick={() => setSelectedImage(img)}
+                  className={`w-20 h-28 relative rounded-sm overflow-hidden border-2 ${selectedImage === img ? 'border-primary' : 'border-transparent'} transition-colors`}
+                  title={`View image ${index + 1} of ${product.name}`}
+                  aria-label={`View image ${index + 1} of ${product.name}`}
+                >
                   <Image
                     src={img}
                     alt={`${product.name} thumbnail ${index + 1}`}
@@ -82,7 +98,13 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
             </div>
              <div className="flex sm:hidden flex-row gap-3 overflow-x-auto absolute bottom-4 left-4 right-4 pb-2">
               {product.images.map((img, index) => (
-                <button key={index} onClick={() => setSelectedImage(img)} className={`w-16 h-24 flex-shrink-0 relative rounded-sm overflow-hidden border-2 ${selectedImage === img ? 'border-primary' : 'border-transparent'} transition-colors`}>
+                <button
+                  key={index}
+                  onClick={() => setSelectedImage(img)}
+                  className={`w-16 h-24 flex-shrink-0 relative rounded-sm overflow-hidden border-2 ${selectedImage === img ? 'border-primary' : 'border-transparent'} transition-colors`}
+                  title={`View image ${index + 1} of ${product.name}`}
+                  aria-label={`View image ${index + 1} of ${product.name}`}
+                >
                   <Image
                     src={img}
                     alt={`${product.name} thumbnail ${index + 1}`}
@@ -126,22 +148,27 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
               </div>
 
               <div className="flex gap-4">
-                <Select value={String(quantity)} onValueChange={(val) => setQuantity(Number(val))}>
-                  <SelectTrigger className="w-20 rounded-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[...Array(10)].map((_, i) => (
-                      <SelectItem key={i + 1} value={String(i + 1)}>{i + 1}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center border rounded-sm">
+                  <Button variant="ghost" size="icon" className="h-full rounded-r-none" onClick={() => setQuantity(q => Math.max(1, q - 1))} disabled={quantity <= 1}>
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <Input 
+                    type="number"
+                    value={quantity}
+                    onChange={handleQuantityChange}
+                    className="w-16 h-full text-center border-x border-y-0 focus-visible:ring-0 rounded-none bg-white"
+                  />
+                  <Button variant="ghost" size="icon" className="h-full rounded-l-none" onClick={() => setQuantity(q => q + 1)}>
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+
                 <Button variant="outline" size="lg" className="flex-1 rounded-sm tracking-widest border-black hover:bg-black hover:text-white" onClick={handleAddToCart}>
                   ADD TO CART
                 </Button>
               </div>
               
-               <Button size="lg" className="w-full rounded-sm bg-primary text-primary-foreground tracking-widest font-semibold hover:bg-primary/90" onClick={handleBuyNow}>BUY NOW</Button>
+              <Button size="lg" className="w-full rounded-sm bg-primary text-primary-foreground tracking-widest font-semibold hover:bg-primary/90" onClick={handleBuyNow}>BUY NOW</Button>
               
               <p className="text-xs text-muted-foreground">Disclaimer: This product will be shipped to you within 5-6 work from the date of order placed.</p>
               
