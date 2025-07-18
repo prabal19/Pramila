@@ -3,20 +3,20 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useCart } from '@/hooks/use-cart';
 import { useAuth } from '@/hooks/use-auth';
 import { getProductsByIds } from '@/lib/products';
-import { savePaymentMethod } from '@/actions/payment';
+import { createOrder } from '@/actions/orders';
 import type { Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Check } from 'lucide-react';
+import { ArrowLeft, Check, Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 
 type EnrichedCartItem = Product & {
@@ -36,10 +36,12 @@ const CheckoutStep = ({ number, label, active, completed }: { number: number; la
 
 
 export default function PaymentPage() {
-  const { cart, isLoading: isCartLoading } = useCart();
-  const { user } = useAuth();
+  const { cart, isLoading: isCartLoading, clearCart } = useCart();
+  const { user, loading: isAuthLoading } = useAuth();
+  const router = useRouter();
   const [products, setProducts] = useState<EnrichedCartItem[]>([]);
   const [isProductLoading, setIsProductLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -64,9 +66,61 @@ export default function PaymentPage() {
 
     if (!isCartLoading) fetchCartProducts();
   }, [cart, isCartLoading]);
+
+  const handleMakePayment = async () => {
+    if (!user || products.length === 0) return;
+    setIsProcessing(true);
+
+    // This is a dummy address. In a real app, you'd get this from the previous step.
+    const shippingAddress = user.addresses[0]?.fullAddress || "123 Test Street, Test City, 12345";
+    
+    const orderItems = products.map(p => ({
+        productId: p.id,
+        name: p.name,
+        quantity: p.quantity,
+        price: p.price,
+        size: p.size,
+    }));
+    
+    const totalAmount = products.reduce((acc, item) => acc + item.price * item.quantity, 0);
+
+    // Simulate payment processing
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    const result = await createOrder({
+        userId: user._id,
+        items: orderItems,
+        totalAmount,
+        shippingAddress
+    });
+
+    setIsProcessing(false);
+
+    if (result.success && result.data) {
+        toast({ title: "Order Placed!", description: "Your order has been placed successfully."});
+        clearCart();
+        router.push(`/checkout/confirmation?orderId=${result.data._id}`);
+    } else {
+        toast({ variant: 'destructive', title: "Order Failed", description: result.message });
+    }
+  }
   
   const subtotal = products.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  const isLoading = isCartLoading || isProductLoading;
+  const isLoading = isCartLoading || isProductLoading || isAuthLoading;
+
+  if (isLoading) {
+      return <div>Loading checkout...</div>
+  }
+  
+  if (!user) {
+      router.push('/login?redirect=/checkout/payment');
+      return null;
+  }
+  
+  if (cart.length === 0 && !isCartLoading) {
+      router.push('/shop');
+      return null;
+  }
 
   return (
     <div className="bg-gray-50/50 min-h-screen">
@@ -112,25 +166,23 @@ export default function PaymentPage() {
                                     <div><Label htmlFor="expiry-date">Expiry Date</Label><Input id="expiry-date" placeholder="MM/YY" /></div>
                                     <div><Label htmlFor="cvv">CVV</Label><Input id="cvv" placeholder="***" type="password"/></div>
                                 </div>
-                                <div className="flex items-center space-x-2 pt-4">
-                                    <Switch id="save-card" />
-                                    <Label htmlFor="save-card">Save this card for future payments</Label>
-                                </div>
                              </div>
                         </TabsContent>
                          <TabsContent value="net-banking" className="border rounded-b-lg p-6 text-center">
-                            <p className="text-muted-foreground">You will be redirected to your bank's secure login page.</p>
+                            <p className="text-muted-foreground">This feature is not yet available.</p>
                          </TabsContent>
                          <TabsContent value="upi" className="border rounded-b-lg p-6 text-center">
-                            <p className="text-muted-foreground mb-4">Click the button below to pay using your UPI app.</p>
-                            <Button asChild><a href="upi://pay?pa=dummy@upi&pn=PRAMILA&am=1.00&cu=INR&tn=TestPayment">Pay with UPI</a></Button>
+                            <p className="text-muted-foreground">This feature is not yet available.</p>
                          </TabsContent>
                      </Tabs>
                 </div>
 
                  <div className="flex justify-between items-center mt-8 pt-6 border-t">
                     <Button variant="link" asChild className="p-0 h-auto text-muted-foreground"><Link href="/checkout"><ArrowLeft className="w-4 h-4 mr-2" /> Back to Shipping Details</Link></Button>
-                    <Button size="lg" className="bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white font-bold w-full md:w-auto">MAKE PAYMENT</Button>
+                    <Button size="lg" className="w-full md:w-auto" onClick={handleMakePayment} disabled={isProcessing}>
+                       {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                       {isProcessing ? 'Processing...' : 'MAKE PAYMENT'}
+                    </Button>
                 </div>
 
             </Card>
@@ -139,7 +191,7 @@ export default function PaymentPage() {
                  <Card className="sticky top-24">
                     <CardHeader><CardTitle className="flex justify-between items-center text-base"><span>Order Summary</span></CardTitle></CardHeader>
                     <CardContent className="space-y-2">
-                        {isLoading ? ( <div className="space-y-2"><Skeleton className="h-5 w-full" /><Skeleton className="h-5 w-full" /></div> ) : (
+                        {isProductLoading ? ( <div className="space-y-2"><Skeleton className="h-5 w-full" /><Skeleton className="h-5 w-full" /></div> ) : (
                             <div className="space-y-2 text-sm text-muted-foreground max-h-60 overflow-y-auto pr-2">
                                 {products.map(item => (
                                     <div key={item.cartItemId} className="flex gap-4">

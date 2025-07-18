@@ -65,6 +65,7 @@ export type OrderItem = {
   name: string;
   quantity: number;
   price: number;
+  size: string;
   _id: string;
 };
 

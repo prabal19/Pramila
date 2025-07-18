@@ -82,7 +82,13 @@ export const useCart = () => {
     setHasUnseenItems(false);
   }, []);
   
+  const clearCart = useCallback(() => {
+      setCartItems([]);
+      // The backend cart is cleared server-side upon order creation.
+      // This just clears the local state.
+  }, []);
+  
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
-  return { cart: cartItems, cartCount, isLoading, addToCart, removeFromCart, updateQuantity, hasUnseenItems, markCartAsViewed };
+  return { cart: cartItems, cartCount, isLoading, addToCart, removeFromCart, updateQuantity, hasUnseenItems, markCartAsViewed, clearCart };
 };

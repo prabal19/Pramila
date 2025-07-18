@@ -1,6 +1,32 @@
 const express = require('express');
 const router = express.Router();
 const Order = require('../../models/Order');
+const Cart = require('../../models/Cart');
+
+// @route   POST api/orders
+// @desc    Create an order
+// @access  Private (should be secured)
+router.post('/', async (req, res) => {
+  const { userId, items, totalAmount, shippingAddress } = req.body;
+  try {
+    const newOrder = new Order({
+      userId,
+      items,
+      totalAmount,
+      shippingAddress,
+    });
+    const order = await newOrder.save();
+    
+    // Clear the user's cart after creating the order
+    await Cart.findOneAndDelete({ userId });
+
+    res.json(order);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
 
 // @route   GET api/orders
 // @desc    Get all orders (for admin)
