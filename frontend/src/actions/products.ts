@@ -12,21 +12,20 @@ const addProductSchema = z.object({
   category: z.string().min(1, 'Category is required'),
   price: z.coerce.number().min(0, 'Price must be positive'),
   strikeoutPrice: z.coerce.number().optional(),
-  images: z.array(z.string().url()).min(1, 'At least one image URL is required'),
+  images: z.array(z.string().url()).min(1, 'At least one image is required'),
   bestseller: z.boolean().default(false),
   sizes: z.array(z.string()).optional(),
   specifications: z.string().optional(),
 });
 
-const updateProductSchema = addProductSchema.extend({
-  productId: z.string().min(1, 'Product ID is required'),
-});
+const updateProductSchema = addProductSchema;
 
 
 export async function addProduct(values: z.infer<typeof addProductSchema>) {
     try {
         const validatedValues = addProductSchema.safeParse(values);
         if (!validatedValues.success) {
+            console.error(validatedValues.error.flatten().fieldErrors);
             return { success: false, message: 'Invalid input.' };
         }
 
@@ -52,13 +51,16 @@ export async function addProduct(values: z.infer<typeof addProductSchema>) {
 
 export async function updateProduct(id: string, values: z.infer<typeof updateProductSchema>) {
     try {
-        // Here we parse with a schema that doesn't include the ID, then pass it separately.
-        const productData = addProductSchema.parse(values);
+        const validatedValues = updateProductSchema.safeParse(values);
+        if (!validatedValues.success) {
+            console.error(validatedValues.error.flatten().fieldErrors);
+            return { success: false, message: 'Invalid input for update.' };
+        }
 
         const res = await fetch(`${API_URL}/api/products/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(productData),
+            body: JSON.stringify(validatedValues.data),
             cache: 'no-store',
         });
 

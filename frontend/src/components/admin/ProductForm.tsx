@@ -1,9 +1,11 @@
+
 'use client'
 
 import { useState, useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import Image from "next/image";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
@@ -14,11 +16,13 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { addProduct, updateProduct, addCategory, updateCategory, deleteCategory } from "@/actions/products";
+import { uploadImage } from "@/actions/upload";
 import type { Product, Category } from "@/lib/types";
 import { getCategories } from "@/lib/categories";
-import { Plus, Check as CheckIcon, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Plus, Check as CheckIcon, MoreVertical, Pencil, Trash2, Upload } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Skeleton } from "../ui/skeleton";
 
 const addProductSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -26,7 +30,7 @@ const addProductSchema = z.object({
   category: z.string().min(1, 'Category is required'),
   price: z.coerce.number().min(0, 'Price must be positive'),
   strikeoutPrice: z.coerce.number().optional(),
-  images: z.string().min(1, 'At least one image URL is required'),
+  images: z.array(z.string().url()).min(1, 'At least one image is required'),
   bestseller: z.boolean().default(false),
   sizes: z.array(z.string()).optional(),
   specifications: z.string().optional(),
@@ -90,27 +94,28 @@ export default function ProductForm({ open, onOpenChange, onFormSubmit, product 
     const { toast } = useToast();
     const [categories, setCategories] = useState<Category[]>([]);
     const [showAddCategory, setShowAddCategory] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
 
     const formSchema = product ? updateProductSchema : addProductSchema;
+    
+    const defaultValues = product ? {
+        ...product,
+        productId: product.id,
+    } : {
+        name: '',
+        description: '',
+        category: '',
+        price: 0,
+        strikeoutPrice: undefined,
+        images: [],
+        bestseller: false,
+        sizes: allSizes,
+        specifications: '',
+    };
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
-        defaultValues: product
-            ? {
-                ...product,
-                images: product.images.join(', '),
-            }
-            : {
-                name: '',
-                description: '',
-                category: '',
-                price: 0,
-                strikeoutPrice: undefined,
-                images: '',
-                bestseller: false,
-                sizes: allSizes,
-                specifications: '',
-            },
+        defaultValues,
     });
     
     const selectedCategorySlug = useWatch({ control: form.control, name: 'category' });
@@ -141,30 +146,43 @@ export default function ProductForm({ open, onOpenChange, onFormSubmit, product 
         }
     };
 
+    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.files && event.target.files.length > 0) {
+            const file = event.target.files[0];
+            const formData = new FormData();
+            formData.append('image', file);
+            setIsUploading(true);
+
+            const result = await uploadImage(formData);
+            setIsUploading(false);
+
+            if (result.success && result.url) {
+                const currentImages = form.getValues('images') || [];
+                form.setValue('images', [...currentImages, result.url], { shouldValidate: true });
+                toast({ title: 'Success', description: 'Image uploaded successfully.' });
+            } else {
+                toast({ variant: 'destructive', title: 'Upload Failed', description: result.message });
+            }
+        }
+    };
+
+    const removeImage = (indexToRemove: number) => {
+        const currentImages = form.getValues('images') || [];
+        form.setValue('images', currentImages.filter((_, index) => index !== indexToRemove));
+    };
+
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
-        const imageArray = values.images.split(',').map(url => url.trim()).filter(url => url);
-        
-        if (product) {
-            const finalValues = { ...(values as z.infer<typeof updateProductSchema>), images: imageArray };
-            const result = await updateProduct(product.id, finalValues);
-            if(result.success) {
-                toast({ title: "Success!", description: `Product updated successfully.` });
-                onFormSubmit(true);
-            } else {
-                toast({ variant: 'destructive', title: "Error", description: result.message });
-                onFormSubmit(false);
-            }
+        const result = product 
+            ? await updateProduct(product.id, values as z.infer<typeof updateProductSchema>) 
+            : await addProduct(values as z.infer<typeof addProductSchema>);
+
+        if(result.success) {
+            toast({ title: "Success!", description: `Product ${product ? 'updated' : 'created'} successfully.` });
+            onFormSubmit(true);
         } else {
-            const finalValues = { ...(values as z.infer<typeof addProductSchema>), images: imageArray };
-            const result = await addProduct(finalValues);
-            if(result.success) {
-                toast({ title: "Success!", description: `Product created successfully.` });
-                onFormSubmit(true);
-            } else {
-                toast({ variant: 'destructive', title: "Error", description: result.message });
-                onFormSubmit(false);
-            }
+            toast({ variant: 'destructive', title: "Error", description: result.message });
+            onFormSubmit(false);
         }
     }
     
@@ -255,15 +273,13 @@ export default function ProductForm({ open, onOpenChange, onFormSubmit, product 
                 </DialogHeader>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {product && (
-                                <FormItem>
-                                    <FormLabel>Product ID</FormLabel>
-                                    <FormControl><Input value={product.id} disabled /></FormControl>
-                                </FormItem>
-                            )}
-                            <FormField name="name" control={form.control} render={({ field }) => (<FormItem><FormLabel>Name*</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                        </div>
+                        {product && (
+                            <FormItem>
+                                <FormLabel>Product ID</FormLabel>
+                                <FormControl><Input value={product.id} disabled /></FormControl>
+                            </FormItem>
+                        )}
+                        <FormField name="name" control={form.control} render={({ field }) => (<FormItem><FormLabel>Name*</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
                         <FormField name="description" control={form.control} render={({ field }) => (<FormItem><FormLabel>Description*</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>)} />
                         <FormField name="specifications" control={form.control} render={({ field }) => (<FormItem><FormLabel>Specifications</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>)} />
                         
@@ -293,7 +309,32 @@ export default function ProductForm({ open, onOpenChange, onFormSubmit, product 
                             <FormField name="strikeoutPrice" control={form.control} render={({ field }) => (<FormItem><FormLabel>Strikeout Price</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
                         </div>
                         
-                        <FormField name="images" control={form.control} render={({ field }) => (<FormItem><FormLabel>Image URLs*</FormLabel><FormControl><Textarea {...field} /></FormControl><FormDescription>Comma-separated list of image URLs.</FormDescription><FormMessage /></FormItem>)} />
+                        <FormField name="images" control={form.control} render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Product Images*</FormLabel>
+                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                                    {field.value?.map((url, index) => (
+                                        <div key={index} className="relative aspect-square">
+                                            <Image src={url} alt={`Product image ${index + 1}`} fill className="object-cover rounded-md" />
+                                            <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6" onClick={() => removeImage(index)}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                    <div className="aspect-square rounded-md border-2 border-dashed border-muted-foreground/30 flex items-center justify-center relative bg-muted/20">
+                                        {isUploading ? <Skeleton className="w-full h-full" /> : (
+                                            <div className="text-center text-muted-foreground p-2">
+                                                <Upload className="mx-auto h-6 w-6" />
+                                                <p className="text-xs">Add Image</p>
+                                                <Input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileChange} accept="image/*" />
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+
                          <FormField name="sizes" control={form.control} render={() => (
                             <FormItem>
                                 <FormLabel>Available Sizes</FormLabel>

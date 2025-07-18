@@ -1,9 +1,11 @@
+
 'use client'
 
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import Image from "next/image";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -15,19 +17,21 @@ import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CalendarIcon, X } from "lucide-react";
+import { CalendarIcon, Upload, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { addBanner, updateBanner } from "@/actions/banners";
+import { uploadImage } from "@/actions/upload";
 import type { Banner } from "@/lib/types";
 import BannerPreview from "./BannerPreview";
+import { Skeleton } from "../ui/skeleton";
 
 const bannerSchema = z.object({
   title: z.string().optional(),
   subtitle: z.string().optional(),
   description: z.string().optional(),
-  imageUrl: z.string().url({ message: "Please enter a valid image URL." }).optional().or(z.literal('')),
+  imageUrl: z.string().url({ message: "Please provide an image." }).optional().or(z.literal('')),
   buttonText: z.string().optional(),
   buttonLink: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
   backgroundColor: z.string().optional(),
@@ -72,6 +76,7 @@ interface BannerFormProps {
 export default function BannerForm({ open, onOpenChange, onFormSubmit, banner }: BannerFormProps) {
     const { toast } = useToast();
     const [step, setStep] = useState<'details' | 'preview'>('details');
+    const [isUploading, setIsUploading] = useState(false);
 
     const form = useForm<z.infer<typeof bannerSchema>>({
         resolver: zodResolver(bannerSchema),
@@ -113,11 +118,28 @@ export default function BannerForm({ open, onOpenChange, onFormSubmit, banner }:
     
     const watchedValues = form.watch();
 
+    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.files && event.target.files.length > 0) {
+            const file = event.target.files[0];
+            const formData = new FormData();
+            formData.append('image', file);
+            setIsUploading(true);
+
+            const result = await uploadImage(formData);
+            setIsUploading(false);
+
+            if (result.success && result.url) {
+                form.setValue('imageUrl', result.url, { shouldValidate: true });
+                toast({ title: 'Success', description: 'Image uploaded successfully.' });
+            } else {
+                toast({ variant: 'destructive', title: 'Upload Failed', description: result.message });
+            }
+        }
+    };
+
+
     const handleNextStep = async () => {
-        const isValid = await form.trigger([
-            "title", "subtitle", "description", "imageUrl", "buttonText", "buttonLink",
-             "backgroundColor", "textColor", "position", "targetPages", "sectionIdentifier", "order"
-        ]);
+        const isValid = await form.trigger();
         if (isValid) {
             setStep('preview');
         } else {
@@ -153,7 +175,7 @@ export default function BannerForm({ open, onOpenChange, onFormSubmit, banner }:
                         </DialogHeader>
 
                         {step === 'details' && (
-                            <div className="p-6">
+                            <div className="p-6 max-h-[calc(100vh-150px)] overflow-y-auto">
                                 <Tabs defaultValue="basic">
                                     <TabsList className="grid w-full grid-cols-2">
                                         <TabsTrigger value="basic">Basic Info</TabsTrigger>
@@ -161,11 +183,29 @@ export default function BannerForm({ open, onOpenChange, onFormSubmit, banner }:
                                     </TabsList>
                                     <TabsContent value="basic" className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6">
                                         <div className="space-y-4">
-                                            <FormField name="imageUrl" control={form.control} render={({ field }) => (
+                                             <FormField name="imageUrl" control={form.control} render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Image URL</FormLabel>
-                                                    <FormControl><Input placeholder="https://example.com/image.jpg" {...field} /></FormControl>
-                                                    <FormDescription>Leave empty for announcement bars without images.</FormDescription>
+                                                    <FormLabel>Banner Image</FormLabel>
+                                                    <FormControl>
+                                                        <div className="w-full aspect-video rounded-md border-2 border-dashed border-muted-foreground/30 flex items-center justify-center relative bg-muted/20">
+                                                            {isUploading ? (
+                                                                <Skeleton className="w-full h-full" />
+                                                            ) : field.value ? (
+                                                                <>
+                                                                    <Image src={field.value} alt="Banner Preview" fill className="object-contain" />
+                                                                     <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2 z-10" onClick={() => form.setValue('imageUrl', '')}>
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    </Button>
+                                                                </>
+                                                            ) : (
+                                                                <div className="text-center text-muted-foreground">
+                                                                    <Upload className="mx-auto h-8 w-8" />
+                                                                    <p>Click to upload or drag & drop</p>
+                                                                    <Input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileChange} accept="image/*" />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
                                             )} />
@@ -212,7 +252,7 @@ export default function BannerForm({ open, onOpenChange, onFormSubmit, banner }:
                                         )} />
                                         {form.watch('position') === 'after-section' && (
                                             <FormField name="sectionIdentifier" control={form.control} render={({ field }) => (
-                                                <FormItem><FormLabel>Section Identifier*</FormLabel><FormControl><Input placeholder="e.g. featured-section" {...field} /></FormControl><FormDescription>Unique ID or classname of the section to place banner after.</FormDescription><FormMessage /></FormItem>
+                                                <FormItem><FormLabel>Section Identifier*</FormLabel><FormControl><Input placeholder="e.g., #featured-products or .featured-section" {...field} /></FormControl><FormDescription>Unique ID or classname of the section to place banner after.</FormDescription><FormMessage /></FormItem>
                                             )} />
                                         )}
                                         <FormField name="targetPages" control={form.control} render={({ field }) => (
@@ -251,9 +291,11 @@ export default function BannerForm({ open, onOpenChange, onFormSubmit, banner }:
                         )}
                         
                         {step === 'preview' && (
-                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
+                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 max-h-[calc(100vh-150px)] overflow-y-auto">
                                 <div className="md:col-span-2">
-                                     <BannerPreview banner={watchedValues} />
+                                     <div className="relative w-full aspect-video overflow-hidden rounded-lg border flex items-center justify-center">
+                                        <BannerPreview banner={watchedValues} />
+                                     </div>
                                 </div>
                                 <div className="space-y-6">
                                     <h3 className="font-semibold text-lg border-b pb-2">Control & Behavior</h3>

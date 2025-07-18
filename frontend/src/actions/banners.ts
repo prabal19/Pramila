@@ -10,7 +10,7 @@ const bannerSchema = z.object({
   title: z.string().optional(),
   subtitle: z.string().optional(),
   description: z.string().optional(),
-  imageUrl: z.string().url({ message: "Please enter a valid image URL." }).optional().or(z.literal('')),
+  imageUrl: z.string().url({ message: "Please provide an image." }).optional().or(z.literal('')),
   buttonText: z.string().optional(),
   buttonLink: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
   backgroundColor: z.string().optional(),
