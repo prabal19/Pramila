@@ -2,9 +2,9 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingBag, Search, User, Menu, Heart, LifeBuoy, Instagram, ChevronDown } from 'lucide-react';
+import { ShoppingBag, Search, User, Menu, Heart, ChevronDown } from 'lucide-react';
 import { Button } from './ui/button';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import SearchOverlay from './SearchOverlay';
 import { useCart } from '@/hooks/use-cart';
 import CartSheet from './CartSheet';
@@ -13,34 +13,22 @@ import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/s
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import WishlistIcon from './WishlistIcon';
 import { cn } from '@/lib/utils';
+import { getCategories } from '@/lib/categories';
+import type { Category } from '@/lib/types';
 
 
-const navItems = [
+const InstagramIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line></svg>
+);
+
+const StaticNavItems = [
   { href: '/', label: 'Home' },
   { href: '/new-in', label: 'New In' },
   { href: '/bestsellers', label: 'Bestsellers' },
-  {
-    href: '/shop',
-    label: 'Collections',
-    dropdown: [
-      { href: '/shop/ethnic-sets', label: 'Ethnic Sets' },
-      { href: '/shop/dresses', label: 'Dresses' },
-      { href: '/shop/pre-drape-sarees', label: 'Pre-drape Sarees' },
-      { href: '/shop/draped-sets', label: 'Draped Sets' },
-    ],
-  },
-  {
-    href: '/shop/accessories',
-    label: 'Accessories',
-    dropdown: [
-        { href: '/shop/chains', label: 'Chains' },
-        { href: '/shop/studs', label: 'Studs' },
-        { href: '/shop/anklets', label: 'Anklets' },
-        { href: '/shop/bracelets', label: 'Bracelets' },
-        { href: '/shop/danglers', label: 'Danglers' },
-    ],
-  },
-  { href: '/about', label: 'About Us' },
+];
+
+const StaticBottomNavItems = [
+    { href: '/about', label: 'About Us' },
 ];
 
 const Header = () => {
@@ -49,6 +37,17 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { cartCount, hasUnseenItems, markCartAsViewed } = useCart();
   const { user } = useAuth();
+  const [collections, setCollections] = useState<Category[]>([]);
+  const [accessories, setAccessories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    async function fetchNavCategories() {
+        const allCategories = await getCategories();
+        setCollections(allCategories.filter(c => c.parent === 'collection'));
+        setAccessories(allCategories.filter(c => c.parent === 'accessory'));
+    }
+    fetchNavCategories();
+  }, [])
 
   const handleCartClick = () => {
     if (hasUnseenItems) {
@@ -56,6 +55,21 @@ const Header = () => {
     }
     setIsCartOpen(true);
   };
+  
+  const navItems = [
+    ...StaticNavItems,
+    ...(collections.length > 0 ? [{
+        href: '#',
+        label: 'Collections',
+        dropdown: collections.map(c => ({ href: `/shop/${c.slug}`, label: c.name }))
+    }] : []),
+     ...(accessories.length > 0 ? [{
+        href: '#', 
+        label: 'Accessories',
+        dropdown: accessories.map(c => ({ href: `/shop/${c.slug}`, label: c.name }))
+    }] : []),
+    ...StaticBottomNavItems
+  ]
 
   return (
     <>
@@ -73,8 +87,8 @@ const Header = () => {
                     <SheetContent side="left" className="w-full max-w-sm p-6">
                       <nav className="flex flex-col gap-2 text-lg font-medium">
                         {navItems.map((item) => (
-                          !item.dropdown ? (
-                            <SheetClose asChild key={item.label}>
+                          !('dropdown' in item) || !item.dropdown ? (
+                            <SheetClose asChild key={item.href}>
                                <Link href={item.href} className="py-3 border-b">{item.label}</Link>
                             </SheetClose>
                           ) : (
@@ -108,10 +122,10 @@ const Header = () => {
                 <div key={item.label} className="group relative">
                     <Link href={item.href} className="text-foreground hover:text-primary transition-colors py-2 flex items-center gap-1">
                       {item.label}
-                      {item.dropdown && <ChevronDown className="w-4 h-4 transition-transform duration-200 group-hover:rotate-180" />}
+                      {'dropdown' in item && item.dropdown && <ChevronDown className="w-4 h-4 transition-transform duration-200 group-hover:rotate-180" />}
                     </Link>
                   <div className="absolute bottom-0 left-0 w-full h-px bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform origin-center duration-300"></div>
-                  {item.dropdown && (
+                  {'dropdown' in item && item.dropdown && (
                     <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 hidden group-hover:block z-50">
                       <div className="bg-popover text-popover-foreground shadow-lg w-auto py-2 rounded-none">
                         {item.dropdown.map((link) => (
@@ -132,8 +146,8 @@ const Header = () => {
 
             <div className="flex items-center justify-end gap-2 md:gap-3">
               <Button asChild variant="ghost" size="icon" className="hidden md:inline-flex">
-                <a href="https:/instagram.com/" target="_blank" rel="noopener noreferrer">
-                  <Instagram className="w-5 h-5" />
+                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram">
+                  <InstagramIcon />
                 </a>
               </Button>
               <Button asChild variant="ghost" size="icon">

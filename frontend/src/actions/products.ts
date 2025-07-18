@@ -1,6 +1,7 @@
 'use server';
 
 import * as z from 'zod';
+import { revalidatePath } from 'next/cache';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -8,7 +9,7 @@ const productSchema = z.object({
   productId: z.string().min(1, 'Product ID is required'),
   name: z.string().min(1, 'Name is required'),
   description: z.string().min(1, 'Description is required'),
-  category: z.enum(['sharara-set', 'saree', 'draped-sets']),
+  category: z.string().min(1, 'Category is required'),
   price: z.coerce.number().min(0, 'Price must be positive'),
   strikeoutPrice: z.coerce.number().optional(),
   images: z.array(z.string().url()).min(1, 'At least one image URL is required'),
@@ -36,10 +37,49 @@ export async function addProduct(values: z.infer<typeof productSchema>) {
         if (!res.ok) {
             return { success: false, message: data.msg || 'Failed to create product.' };
         }
-
+        revalidatePath('/admin/products');
         return { success: true, message: 'Product created successfully', data };
     } catch (error) {
         console.error(error);
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
+
+
+
+const categorySchema = z.object({
+    name: z.string().min(1, 'Category name is required.'),
+    parent: z.enum(['collection', 'accessory']),
+});
+
+export async function addCategory(values: z.infer<typeof categorySchema>) {
+    try {
+        const validatedValues = categorySchema.safeParse(values);
+        if (!validatedValues.success) {
+            return { success: false, message: 'Invalid input.' };
+        }
+
+        const res = await fetch(`${API_URL}/api/categories`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(validatedValues.data),
+            cache: 'no-store',
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            return { success: false, message: data.msg || 'Failed to create category.' };
+        }
+
+        // Revalidate paths to update navigation and forms
+        revalidatePath('/admin/products');
+        revalidatePath('/');
+
+        return { success: true, message: 'Category created successfully', data };
+    } catch (error) {
+        console.error(error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+

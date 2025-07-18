@@ -1,4 +1,5 @@
 import { getProducts } from '@/lib/products';
+import { getCategories } from '@/lib/categories';
 import ProductCard from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -6,18 +7,11 @@ import { Filter } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import PageBannerContainer from '@/components/PageBannerContainer';
 
-
-function getCategoryTitle(slug: string): string {
-  if (!slug) return 'Products';
-  // Example: 'pre-drape-sarees' -> 'Pre Drape Sarees'
-  return slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+async function getCategoryTitle(slug: string): Promise<string> {
+  const categories = await getCategories();
+  const category = categories.find(c => c.slug === slug);
+  return category ? category.name : notFound();
 }
-
-// Add all valid categories here, including accessories
-const validCategories = [
-    'sharara-set', 'saree', 'draped-sets', 'ethnic-sets', 'dresses', 'pre-drape-sarees',
-    'accessories', 'chains', 'studs', 'anklets', 'bracelets', 'danglers'
-];
 
 type CategoryPageProps = {
   params: {
@@ -26,19 +20,19 @@ type CategoryPageProps = {
 };
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
-  const { category } = params;
+  const { category: categorySlug } = params;
 
-  if (!validCategories.includes(category)) {
-      notFound();
-  }
-
-  const allProducts = await getProducts();
-  const products = allProducts.filter(p => p.category === category);
-  const categoryName = getCategoryTitle(category);
+  // We fetch category details and products in parallel
+  const [categoryName, allProducts] = await Promise.all([
+    getCategoryTitle(categorySlug),
+    getProducts()
+  ]);
+  
+  const products = allProducts.filter(p => p.category === categorySlug);
 
   return (
     <>
-      <PageBannerContainer page={category} position="top-of-page" />
+      <PageBannerContainer page={categorySlug} position="top-of-page" />
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl md:text-4xl font-headline text-center mb-8" style={{fontFamily: "'Cormorant Garamond', serif"}}>
           {categoryName}
@@ -78,7 +72,15 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
           </div>
         )}
       </div>
-      <PageBannerContainer page={category} position="bottom-of-page" />
+      <PageBannerContainer page={categorySlug} position="bottom-of-page" />
     </>
   );
+}
+
+// Generate static paths for all categories
+export async function generateStaticParams() {
+  const categories = await getCategories();
+  return categories.map((category) => ({
+    category: category.slug,
+  }));
 }

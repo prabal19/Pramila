@@ -136,3 +136,12 @@ export type SupportTicket = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type Category = {
+  _id: string;
+  name: string;
+  slug: string;
+  parent: 'collection' | 'accessory';
+  createdAt: string;
+  updatedAt: string;
+};

@@ -34,7 +34,11 @@ export const columns: ColumnDef<Product>[] = [
     header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Category" />
     ),
-    cell: ({ row }) => <span className="capitalize">{(row.getValue("category") as string).replace('-', ' ')}</span>,
+    cell: ({ row }) => {
+        const category = row.getValue("category") as string;
+        // Capitalize and replace dash with space
+        return <span className="capitalize">{category.replace(/-/g, ' ')}</span>;
+    },
   },
   {
     accessorKey: "bestseller",

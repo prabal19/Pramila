@@ -1,6 +1,7 @@
 const Product = require('../models/Product');
 const Banner = require('../models/Banner');
 const connectDB = require('../config/db');
+const Category = require('../models/Category');
 
 const allSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', 'CUSTOM SIZE'];
 const accessorySizes = ['One Size'];
@@ -550,6 +551,21 @@ const products = [
   }
 ];
 
+const categories = [
+  // Collections
+  // { name: 'Sharara Sets', slug: 'sharara-set', parent: 'collection' },
+  // { name: 'Sarees', slug: 'saree', parent: 'collection' },
+  { name: 'Draped Sets', slug: 'draped-sets', parent: 'collection' },
+  { name: 'Ethnic Sets', slug: 'ethnic-sets', parent: 'collection' },
+  { name: 'Dresses', slug: 'dresses', parent: 'collection' },
+  { name: 'Pre-drape Sarees', slug: 'pre-drape-sarees', parent: 'collection' },
+  // Accessories
+  { name: 'Chains', slug: 'chains', parent: 'accessory' },
+  { name: 'Studs', slug: 'studs', parent: 'accessory' },
+  { name: 'Anklets', slug: 'anklets', parent: 'accessory' },
+  { name: 'Bracelets', slug: 'bracelets', parent: 'accessory' },
+  { name: 'Danglers', slug: 'danglers', parent: 'accessory' },
+];
 
 
 const seedDatabase = async () => {
@@ -560,11 +576,17 @@ const seedDatabase = async () => {
         await Product.insertMany(products);
         console.log(`${products.length} products seeded successfully!`);
         
-        await Banner.deleteMany({});
-        console.log('Existing banners cleared.');
+        // await Banner.deleteMany({});
+        // console.log('Existing banners cleared.');
         
-        await Banner.insertMany(banners);
-        console.log(`${banners.length} banners seeded successfully!`);
+        // await Banner.insertMany(banners);
+        // console.log(`${banners.length} banners seeded successfully!`);
+
+        
+        await Category.deleteMany({});
+        console.log('Existing categories cleared.');
+        await Category.insertMany(categories);
+        console.log(`${categories.length} categories seeded successfully!`);
 
     } catch (err) {
         console.error('Error seeding database:', err.message);
