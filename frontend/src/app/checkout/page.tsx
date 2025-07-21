@@ -57,10 +57,10 @@ const parseAddressForForm = (fullAddress: string) => {
     const parts = fullAddress.split(', ');
     if (parts.length >= 4) {
         const [houseNo, landmark, city, rest] = parts;
-        const stateAndPincode = rest.split(' - ');
+        const stateAndPincode = rest ? rest.split(' - ') : [];
         if (stateAndPincode.length >= 2) {
              const [state, pincodeAndCountry] = stateAndPincode;
-             const countryParts = pincodeAndCountry.split(', ');
+              const countryParts = pincodeAndCountry ? pincodeAndCountry.split(', ') : [];
              const pincode = countryParts[0] || '';
              const country = countryParts.length > 1 ? countryParts[1] : 'India';
              return { houseNo, landmark, city, state, pincode, country };

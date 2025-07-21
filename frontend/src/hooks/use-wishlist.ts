@@ -25,29 +25,25 @@ export const useWishlist = () => {
     try {
       localStorage.setItem(WISHLIST_KEY, JSON.stringify(updatedWishlist));
     } catch (error) {
-        console.error("Failed to save wishlist to localStorage", error);
+      console.error("Failed to save wishlist to localStorage", error);
     }
   };
 
   const addToWishlist = useCallback((productId: string) => {
-    setWishlist(prev => {
-      if (prev.includes(productId)) return prev;
-      const newWishlist = [...prev, productId];
-      updateLocalStorage(newWishlist);
-      return newWishlist;
-    });
-    toast({ title: "Added to wishlist!" });
-  }, [toast]);
+    const newWishlist = [...wishlist, productId];
+    if (!wishlist.includes(productId)) {
+        setWishlist(newWishlist);
+        updateLocalStorage(newWishlist);
+        toast({ title: "Added to wishlist!" });
+    }
+  }, [wishlist, toast]);
 
   const removeFromWishlist = useCallback((productId: string) => {
-    setWishlist(prev => {
-      if (!prev.includes(productId)) return prev;
-      const newWishlist = prev.filter(id => id !== productId);
-      updateLocalStorage(newWishlist);
-      return newWishlist;
-    });
+    const newWishlist = wishlist.filter(id => id !== productId);
+    setWishlist(newWishlist);
+    updateLocalStorage(newWishlist);
     toast({ title: "Removed from wishlist." });
-  }, [toast]);
+  }, [wishlist, toast]);
 
   const isInWishlist = useCallback((productId: string) => {
     return wishlist.includes(productId);

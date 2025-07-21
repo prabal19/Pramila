@@ -1,15 +1,14 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useSyncExternalStore } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/hooks/use-auth';
 import { getCart, addItemToCart, updateCartItemQuantity, removeItemFromCart } from '@/actions/cart';
-import type { CartItem as ApiCartItem, User } from '@/lib/types'; // This is the type from the DB
+import type { CartItem as ApiCartItem, User } from '@/lib/types';
 
-// We'll use a slightly different type for local state to handle guest carts
 type LocalCartItem = {
-    _id: string; // For local identification
+    _id: string;
     productId: string;
     quantity: number;
     size: string;
@@ -24,50 +23,87 @@ type ShippingInfo = {
 const GUEST_CART_KEY = 'pramila-guest-cart';
 const SHIPPING_INFO_KEY = 'pramila-shipping-info';
 
+// State management that works across multiple components
+const listeners: Set<() => void> = new Set();
+let state: {
+  cartItems: (LocalCartItem[] | ApiCartItem[]);
+  isLoading: boolean;
+  hasUnseenItems: boolean;
+  isUpdating: boolean;
+} = {
+  cartItems: [],
+  isLoading: true,
+  hasUnseenItems: false,
+  isUpdating: false,
+};
+
+const emitChange = () => {
+  for (const listener of listeners) {
+    listener();
+  }
+};
+
+const setState = (newState: Partial<typeof state>) => {
+  state = { ...state, ...newState };
+  emitChange();
+};
+
+const subscribe = (listener: () => void) => {
+    listeners.add(listener);
+    return () => listeners.delete(listener);
+}
+
+const getSnapshot = () => state;
+
+// Custom hook to use the external store
+const useCartStore = () => {
+    return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+}
+
 export const useCart = () => {
+  const store = useCartStore();
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
-  const [cartItems, setCartItems] = useState<(LocalCartItem[] | ApiCartItem[])>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasUnseenItems, setHasUnseenItems] = useState(false);
   const [shippingInfo, setLocalShippingInfo] = useState<ShippingInfo | null>(null);
 
-  // Function to sync local guest cart with the backend after login
   const syncGuestCart = useCallback(async (guestCart: LocalCartItem[], userId: string) => {
     if (guestCart.length === 0) return;
+    setState({ isUpdating: true });
     
     let finalCart: ApiCartItem[] = [];
+    // Fetch the user's current server cart first
+    const serverCart = await getCart(userId);
+    if(serverCart) {
+        finalCart = serverCart.items;
+    }
+
     for (const item of guestCart) {
       const updatedCart = await addItemToCart(userId, item.productId, item.quantity, item.size);
       if (updatedCart) {
         finalCart = updatedCart.items;
       }
     }
-    setCartItems(finalCart);
+    setState({ cartItems: finalCart, isUpdating: false });
     localStorage.removeItem(GUEST_CART_KEY);
-  }, []);
+    toast({ title: "Cart Synced", description: "Your items have been moved to your account." });
+  }, [toast]);
 
-  // Main effect to handle cart loading and syncing
   useEffect(() => {
     const loadCart = async (currentUser: User | null) => {
-        setIsLoading(true);
+        setState({ isLoading: true });
         if (currentUser) {
             const guestCartData = localStorage.getItem(GUEST_CART_KEY);
             const guestCart: LocalCartItem[] = guestCartData ? JSON.parse(guestCartData) : [];
             
-            const serverCart = await getCart(currentUser._id);
-
             if (guestCart.length > 0) {
                 await syncGuestCart(guestCart, currentUser._id);
-                const finalCart = await getCart(currentUser._id);
-                setCartItems(finalCart?.items || []);
-                 toast({ title: "Cart Synced", description: "Your items have been moved to your account." });
             } else {
-                setCartItems(serverCart?.items || []);
+                const serverCart = await getCart(currentUser._id);
+                setState({ cartItems: serverCart?.items || [] });
             }
         } else {
             const guestCartData = localStorage.getItem(GUEST_CART_KEY);
-            setCartItems(guestCartData ? JSON.parse(guestCartData) : []);
+            setState({ cartItems: guestCartData ? JSON.parse(guestCartData) : [] });
         }
          try {
             const storedShippingInfo = sessionStorage.getItem(SHIPPING_INFO_KEY);
@@ -77,65 +113,68 @@ export const useCart = () => {
         } catch (error) {
             console.error("Failed to load shipping info from sessionStorage", error);
         }
-        setIsLoading(false);
+        setState({ isLoading: false });
     }
     
     if (!authLoading) {
         loadCart(user);
     }
-  }, [user, authLoading, syncGuestCart, toast]);
+  }, [user, authLoading, syncGuestCart]);
   
-  const addToCart = useCallback(async (productId: string, quantity: number, size: string) => {
+  const addToCart = useCallback(async (productId: string, quantity: number, size: string, options?: { showToast?: boolean }) => {
+    setState({ isUpdating: true });
     let success = false;
     if (user) {
         const updatedCart = await addItemToCart(user._id, productId, quantity, size);
         if (updatedCart) {
-            setCartItems(updatedCart.items);
+            setState({ cartItems: updatedCart.items });
             success = true;
         }
     } else {
-        setCartItems(prev => {
-            const typedPrev = prev as LocalCartItem[];
-            const existingItemIndex = typedPrev.findIndex(item => item.productId === productId && item.size === size);
-            let newCart: LocalCartItem[];
+        const typedPrev = state.cartItems as LocalCartItem[];
+        const existingItemIndex = typedPrev.findIndex(item => item.productId === productId && item.size === size);
+        let newCart: LocalCartItem[];
 
-            if (existingItemIndex > -1) {
-                newCart = [...typedPrev];
-                newCart[existingItemIndex].quantity += quantity;
-            } else {
-                newCart = [...typedPrev, { _id: new Date().toISOString(), productId, quantity, size }];
-            }
-            localStorage.setItem(GUEST_CART_KEY, JSON.stringify(newCart));
-            return newCart;
-        });
+        if (existingItemIndex > -1) {
+            newCart = [...typedPrev];
+            newCart[existingItemIndex].quantity += quantity;
+        } else {
+            newCart = [...typedPrev, { _id: new Date().toISOString(), productId, quantity, size }];
+        }
+        localStorage.setItem(GUEST_CART_KEY, JSON.stringify(newCart));
+        setState({ cartItems: newCart });
         success = true;
     }
     
+    setState({ isUpdating: false });
     if (success) {
-      setHasUnseenItems(true);
-      toast({ title: "Added to cart!" });
+      if (options?.showToast) {
+        toast({ title: "Added to cart!" });
+      }
+      setState({ hasUnseenItems: true });
     } else {
       toast({ variant: 'destructive', title: "Error", description: 'Failed to add item to cart.'});
     }
+    return success;
   }, [user, toast]);
 
   const removeFromCart = useCallback(async (itemId: string) => {
+    setState({ isUpdating: true });
     let success = false;
     if (user) {
         const updatedCart = await removeItemFromCart(user._id, itemId);
         if (updatedCart) {
-            setCartItems(updatedCart.items);
+            setState({ cartItems: updatedCart.items });
             success = true;
         }
     } else {
-        setCartItems(prev => {
-            const newCart = (prev as LocalCartItem[]).filter(item => item._id !== itemId);
-            localStorage.setItem(GUEST_CART_KEY, JSON.stringify(newCart));
-            return newCart;
-        });
+        const newCart = (state.cartItems as LocalCartItem[]).filter(item => item._id !== itemId);
+        localStorage.setItem(GUEST_CART_KEY, JSON.stringify(newCart));
+        setState({ cartItems: newCart });
         success = true;
     }
 
+    setState({ isUpdating: false });
     if (success) {
       toast({ title: "Removed from cart." });
     } else {
@@ -148,31 +187,33 @@ export const useCart = () => {
       await removeFromCart(itemId);
       return;
     }
+    setState({ isUpdating: true });
     if (user) {
       const updatedCart = await updateCartItemQuantity(user._id, itemId, quantity);
        if (updatedCart) {
-          setCartItems(updatedCart.items);
+          setState({ cartItems: updatedCart.items });
       } else {
           toast({ variant: 'destructive', title: "Error", description: 'Failed to update quantity.'});
       }
     } else {
-        setCartItems(prev => {
-            const newCart = (prev as LocalCartItem[]).map(item => item._id === itemId ? { ...item, quantity } : item);
-            localStorage.setItem(GUEST_CART_KEY, JSON.stringify(newCart));
-            return newCart;
-        });
+        const newCart = (state.cartItems as LocalCartItem[]).map(item => item._id === itemId ? { ...item, quantity } : item);
+        localStorage.setItem(GUEST_CART_KEY, JSON.stringify(newCart));
+        setState({ cartItems: newCart });
     }
+    setState({ isUpdating: false });
   }, [user, removeFromCart, toast]);
   
   const markCartAsViewed = useCallback(() => {
-    setHasUnseenItems(false);
+    setState({ hasUnseenItems: false });
   }, []);
   
   const clearCart = useCallback(() => {
     if (user) {
-      setCartItems([]);
+        // We can't actually clear the DB cart here, but we can clear the local state
+        // The backend will clear it upon successful order.
+        setState({cartItems: []});
     } else {
-      setCartItems([]);
+      setState({cartItems: []});
       localStorage.removeItem(GUEST_CART_KEY);
     }
     sessionStorage.removeItem(SHIPPING_INFO_KEY);
@@ -188,7 +229,7 @@ export const useCart = () => {
     }
   }, []);
   
-  const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+  const cartCount = store.cartItems.reduce((total, item) => total + item.quantity, 0);
 
-  return { cart: cartItems, cartCount, isLoading, addToCart, removeFromCart, updateQuantity, hasUnseenItems, markCartAsViewed, clearCart, shippingInfo, setShippingInfo };
+  return { cart: store.cartItems, cartCount, isLoading: store.isLoading, isUpdating: store.isUpdating, addToCart, removeFromCart, updateQuantity, hasUnseenItems: store.hasUnseenItems, markCartAsViewed, clearCart, shippingInfo, setShippingInfo };
 };

@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { useViewedProducts } from '@/hooks/use-viewed-products';
 import { useCart } from '@/hooks/use-cart';
 import { Shirt, MessageCircle, Minus, Plus } from 'lucide-react';
 import { SizeChartDialog } from './SizeChartDialog';
@@ -20,8 +19,7 @@ import WishlistIcon from './WishlistIcon';
 import { cn } from '@/lib/utils';
 
 const ProductDetailsClient = ({ product }: { product: Product }) => {
-  const { addViewedProduct } = useViewedProducts();
-  const { addToCart } = useCart();
+  const { addToCart, isUpdating } = useCart();
   const router = useRouter();
   
   const availableSizes = product.sizes && product.sizes.length > 0
@@ -34,26 +32,25 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
   const [isSizeChartOpen, setIsSizeChartOpen] = useState(false);
 
   useEffect(() => {
-    addViewedProduct(product.id);
     setSelectedImage(product.images[0]);
     if (availableSizes.length > 0) {
       setSelectedSize(availableSizes[0]);
     }
-  }, [product, addViewedProduct, availableSizes]);
+  }, [product, availableSizes]);
 
   const handleAddToCart = () => {
-    addToCart(product.id, quantity, selectedSize);
+    addToCart(product.id, quantity, selectedSize, { showToast: true });
     const cartSheetTrigger = document.getElementById('cart-sheet-trigger');
     if (cartSheetTrigger) {
         cartSheetTrigger.click();
     }
   };
 
-  const handleBuyNow = () => {
-    addToCart(product.id, quantity, selectedSize);
+  const handleBuyNow = async () => {
+    await addToCart(product.id, quantity, selectedSize, { showToast: false });
     router.push('/checkout');
   };
-
+  
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
     if (!isNaN(value) && value >= 1) {
@@ -194,12 +191,12 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
                   </Button>
                 </div>
 
-                <Button variant="outline" size="lg" className={cn("flex-1 rounded-sm tracking-widest border-black hover:bg-black hover:text-white", isOutOfStock && "bg-gray-300 border-gray-300 text-gray-500 hover:bg-gray-300 hover:text-gray-500 cursor-not-allowed")} onClick={handleAddToCart} disabled={isOutOfStock}>
+                <Button variant="outline" size="lg" className={cn("flex-1 rounded-sm tracking-widest border-black hover:bg-black hover:text-white", isOutOfStock && "bg-gray-300 border-gray-300 text-gray-500 hover:bg-gray-300 hover:text-gray-500 cursor-not-allowed")} onClick={handleAddToCart} disabled={isOutOfStock|| isUpdating}>
                   ADD TO CART
                 </Button>
               </div>
               
-              <Button size="lg" className={cn("w-full rounded-sm bg-primary text-primary-foreground tracking-widest font-semibold hover:bg-primary/90", isOutOfStock && "bg-gray-400 hover:bg-gray-400 cursor-not-allowed")} onClick={handleBuyNow} disabled={isOutOfStock}>
+              <Button size="lg" className={cn("w-full rounded-sm bg-primary text-primary-foreground tracking-widest font-semibold hover:bg-primary/90", isOutOfStock && "bg-gray-400 hover:bg-gray-400 cursor-not-allowed")} onClick={handleBuyNow} disabled={isOutOfStock|| isUpdating}>
                 {isOutOfStock ? "OUT OF STOCK" : "BUY NOW"}
               </Button>
               
