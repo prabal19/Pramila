@@ -32,9 +32,11 @@ router.get('/stats', async (req, res) => {
     try {
         const productCount = await Product.countDocuments();
         const orderCount = await Order.countDocuments();
+        const userCount = await User.countDocuments();
         res.json({
             productCount,
             orderCount,
+            userCount,
         });
     } catch (err) {
         console.error(err.message);

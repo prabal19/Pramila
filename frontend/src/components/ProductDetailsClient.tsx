@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RelatedProducts from './RelatedProducts';
 import ProductReviews from './ProductReviews';
 import { Input } from '@/components/ui/input';
+import { Badge } from './ui/badge';
 
 const ProductDetailsClient = ({ product }: { product: Product }) => {
   const { addViewedProduct } = useViewedProducts();
@@ -62,6 +63,11 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
   }
   
   const washInstructions = "To maintain the beauty of your handcrafted garment, we recommend dry cleaning only. Avoid direct exposure to sunlight for prolonged periods. Store in a cool, dry place."
+
+  const hasDiscount = product.strikeoutPrice && product.strikeoutPrice > product.price;
+  const discountPercentage = hasDiscount
+    ? Math.round(((product.strikeoutPrice! - product.price) / product.strikeoutPrice!) * 100)
+    : 0;
 
   return (
     <>
@@ -125,7 +131,17 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
             )}
             <Link href={`/shop/${product.category}`} className="text-sm text-muted-foreground hover:text-primary">{getCategoryTitle(product.category)}</Link>
             <h1 className="text-3xl md:text-4xl font-headline mt-1 mb-2">{product.name}</h1>
-            <p className="text-2xl mb-6">Rs. {product.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+            <div className="flex items-baseline gap-4 mb-6">
+                <p className="text-2xl font-semibold">Rs. {product.price.toLocaleString('en-IN')}</p>
+                {hasDiscount && (
+                    <>
+                        <p className="text-lg text-muted-foreground line-through">Rs. {product.strikeoutPrice!.toLocaleString('en-IN')}</p>
+                        <Badge variant="destructive" className="bg-red-100 text-red-700 border-red-200">
+                            {discountPercentage}% OFF
+                        </Badge>
+                    </>
+                )}
+            </div>
 
             <div className="space-y-6">
               <div>

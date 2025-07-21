@@ -187,7 +187,7 @@ export default function BannerForm({ open, onOpenChange, onFormSubmit, banner }:
                                                 <FormItem>
                                                     <FormLabel>Banner Image</FormLabel>
                                                     <FormControl>
-                                                        <div className="w-full h-60 rounded-md border-2 border-dashed border-muted-foreground/30 flex items-center justify-center relative bg-muted/20 cursor-pointer">
+                                                        <div className="w-full h-60 rounded-md border-2 border-dashed border-muted-foreground/30 flex items-center justify-center relative bg-muted/20">
                                                             {isUploading ? (
                                                                 <Skeleton className="w-full h-full" />
                                                             ) : field.value ? (
@@ -203,7 +203,7 @@ export default function BannerForm({ open, onOpenChange, onFormSubmit, banner }:
                                                                     <p>Click to upload or drag & drop</p>
                                                                 </div>
                                                             )}
-                                                             <Input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileChange} accept="image/*" />
+                                                             <Input type="file" className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onChange={handleFileChange} accept="image/*" />
                                                         </div>
                                                     </FormControl>
                                                     <FormMessage />

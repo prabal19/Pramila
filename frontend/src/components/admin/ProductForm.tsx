@@ -36,9 +36,7 @@ const addProductSchema = z.object({
   specifications: z.string().optional(),
 });
 
-const updateProductSchema = addProductSchema.extend({
-  productId: z.string().min(1, 'Product ID is required'),
-});
+const updateProductSchema = addProductSchema;
 
 const categorySchema = z.object({
     name: z.string().min(1, 'Category name is required.'),
@@ -96,7 +94,7 @@ export default function ProductForm({ open, onOpenChange, onFormSubmit, product 
     const [showAddCategory, setShowAddCategory] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
 
-    const formSchema = product ? updateProductSchema : addProductSchema;
+            const formSchema = product ? updateProductSchema.extend({ productId: z.string() }) : addProductSchema;
     
     const defaultValues = product ? {
         ...product,
@@ -312,23 +310,23 @@ export default function ProductForm({ open, onOpenChange, onFormSubmit, product 
                         <FormField name="images" control={form.control} render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Product Images*</FormLabel>
-                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                                <div className="flex flex-col gap-4">
                                     {field.value?.map((url, index) => (
-                                        <div key={index} className="relative aspect-square">
-                                            <Image src={url} alt={`Product image ${index + 1}`} fill className="object-cover rounded-md" />
-                                            <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6" onClick={() => removeImage(index)}>
+                                        <div key={index} className="relative w-full h-60 rounded-md border-2 border-dashed border-muted-foreground/30 flex items-center justify-center bg-muted/20">
+                                            <Image src={url} alt={`Product image ${index + 1}`} fill className="object-contain" />
+                                            <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2 z-10" onClick={() => removeImage(index)}>
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
                                         </div>
                                     ))}
-                                    <div className="aspect-square rounded-md border-2 border-dashed border-muted-foreground/30 flex items-center justify-center relative bg-muted/20 cursor-pointer">
+                                    <div className="w-full h-60 rounded-md border-2 border-dashed border-muted-foreground/30 flex items-center justify-center relative bg-muted/20">
                                         {isUploading ? <Skeleton className="w-full h-full" /> : (
                                             <div className="text-center text-muted-foreground p-2">
-                                                <Upload className="mx-auto h-6 w-6" />
-                                                <p className="text-xs">Add Image</p>
+                                                <Upload className="mx-auto h-8 w-8" />
+                                                <p className="mt-2">Click to upload or drag & drop</p>
                                             </div>
                                         )}
-                                        <Input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileChange} accept="image/*" />
+                                        <Input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={handleFileChange} accept="image/*" />
                                     </div>
                                 </div>
                                 <FormMessage />
