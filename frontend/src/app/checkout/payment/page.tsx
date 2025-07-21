@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -66,12 +67,29 @@ export default function PaymentPage() {
 
     if (!isCartLoading) fetchCartProducts();
   }, [cart, isCartLoading]);
+  
+  useEffect(() => {
+    if (!isCartLoading && !isAuthLoading && cart.length === 0) {
+        router.replace('/shop');
+    }
+  }, [isCartLoading, isAuthLoading, cart.length, router]);
+
 
   const handleMakePayment = async () => {
-    if (!user || products.length === 0) return;
+    if (!user) {
+        toast({
+            title: "Please Log In",
+            description: "You need to log in to place an order.",
+            variant: "destructive"
+        });
+        router.push('/login?redirect=/checkout/payment');
+        return;
+    }
+    
+    if (products.length === 0) return;
+
     setIsProcessing(true);
 
-    // This is a dummy address. In a real app, you'd get this from the previous step.
     const shippingAddress = user.addresses[0]?.fullAddress || "123 Test Street, Test City, 12345";
     
     const orderItems = products.map(p => ({
@@ -109,17 +127,11 @@ export default function PaymentPage() {
   const isLoading = isCartLoading || isProductLoading || isAuthLoading;
 
   if (isLoading) {
-      return <div>Loading checkout...</div>
-  }
-  
-  if (!user) {
-      router.push('/login?redirect=/checkout/payment');
-      return null;
-  }
-  
-  if (cart.length === 0 && !isCartLoading) {
-      router.push('/shop');
-      return null;
+      return (
+         <div className="flex items-center justify-center min-h-screen">
+            <Loader2 className="w-10 h-10 animate-spin" />
+         </div>
+      );
   }
 
   return (
@@ -127,7 +139,7 @@ export default function PaymentPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-2xl font-bold tracking-widest" style={{fontFamily: "'Cormorant Garamond', serif"}}>PRAMILA</h1>
+            <Link href="/" className="text-2xl font-bold tracking-widest" style={{fontFamily: "'Cormorant Garamond', serif"}}>PRAMILA</Link>
             <Button variant="link" asChild className="p-0 h-auto">
                 <Link href="/checkout" className="flex items-center gap-2 text-muted-foreground hover:text-primary">
                     <ArrowLeft className="w-4 h-4" />
@@ -137,11 +149,11 @@ export default function PaymentPage() {
           </div>
           
           <div className="flex items-start mb-8 p-4 border rounded-lg bg-white">
-            <CheckoutStep number={1} label="Shipping & Gift Options" active={false} completed={true} />
+            <CheckoutStep number={1} label="Shipping Details" active={false} completed={true} />
             <div className="flex-1 mt-4"><Separator /></div>
-            <CheckoutStep number={2} label="Savings & Payment" active={true} completed={false} />
+            <CheckoutStep number={2} label="Payment" active={true} completed={false} />
             <div className="flex-1 mt-4"><Separator /></div>
-            <CheckoutStep number={3} label="Order Review" active={false} completed={false} />
+            <CheckoutStep number={3} label="Order Confirmation" active={false} completed={false} />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">

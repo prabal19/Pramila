@@ -50,13 +50,15 @@ export const useCart = () => {
             const guestCartData = localStorage.getItem(GUEST_CART_KEY);
             const guestCart: LocalCartItem[] = guestCartData ? JSON.parse(guestCartData) : [];
             
+            const serverCart = await getCart(user._id);
+
             if (guestCart.length > 0) {
-                // Sync first, then load the final cart state
                 await syncGuestCart(guestCart, user._id);
+                // After syncing, fetch the final state of the cart
+                const finalCart = await getCart(user._id);
+                setCartItems(finalCart?.items || []);
             } else {
-                // Just load the user's cart from DB
-                const cart = await getCart(user._id);
-                setCartItems(cart?.items || []);
+                setCartItems(serverCart?.items || []);
             }
         } else {
             // User is a guest, load from localStorage
@@ -78,7 +80,7 @@ export const useCart = () => {
         if (updatedCart) {
             setCartItems(updatedCart.items);
             setHasUnseenItems(true);
-            toast({ title: "Added to cart!", description: `Item added to your cart.` });
+            toast({ title: "Added to cart!" });
         } else {
             toast({ variant: 'destructive', title: "Error", description: 'Failed to add item to cart.'});
         }
@@ -96,31 +98,34 @@ export const useCart = () => {
                 newCart = [...typedPrev, { _id: new Date().toISOString(), productId, quantity, size }];
             }
             localStorage.setItem(GUEST_CART_KEY, JSON.stringify(newCart));
-            setHasUnseenItems(true);
-            toast({ title: "Added to cart!" });
             return newCart;
         });
+        setHasUnseenItems(true);
+        toast({ title: "Added to cart!" });
     }
   }, [user, toast]);
 
   const removeFromCart = useCallback(async (itemId: string) => { // itemId can be _id from DB or local ID
+    let success = false;
     if (user) {
         const updatedCart = await removeItemFromCart(user._id, itemId);
         if (updatedCart) {
             setCartItems(updatedCart.items);
-            setHasUnseenItems(true);
-            toast({ title: "Removed from cart." });
-        } else {
-            toast({ variant: 'destructive', title: "Error", description: 'Failed to remove item from cart.'});
+            success = true;
         }
     } else {
         setCartItems(prev => {
             const newCart = (prev as LocalCartItem[]).filter(item => item._id !== itemId);
             localStorage.setItem(GUEST_CART_KEY, JSON.stringify(newCart));
-            setHasUnseenItems(true);
-            toast({ title: "Removed from cart." });
             return newCart;
         });
+        success = true;
+    }
+
+    if (success) {
+      toast({ title: "Removed from cart." });
+    } else {
+      toast({ variant: 'destructive', title: "Error", description: 'Failed to remove item from cart.'});
     }
   }, [user, toast]);
 
@@ -133,7 +138,6 @@ export const useCart = () => {
       const updatedCart = await updateCartItemQuantity(user._id, itemId, quantity);
        if (updatedCart) {
           setCartItems(updatedCart.items);
-          setHasUnseenItems(true);
       } else {
           toast({ variant: 'destructive', title: "Error", description: 'Failed to update quantity.'});
       }
@@ -141,7 +145,6 @@ export const useCart = () => {
         setCartItems(prev => {
             const newCart = (prev as LocalCartItem[]).map(item => item._id === itemId ? { ...item, quantity } : item);
             localStorage.setItem(GUEST_CART_KEY, JSON.stringify(newCart));
-            setHasUnseenItems(true);
             return newCart;
         });
     }

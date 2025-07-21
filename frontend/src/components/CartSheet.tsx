@@ -101,20 +101,20 @@ export default function CartSheet({ open, onOpenChange }: CartSheetProps) {
                              Size: {item.size}
                           </p>
                           <p className="text-sm text-muted-foreground mt-1">
-                             Rs. {item.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                             Rs. {item.price.toLocaleString('en-IN')}
                           </p>
                           <div className="mt-4 flex items-center border w-fit">
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.cartItemId, item.quantity - 1)}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.cartItemId, item.quantity - 1)} aria-label="Decrease quantity">
                               <Minus className="h-4 w-4" />
                             </Button>
                             <span className="px-2 text-sm">{item.quantity}</span>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)} aria-label="Increase quantity">
                               <Plus className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>
                       </div>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground shrink-0" onClick={() => removeFromCart(item.cartItemId)}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground shrink-0" onClick={() => removeFromCart(item.cartItemId)} aria-label="Remove item">
                         <X className="h-4 w-4" />
                       </Button>
                     </div>
@@ -127,7 +127,7 @@ export default function CartSheet({ open, onOpenChange }: CartSheetProps) {
                 <div className="space-y-1.5 text-sm py-4">
                     <div className="flex">
                         <span className="flex-1">Subtotal</span>
-                        <span className="font-semibold"> Rs. {subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        <span className="font-semibold"> Rs. {subtotal.toLocaleString('en-IN')}</span>
                     </div>
                 </div>
                  <div className="space-y-3">

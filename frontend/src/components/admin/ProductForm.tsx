@@ -36,7 +36,9 @@ const addProductSchema = z.object({
   specifications: z.string().optional(),
 });
 
-const updateProductSchema = addProductSchema;
+const updateProductSchema = addProductSchema.extend({
+  productId: z.string().min(1, 'Product ID is required'),
+});
 
 const categorySchema = z.object({
     name: z.string().min(1, 'Category name is required.'),
@@ -94,7 +96,7 @@ export default function ProductForm({ open, onOpenChange, onFormSubmit, product 
     const [showAddCategory, setShowAddCategory] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
 
-            const formSchema = product ? updateProductSchema.extend({ productId: z.string() }) : addProductSchema;
+    const formSchema = product ? updateProductSchema : addProductSchema;
     
     const defaultValues = product ? {
         ...product,

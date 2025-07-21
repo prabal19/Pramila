@@ -16,6 +16,7 @@ import RelatedProducts from './RelatedProducts';
 import ProductReviews from './ProductReviews';
 import { Input } from '@/components/ui/input';
 import { Badge } from './ui/badge';
+import WishlistIcon from './WishlistIcon';
 
 const ProductDetailsClient = ({ product }: { product: Product }) => {
   const { addViewedProduct } = useViewedProducts();
@@ -41,6 +42,10 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
 
   const handleAddToCart = () => {
     addToCart(product.id, quantity, selectedSize);
+    const cartSheetTrigger = document.getElementById('cart-sheet-trigger');
+    if (cartSheetTrigger) {
+        cartSheetTrigger.click();
+    }
   };
 
   const handleBuyNow = () => {
@@ -74,7 +79,7 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
       <SizeChartDialog open={isSizeChartOpen} onOpenChange={setIsSizeChartOpen} />
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-16">
-          <div className="flex flex-row md:flex-row gap-4">
+          <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-col gap-3 shrink-0 order-first hidden sm:flex">
               {product.images.map((img, index) => (
                 <button
@@ -101,6 +106,9 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
                 className="object-cover rounded-lg"
                 priority
               />
+               <div className="absolute top-4 right-4">
+                    <WishlistIcon productId={product.id} variant="button" />
+                </div>
             </div>
              <div className="flex sm:hidden flex-row gap-3 overflow-x-auto absolute bottom-4 left-4 right-4 pb-2">
               {product.images.map((img, index) => (
@@ -165,16 +173,17 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
 
               <div className="flex gap-4">
                 <div className="flex items-center border rounded-sm">
-                  <Button variant="ghost" size="icon" className="h-full rounded-r-none" onClick={() => setQuantity(q => Math.max(1, q - 1))} disabled={quantity <= 1}>
+                  <Button aria-label="Decrease quantity" variant="ghost" size="icon" className="h-full rounded-r-none" onClick={() => setQuantity(q => Math.max(1, q - 1))} disabled={quantity <= 1}>
                     <Minus className="h-4 w-4" />
                   </Button>
                   <Input 
                     type="number"
                     value={quantity}
                     onChange={handleQuantityChange}
-                    className="w-16 h-full text-center border-x border-y-0 focus-visible:ring-0 rounded-none bg-white"
+                    aria-label="Product quantity"
+                    className="w-16 h-full text-center border-x border-y-0 focus-visible:ring-0 rounded-none hide-arrows [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
-                  <Button variant="ghost" size="icon" className="h-full rounded-l-none" onClick={() => setQuantity(q => q + 1)}>
+                  <Button aria-label="Increase quantity" variant="ghost" size="icon" className="h-full rounded-l-none" onClick={() => setQuantity(q => q + 1)}>
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
