@@ -14,7 +14,7 @@ const mapProduct = (backendProduct: any): Product => {
 
 export async function getProducts(): Promise<Product[]> {
   try {
-    const res = await fetch(`${API_URL}/api/products`, { cache: 'no-store' });
+    const res = await fetch(`${API_URL}/api/products`);
     if (!res.ok) {
       console.error('Failed to fetch products, status:', res.status);
       return [];

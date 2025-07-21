@@ -3,7 +3,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export async function getBanners(): Promise<Banner[]> {
   try {
-    const res = await fetch(`${API_URL}/api/banners`, { cache: 'no-store' });
+    const res = await fetch(`${API_URL}/api/banners`);
     if (!res.ok) {
       console.error('Failed to fetch banners, status:', res.status);
       return [];
