@@ -1,3 +1,4 @@
+
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
@@ -29,7 +30,13 @@ export const columns: ColumnDef<User>[] = [
     header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Date Joined" />
     ),
-     cell: ({ row }) => format(new Date(row.getValue("date") as string), 'MMM d, yyyy'),
+     cell: ({ row }) => {
+        const dateValue = row.getValue("date") as string;
+        if (!dateValue || isNaN(new Date(dateValue).getTime())) {
+            return <span>-</span>;
+        }
+        return format(new Date(dateValue), 'MMM d, yyyy');
+     },
      filterFn: (row, id, value) => {
         const date = new Date(row.getValue(id) as string);
         const { from, to } = value as { from?: Date; to?: Date };

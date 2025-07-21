@@ -647,7 +647,6 @@ const categories = [
   { name: 'Danglers', slug: 'danglers', parent: 'accessory' },
 ];
 
-
 let dummyUsers = [];
 let dummyOrders = [];
 
@@ -658,7 +657,7 @@ const createDummyData = async () => {
 
     dummyUsers = [
         {
-            _id: new mongoose.Types.ObjectId(),
+            _id: new mongoose.Types.ObjectId("60f8d2d3c3b4a2001c8e4f5a"), // Fixed ID
             firstName: 'John',
             lastName: 'Doe',
             email: 'john.doe@example.com',
@@ -666,7 +665,7 @@ const createDummyData = async () => {
             addresses: [{ fullAddress: '123 Main St, Anytown, USA - 12345, United States' }],
         },
         {
-            _id: new mongoose.Types.ObjectId(),
+            _id: new mongoose.Types.ObjectId("60f8d2d3c3b4a2001c8e4f5b"), // Fixed ID
             firstName: 'Jane',
             lastName: 'Smith',
             email: 'jane.smith@example.com',
@@ -678,6 +677,7 @@ const createDummyData = async () => {
     // Create dummy orders
     dummyOrders = [
         {
+            _id: new mongoose.Types.ObjectId("60f8d2d3c3b4a2001c8e4f5c"), // Fixed ID
             userId: dummyUsers[0]._id,
             items: [
                 { productId: products[0].productId, name: products[0].name, quantity: 1, price: products[0].price, size: 'M' },
@@ -688,6 +688,7 @@ const createDummyData = async () => {
             status: 'Delivered',
         },
         {
+            _id: new mongoose.Types.ObjectId("60f8d2d3c3b4a2001c8e4f5d"), // Fixed ID
             userId: dummyUsers[1]._id,
             items: [
                 { productId: products[4].productId, name: products[4].name, quantity: 1, price: products[4].price, size: 'S' },
@@ -697,6 +698,7 @@ const createDummyData = async () => {
             status: 'Shipped',
         },
         {
+            _id: new mongoose.Types.ObjectId("60f8d2d3c3b4a2001c8e4f5e"), // Fixed ID
             userId: dummyUsers[0]._id,
             items: [
                 { productId: products[6].productId, name: products[6].name, quantity: 2, price: products[6].price, size: 'XL' },
@@ -713,30 +715,30 @@ const seedDatabase = async () => {
     try {
         await createDummyData();
 
-        await Product.deleteMany({});
-        console.log('Existing products cleared.');
-        await Product.insertMany(products);
+        // Use updateOne with upsert for non-destructive seeding
+        console.log('Seeding products...');
+        for (const product of products) {
+            await Product.updateOne({ productId: product.productId }, { $set: product }, { upsert: true });
+        }
         console.log(`${products.length} products seeded successfully!`);
         
-        // await Banner.deleteMany({});
-        // console.log('Existing banners cleared.');
-        // await Banner.insertMany(banners);
-        // console.log(`${banners.length} banners seeded successfully!`);
-
-        await Category.deleteMany({});
-        console.log('Existing categories cleared.');
-        await Category.insertMany(categories);
+        console.log('Seeding categories...');
+        for (const category of categories) {
+            await Category.updateOne({ slug: category.slug }, { $set: category }, { upsert: true });
+        }
         console.log(`${categories.length} categories seeded successfully!`);
         
-        await User.deleteMany({});
-        console.log('Existing users cleared.');
-        await User.insertMany(dummyUsers);
-        console.log(`${dummyUsers.length} users seeded successfully!`);
+        console.log('Seeding dummy users...');
+        for (const user of dummyUsers) {
+            await User.updateOne({ email: user.email }, { $set: user }, { upsert: true });
+        }
+        console.log(`${dummyUsers.length} dummy users seeded successfully!`);
 
-        await Order.deleteMany({});
-        console.log('Existing orders cleared.');
-        await Order.insertMany(dummyOrders);
-        console.log(`${dummyOrders.length} orders seeded successfully!`);
+        console.log('Seeding dummy orders...');
+        for (const order of dummyOrders) {
+            await Order.updateOne({ _id: order._id }, { $set: order }, { upsert: true });
+        }
+        console.log(`${dummyOrders.length} dummy orders seeded successfully!`);
 
 
     } catch (err) {
