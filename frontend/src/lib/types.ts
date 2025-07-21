@@ -123,20 +123,30 @@ export type SupportMessage = {
   timestamp: string;
 };
 
-export type SupportTicketStatus = 'Open' | 'Pending' | 'Closed';
 
-export type SupportTicket = {
+export type RequestStatus = 'Open' | 'Pending' | 'Closed' | 'New Subscriber';
+export type RequestType = 'Support' | 'Contact' | 'Newsletter';
+
+export type Request = {
   _id: string;
   ticketId: number;
-  userId: string | PopulatedUser; // Can be populated
-  subject: string;
-  category: string;
-  orderId?: string;
-  status: SupportTicketStatus;
-  messages: SupportMessage[];
+  type: RequestType;
+  status: RequestStatus;
+  
+  contactName?: string;
+  contactEmail: string;
+  message?: string; // For Contact Form
+  
+  userId?: string | PopulatedUser; // Can be populated for Support
+  subject?: string; // For Support/Contact
+  category?: string; // For Support
+  orderId?: string; // For Support
+  messages: SupportMessage[]; // For Support
+
   createdAt: string;
   updatedAt: string;
 };
+
 
 export type Category = {
   _id: string;

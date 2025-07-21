@@ -6,6 +6,12 @@ import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ChevronDown } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { useToast } from '@/hooks/use-toast';
+import { subscribeToNewsletter } from '@/actions/requests';
 
 const InstagramIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-instagram"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
@@ -22,8 +28,28 @@ const WhatsAppIcon = () => (
     </svg>
 );
 
+const newsletterSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  email: z.string().email('Invalid email address'),
+});
 
 const Footer = () => {
+  const { toast } = useToast();
+  const form = useForm<z.infer<typeof newsletterSchema>>({
+    resolver: zodResolver(newsletterSchema),
+    defaultValues: { name: '', email: '' },
+  });
+
+  const onSubmit = async (values: z.infer<typeof newsletterSchema>) => {
+    const result = await subscribeToNewsletter(values);
+    if (result.success) {
+      toast({ title: 'Subscribed!', description: "Thank you for joining our newsletter." });
+      form.reset();
+    } else {
+      toast({ variant: 'destructive', title: 'Error', description: result.message });
+    }
+  };
+
   return (
     <footer className="bg-[#F9F9F7] text-gray-800 font-body">
       <div className="container mx-auto px-4 py-16 md:py-20">
@@ -65,23 +91,30 @@ const Footer = () => {
             <p className="text-gray-600 mb-6">
               Subscribe to get special offers, free giveaways, and once-in-a-lifetime deals.
             </p>
-            <form>
-              <div className="space-y-5">
-                <Input
-                  type="text"
-                  placeholder="Name"
-                  className="bg-transparent border-0 border-b border-input rounded-none px-0 py-2 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-black placeholder:text-gray-500"
-                />
-                <Input
-                  type="email"
-                  placeholder="Email"
-                  className="bg-transparent border-0 border-b border-input rounded-none px-0 py-2 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-black placeholder:text-gray-500"
-                />
-              </div>
-              <Button type="submit" className="w-full mt-8 bg-black text-white hover:bg-gray-800 rounded-none py-3 text-sm tracking-widest font-semibold h-auto">
-                JOIN
+            <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              <FormField control={form.control} name="name" render={({ field }) => (
+                <FormItem>
+                    <FormControl>
+                      <Input placeholder="Name" {...field} className="bg-transparent border-0 border-b border-input rounded-none px-0 py-2 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-black placeholder:text-gray-500" />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+              )}/>
+              <FormField control={form.control} name="email" render={({ field }) => (
+                <FormItem>
+                    <FormControl>
+                     <Input type="email" placeholder="Email" {...field} className="bg-transparent border-0 border-b border-input rounded-none px-0 py-2 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-black placeholder:text-gray-500" />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+              )}/>
+
+              <Button type="submit" disabled={form.formState.isSubmitting} className="w-full mt-8 bg-black text-white hover:bg-gray-800 rounded-none py-3 text-sm tracking-widest font-semibold h-auto">
+                {form.formState.isSubmitting ? 'JOINING...' : 'JOIN'}
               </Button>
             </form>
+            </Form>
             <p className="text-xs text-gray-400 mt-4 text-center">
               This site is protected by hCaptcha and the hCaptcha Privacy Policy and Terms of Service apply.
             </p>

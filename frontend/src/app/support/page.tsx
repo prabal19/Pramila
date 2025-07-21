@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { getUserSupportTickets } from '@/lib/support';
-import type { SupportTicket, SupportTicketStatus } from '@/lib/types';
+import { getUserRequests } from '@/lib/requests';
+import type { Request as SupportRequest, RequestStatus } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import NewSupportTicketDialog from '@/components/NewSupportTicketDialog';
-import { addMessageToTicket } from '@/actions/support';
+import { addMessageToTicket } from '@/actions/requests';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -24,8 +24,8 @@ export default function SupportPage() {
     const router = useRouter();
     const { toast } = useToast();
 
-    const [tickets, setTickets] = useState<SupportTicket[]>([]);
-    const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
+    const [tickets, setTickets] = useState<SupportRequest[]>([]);
+    const [selectedTicket, setSelectedTicket] = useState<SupportRequest | null>(null);
     const [loading, setLoading] = useState(true);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [newMessage, setNewMessage] = useState('');
@@ -34,7 +34,7 @@ export default function SupportPage() {
     const fetchTickets = async () => {
         if (user) {
             setLoading(true);
-            const userTickets = await getUserSupportTickets(user._id);
+            const userTickets = await getUserRequests(user._id);
             setTickets(userTickets);
             if (userTickets.length > 0 && !selectedTicket) {
                 setSelectedTicket(userTickets[0]);
@@ -84,7 +84,7 @@ export default function SupportPage() {
         return null;
     }
 
-    const getStatusVariant = (status: SupportTicketStatus) => {
+    const getStatusVariant = (status: RequestStatus) => {
         switch (status) {
             case 'Open': return 'bg-green-100 text-green-800 border-green-200';
             case 'Pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';

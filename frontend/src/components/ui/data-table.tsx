@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
+import { DataTableFacetedFilter } from "./data-table-faceted-filter"
 
 function DatePickerWithRange({
   className,
@@ -92,6 +93,13 @@ interface DataTableProps<TData, TValue> {
   searchKey: string
   searchPlaceholder: string
   dateFilterKey?: string
+  facetedFilterKey?: string
+  facetedFilterOptions?: {
+    label: string
+    value: string
+    icon?: React.ComponentType<{ className?: string }>
+  }[]
+  facetedFilterTitle?: string
 }
 
 export function DataTable<TData, TValue>({
@@ -100,6 +108,9 @@ export function DataTable<TData, TValue>({
   searchKey,
   searchPlaceholder,
   dateFilterKey,
+  facetedFilterKey,
+  facetedFilterOptions,
+  facetedFilterTitle,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -130,17 +141,28 @@ export function DataTable<TData, TValue>({
     [table, dateFilterKey]
   )
 
+  const facetedFilterColumn = facetedFilterKey ? table.getColumn(facetedFilterKey) : undefined;
+
   return (
     <div className="space-y-4">
        <div className="flex items-center justify-between">
-        <Input
-          placeholder={searchPlaceholder}
-          value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn(searchKey)?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
+         <div className="flex flex-1 items-center space-x-2">
+            <Input
+              placeholder={searchPlaceholder}
+              value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ""}
+              onChange={(event) =>
+                table.getColumn(searchKey)?.setFilterValue(event.target.value)
+              }
+              className="max-w-sm"
+            />
+            {facetedFilterColumn && facetedFilterOptions && (
+              <DataTableFacetedFilter
+                column={facetedFilterColumn}
+                title={facetedFilterTitle || 'Filter'}
+                options={facetedFilterOptions}
+              />
+            )}
+        </div>
         {dateFilterKey && <DatePickerWithRange onSelectDate={handleDateChange} />}
       </div>
       <div className="rounded-md border">

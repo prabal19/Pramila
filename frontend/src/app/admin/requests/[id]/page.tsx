@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getTicketById } from '@/lib/support';
-import { addMessageToTicket, updateTicketStatus } from '@/actions/support';
+import { getRequestById } from '@/lib/requests';
+import { addMessageToTicket, updateTicketStatus } from '@/actions/requests';
 import { useAuth } from '@/hooks/use-auth';
-import type { SupportTicket, SupportTicketStatus } from '@/lib/types';
+import type { Request as SupportRequest, RequestStatus } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -25,7 +25,7 @@ export default function TicketDetailPage() {
     const { toast } = useToast();
     const { user: adminUser } = useAuth();
 
-    const [ticket, setTicket] = useState<SupportTicket | null>(null);
+    const [ticket, setTicket] = useState<SupportRequest | null>(null);
     const [loading, setLoading] = useState(true);
     const [newMessage, setNewMessage] = useState('');
     const [isSending, setIsSending] = useState(false);
@@ -34,19 +34,19 @@ export default function TicketDetailPage() {
         const fetchTicket = async () => {
             if (typeof id !== 'string') return;
             setLoading(true);
-            const data = await getTicketById(id);
+            const data = await getRequestById(id);
             setTicket(data);
             setLoading(false);
         };
         fetchTicket();
     }, [id]);
 
-    const handleUpdateStatus = async (status: SupportTicketStatus) => {
+    const handleUpdateStatus = async (status: RequestStatus) => {
         if (!ticket) return;
         const result = await updateTicketStatus(ticket._id, status);
         if (result.success && result.data) {
             setTicket(result.data);
-            toast({ title: 'Status Updated', description: `Ticket status changed to ${status}.` });
+            toast({ title: 'Status Updated', description: `Request status changed to ${status}.` });
         } else {
             toast({ variant: 'destructive', title: 'Error', description: result.message });
         }
@@ -75,6 +75,7 @@ export default function TicketDetailPage() {
             case 'Open': return 'bg-green-100 text-green-800 border-green-200';
             case 'Pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
             case 'Closed': return 'bg-gray-100 text-gray-800 border-gray-200';
+            case 'New Subscriber': return 'bg-blue-100 text-blue-800 border-blue-200';
             default: return 'secondary';
         }
     };
@@ -84,15 +85,15 @@ export default function TicketDetailPage() {
     }
 
     if (!ticket) {
-        return <div className="text-center py-10">Ticket not found.</div>
+        return <div className="text-center py-10">Request not found.</div>
     }
     
-    const customer = typeof ticket.userId === 'object' ? ticket.userId : null;
+    const isSupportTicket = ticket.type === 'Support';
 
     return (
         <div className="space-y-6">
             <Button variant="ghost" onClick={() => router.push('/admin/requests')} className="text-muted-foreground">
-                <ArrowLeft className="mr-2 h-4 w-4" /> Back to All Tickets
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back to All Requests
             </Button>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                 <div className="lg:col-span-2">
@@ -103,7 +104,7 @@ export default function TicketDetailPage() {
                         <CardContent className="h-[50vh] flex flex-col">
                            <ScrollArea className="flex-1 pr-4 -mr-4 mb-4">
                                 <div className="space-y-6">
-                                    {ticket.messages.map(msg => (
+                                    {isSupportTicket ? ticket.messages.map(msg => (
                                         <div key={msg._id} className={cn("flex items-end gap-3", msg.sender === 'support' ? 'justify-end' : 'justify-start')}>
                                             {msg.sender === 'user' && <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center font-bold text-sm shrink-0">U</div>}
                                             <div className={cn("max-w-md p-3 rounded-lg", msg.sender === 'support' ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
@@ -112,54 +113,61 @@ export default function TicketDetailPage() {
                                             </div>
                                             {msg.sender === 'support' && <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm shrink-0">S</div>}
                                         </div>
-                                    ))}
+                                    )) : (
+                                        <p className="text-muted-foreground italic">{ticket.message || 'No message content.'}</p>
+                                    )}
                                 </div>
                             </ScrollArea>
-                            <div className="relative pt-4 border-t">
-                                <Textarea 
-                                    placeholder="Type your reply..." 
-                                    className="pr-24" 
-                                    value={newMessage}
-                                    onChange={(e) => setNewMessage(e.target.value)}
-                                />
-                                <Button 
-                                    className="absolute right-2 bottom-3" 
-                                    size="sm"
-                                    onClick={handleSendMessage}
-                                    disabled={isSending || !newMessage.trim()}
-                                >
-                                    {isSending ? 'Sending...' : 'Send Reply'}
-                                </Button>
-                            </div>
+                            {isSupportTicket && (
+                                <div className="relative pt-4 border-t">
+                                    <Textarea 
+                                        placeholder="Type your reply..." 
+                                        className="pr-24" 
+                                        value={newMessage}
+                                        onChange={(e) => setNewMessage(e.target.value)}
+                                    />
+                                    <Button 
+                                        className="absolute right-2 bottom-3" 
+                                        size="sm"
+                                        onClick={handleSendMessage}
+                                        disabled={isSending || !newMessage.trim()}
+                                    >
+                                        {isSending ? 'Sending...' : 'Send Reply'}
+                                    </Button>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </div>
                 <Card>
                     <CardHeader>
-                        <CardTitle>Ticket Details</CardTitle>
+                        <CardTitle>Request Details</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4 text-sm">
                         <div>
                             <p className="font-semibold">Status</p>
-                            <Select value={ticket.status} onValueChange={(val) => handleUpdateStatus(val as SupportTicketStatus)}>
+                            <Select value={ticket.status} onValueChange={(val) => handleUpdateStatus(val as RequestStatus)}>
                                 <SelectTrigger><SelectValue /></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="Open">Open</SelectItem>
                                     <SelectItem value="Pending">Pending</SelectItem>
                                     <SelectItem value="Closed">Closed</SelectItem>
+                                     {ticket.type === 'Newsletter' && <SelectItem value="New Subscriber">New Subscriber</SelectItem>}
                                 </SelectContent>
                             </Select>
                         </div>
                         <Separator />
                          <div>
-                            <p className="font-semibold">Customer</p>
-                            <p className="text-muted-foreground">{customer?.firstName} {customer?.lastName}</p>
-                            <p className="text-muted-foreground">{customer?.email}</p>
+                            <p className="font-semibold">Requester</p>
+                            <p className="text-muted-foreground">{ticket.contactName}</p>
+                            <p className="text-muted-foreground">{ticket.contactEmail}</p>
                         </div>
                         <Separator />
                         <div>
-                            <p className="font-semibold">Category</p>
-                            <p className="text-muted-foreground">{ticket.category}</p>
+                            <p className="font-semibold">Type</p>
+                             <Badge variant="outline" className={cn('capitalize', getStatusVariant(ticket.status))}>
+                                {ticket.type}
+                            </Badge>
                         </div>
                          {ticket.orderId && <>
                             <Separator />
