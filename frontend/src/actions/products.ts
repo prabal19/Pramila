@@ -16,6 +16,7 @@ const addProductSchema = z.object({
   bestseller: z.boolean().default(false),
   sizes: z.array(z.string()).optional(),
   specifications: z.string().optional(),
+quantity: z.coerce.number().min(0, 'Quantity cannot be negative.'),
 });
 
 const updateProductSchema = addProductSchema;

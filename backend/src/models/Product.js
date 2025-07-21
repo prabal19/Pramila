@@ -39,6 +39,11 @@ const ProductSchema = new mongoose.Schema({
   },
   specifications: {
     type: String,
+  },
+  quantity: {
+    type: Number,
+    required: true,
+    default: 0,
   }
 }, {
   timestamps: true, // This will add createdAt and updatedAt fields

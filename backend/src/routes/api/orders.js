@@ -2,19 +2,47 @@ const express = require('express');
 const router = express.Router();
 const Order = require('../../models/Order');
 const Cart = require('../../models/Cart');
+const Product = require('../../models/Product');
 
 // @route   POST api/orders
-// @desc    Create an order
+// @desc    Create an order and deduct product quantity
 // @access  Private (should be secured)
 router.post('/', async (req, res) => {
   const { userId, items, totalAmount, shippingAddress } = req.body;
+  
   try {
+    // Basic validation
+    if (!userId || !items || items.length === 0 || !totalAmount || !shippingAddress) {
+      return res.status(400).json({ msg: 'Missing required order information.' });
+    }
+
+    // Check stock availability before creating the order
+    for (const item of items) {
+      const product = await Product.findOne({ productId: item.productId });
+      if (!product) {
+        return res.status(404).json({ msg: `Product ${item.name} not found.` });
+      }
+      if (product.quantity < item.quantity) {
+        return res.status(400).json({ msg: `Not enough stock for ${item.name}. Only ${product.quantity} left.` });
+      }
+    }
+
+    // All products are in stock, proceed to create order
     const newOrder = new Order({
       userId,
       items,
       totalAmount,
       shippingAddress,
     });
+    
+    // Deduct quantities from products
+    for (const item of items) {
+       await Product.findOneAndUpdate(
+        { productId: item.productId },
+        { $inc: { quantity: -item.quantity } }
+      );
+    }
+    
     const order = await newOrder.save();
     
     // Clear the user's cart after creating the order
@@ -33,7 +61,6 @@ router.post('/', async (req, res) => {
 // @access  Private (should be secured)
 router.get('/', async (req, res) => {
   try {
-    // Populate user details to get customer name/email
     const orders = await Order.find()
       .populate('userId', 'firstName lastName email')
       .sort({ createdAt: -1 });
@@ -43,7 +70,6 @@ router.get('/', async (req, res) => {
     res.status(500).send('Server Error');
   }
 });
-
 
 // @route   PUT api/orders/:id/status
 // @desc    Update order status
@@ -65,7 +91,6 @@ router.put('/:id/status', async (req, res) => {
     order.status = status;
     await order.save();
     
-    // Repopulate user details for consistency
     const updatedOrder = await Order.findById(req.params.id).populate('userId', 'firstName lastName email');
     res.json(updatedOrder);
 

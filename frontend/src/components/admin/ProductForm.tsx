@@ -34,11 +34,10 @@ const addProductSchema = z.object({
   bestseller: z.boolean().default(false),
   sizes: z.array(z.string()).optional(),
   specifications: z.string().optional(),
+  quantity: z.coerce.number().min(0, "Quantity can't be negative").default(0),
 });
 
-const updateProductSchema = addProductSchema.extend({
-  productId: z.string().min(1, 'Product ID is required'),
-});
+const updateProductSchema = addProductSchema;
 
 const categorySchema = z.object({
     name: z.string().min(1, 'Category name is required.'),
@@ -100,7 +99,6 @@ export default function ProductForm({ open, onOpenChange, onFormSubmit, product 
     
     const defaultValues = product ? {
         ...product,
-        productId: product.id,
     } : {
         name: '',
         description: '',
@@ -111,6 +109,7 @@ export default function ProductForm({ open, onOpenChange, onFormSubmit, product 
         bestseller: false,
         sizes: allSizes,
         specifications: '',
+        quantity: 0,
     };
 
     const form = useForm<z.infer<typeof formSchema>>({
@@ -127,7 +126,8 @@ export default function ProductForm({ open, onOpenChange, onFormSubmit, product 
 
     useEffect(() => {
         fetchCategories();
-    }, []);
+        form.reset(defaultValues);
+    }, [product, open]);
 
     const handleCategoryAdded = (newCategory: Category) => {
         setCategories(prev => [...prev, newCategory].sort((a,b) => a.name.localeCompare(b.name)));
@@ -304,18 +304,19 @@ export default function ProductForm({ open, onOpenChange, onFormSubmit, product 
                         </div>
                         {showAddCategory && <AddCategoryForm onCategoryAdded={handleCategoryAdded} />}
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <FormField name="price" control={form.control} render={({ field }) => (<FormItem><FormLabel>Price*</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
                             <FormField name="strikeoutPrice" control={form.control} render={({ field }) => (<FormItem><FormLabel>Strikeout Price</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                            <FormField name="quantity" control={form.control} render={({ field }) => (<FormItem><FormLabel>Quantity*</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
                         </div>
                         
                         <FormField name="images" control={form.control} render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Product Images*</FormLabel>
-                                <div className="flex flex-col gap-4">
+                                <div className="space-y-4">
                                     {field.value?.map((url, index) => (
-                                        <div key={index} className="relative w-full h-60 rounded-md border-2 border-dashed border-muted-foreground/30 flex items-center justify-center bg-muted/20">
-                                            <Image src={url} alt={`Product image ${index + 1}`} fill className="object-contain" />
+                                        <div key={index} className="relative w-full h-60 rounded-md border flex items-center justify-center bg-muted/20">
+                                            <Image src={url} alt={`Product image ${index + 1}`} fill className="object-contain rounded-md" />
                                             <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2 z-10" onClick={() => removeImage(index)}>
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>

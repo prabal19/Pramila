@@ -10,6 +10,7 @@ export type Product = {
   sizes?: string[];
   specifications?: string;
   createdAt: string;
+    quantity: number;
 };
 
 export type CartItem = {

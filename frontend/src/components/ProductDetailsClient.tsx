@@ -17,6 +17,7 @@ import ProductReviews from './ProductReviews';
 import { Input } from '@/components/ui/input';
 import { Badge } from './ui/badge';
 import WishlistIcon from './WishlistIcon';
+import { cn } from '@/lib/utils';
 
 const ProductDetailsClient = ({ product }: { product: Product }) => {
   const { addViewedProduct } = useViewedProducts();
@@ -73,6 +74,8 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
   const discountPercentage = hasDiscount
     ? Math.round(((product.strikeoutPrice! - product.price) / product.strikeoutPrice!) * 100)
     : 0;
+  
+  const isOutOfStock = product.quantity === 0;
 
   return (
     <>
@@ -82,7 +85,7 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-col gap-3 shrink-0 order-first hidden sm:flex">
               {product.images.map((img, index) => (
-                <button
+              <button
                   key={index}
                   onClick={() => setSelectedImage(img)}
                   className={`w-20 h-28 relative rounded-sm overflow-hidden border-2 ${selectedImage === img ? 'border-primary' : 'border-transparent'} transition-colors`}
@@ -131,14 +134,15 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
           </div>
 
           <div className="md:sticky top-24 self-start">
-            {product.bestseller && (
+            {product.bestseller && !isOutOfStock && (
               <div className="flex items-center gap-2 text-sm font-semibold text-primary mb-2 tracking-widest">
                 <Shirt className="w-5 h-5" />
                 <span>BESTSELLER</span>
               </div>
             )}
             <Link href={`/shop/${product.category}`} className="text-sm text-muted-foreground hover:text-primary">{getCategoryTitle(product.category)}</Link>
-            <h1 className="text-3xl md:text-4xl font-headline mt-1 mb-2">{product.name}</h1>
+            <h1 className={cn("text-3xl md:text-4xl font-headline mt-1 mb-2", isOutOfStock && "line-through text-muted-foreground")}>{product.name}</h1>
+             {isOutOfStock && <p className="text-xl font-bold text-destructive mb-2">OUT OF STOCK</p>}
             <div className="flex items-baseline gap-4 mb-6">
                 <p className="text-2xl font-semibold">Rs. {product.price.toLocaleString('en-IN')}</p>
                 {hasDiscount && (
@@ -164,6 +168,7 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
                       variant={selectedSize === size ? 'default' : 'outline'}
                       onClick={() => setSelectedSize(size)}
                       className={`rounded-sm px-4 h-9 ${selectedSize === size ? 'bg-primary text-primary-foreground' : 'bg-white'}`}
+                      disabled={isOutOfStock}
                     >
                       {size}
                     </Button>
@@ -173,7 +178,7 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
 
               <div className="flex gap-4">
                 <div className="flex items-center border rounded-sm">
-                  <Button aria-label="Decrease quantity" variant="ghost" size="icon" className="h-full rounded-r-none" onClick={() => setQuantity(q => Math.max(1, q - 1))} disabled={quantity <= 1}>
+                  <Button aria-label="Decrease quantity" variant="ghost" size="icon" className="h-full rounded-r-none" onClick={() => setQuantity(q => Math.max(1, q - 1))} disabled={quantity <= 1 || isOutOfStock}>
                     <Minus className="h-4 w-4" />
                   </Button>
                   <Input 
@@ -182,18 +187,21 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
                     onChange={handleQuantityChange}
                     aria-label="Product quantity"
                     className="w-16 h-full text-center border-x border-y-0 focus-visible:ring-0 rounded-none hide-arrows [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                     disabled={isOutOfStock}
                   />
-                  <Button aria-label="Increase quantity" variant="ghost" size="icon" className="h-full rounded-l-none" onClick={() => setQuantity(q => q + 1)}>
+                  <Button aria-label="Increase quantity" variant="ghost" size="icon" className="h-full rounded-l-none" onClick={() => setQuantity(q => q + 1)} disabled={isOutOfStock}>
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
 
-                <Button variant="outline" size="lg" className="flex-1 rounded-sm tracking-widest border-black hover:bg-black hover:text-white" onClick={handleAddToCart}>
+                <Button variant="outline" size="lg" className={cn("flex-1 rounded-sm tracking-widest border-black hover:bg-black hover:text-white", isOutOfStock && "bg-gray-300 border-gray-300 text-gray-500 hover:bg-gray-300 hover:text-gray-500 cursor-not-allowed")} onClick={handleAddToCart} disabled={isOutOfStock}>
                   ADD TO CART
                 </Button>
               </div>
               
-              <Button size="lg" className="w-full rounded-sm bg-primary text-primary-foreground tracking-widest font-semibold hover:bg-primary/90" onClick={handleBuyNow}>BUY NOW</Button>
+              <Button size="lg" className={cn("w-full rounded-sm bg-primary text-primary-foreground tracking-widest font-semibold hover:bg-primary/90", isOutOfStock && "bg-gray-400 hover:bg-gray-400 cursor-not-allowed")} onClick={handleBuyNow} disabled={isOutOfStock}>
+                {isOutOfStock ? "OUT OF STOCK" : "BUY NOW"}
+              </Button>
               
               <p className="text-xs text-muted-foreground">Disclaimer: This product will be shipped to you within 5-6 work from the date of order placed.</p>
               
