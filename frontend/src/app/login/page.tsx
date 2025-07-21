@@ -70,7 +70,7 @@ export default function LoginPage() {
                 <FormItem>
                   <FormLabel className="text-sm font-medium text-muted-foreground">Email</FormLabel>
                   <FormControl>
-                    <Input {...field} className="bg-transparent border-0 border-b border-input rounded-none px-0 h-auto py-2 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-primary" />
+                    <Input {...field} autoComplete="email" className="bg-transparent border-0 border-b border-input rounded-none px-0 h-auto py-2 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-primary" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -83,7 +83,7 @@ export default function LoginPage() {
                 <FormItem>
                   <FormLabel className="text-sm font-medium text-muted-foreground">Password</FormLabel>
                   <FormControl>
-                    <Input type="password" {...field} className="bg-transparent border-0 border-b border-input rounded-none px-0 h-auto py-2 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-primary" />
+                    <Input type="password" {...field} autoComplete="current-password" className="bg-transparent border-0 border-b border-input rounded-none px-0 h-auto py-2 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-primary" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
