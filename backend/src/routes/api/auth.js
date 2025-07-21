@@ -44,22 +44,29 @@ router.post('/register', async (req, res) => {
       { upsert: true, new: true }
     );
 
-    await resend.emails.send({
-      from: 'onboarding@resend.dev',
-      to: email,
-      subject: `Your Verification Code for PRAMILA`,
-      html: `
-        <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
-            <h2 style="color: #350210;">Welcome to PRAMILA!</h2>
-            <p>Thank you for registering. Please use the following One-Time Password (OTP) to complete your signup process.</p>
-            <p style="font-size: 24px; font-weight: bold; letter-spacing: 3px; margin: 20px 0; text-align: center; color: #350210;">${otp}</p>
-            <p>This code is valid for <strong>${OTP_VALIDITY_MINUTES} minutes</strong>. For your security, please do not share this code with anyone.</p>
-            <p>If you did not request this, you can safely ignore this email.</p>
-            <br>
-            <p>Best regards,<br>The PRAMILA Team</p>
-        </div>
-      `,
-    });
+    try {
+      await resend.emails.send({
+        from: 'onboarding@resend.dev',
+        to: email,
+        subject: `Your Verification Code for PRAMILA`,
+        html: `
+          <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
+              <h2 style="color: #350210;">Welcome to PRAMILA!</h2>
+              <p>Thank you for registering. Please use the following One-Time Password (OTP) to complete your signup process.</p>
+              <p style="font-size: 24px; font-weight: bold; letter-spacing: 3px; margin: 20px 0; text-align: center; color: #350210;">${otp}</p>
+              <p>This code is valid for <strong>${OTP_VALIDITY_MINUTES} minutes</strong>. For your security, please do not share this code with anyone.</p>
+              <p>If you did not request this, you can safely ignore this email.</p>
+              <br>
+              <p>Best regards,<br>The PRAMILA Team</p>
+          </div>
+        `,
+      });
+    } catch (emailError) {
+      console.error("Resend email failed:", emailError);
+      // Even if email fails, we don't want to block registration in this step
+      // The user can use the "Resend OTP" feature.
+      // We will still return a success response to the client.
+    }
 
     res.status(200).json({ msg: 'OTP sent successfully' });
 
