@@ -1,3 +1,4 @@
+
 import { getProducts } from '@/lib/products';
 import { getCategories } from '@/lib/categories';
 import PageBannerContainer from '@/components/PageBannerContainer';
@@ -15,7 +16,7 @@ export default async function BestsellersPage() {
           Bestsellers
         </h1>
 
-        <ProductGrid products={products} allCategories={allCategories} />
+        <ProductGrid products={products} allCategories={allCategories} showCategoryFilter={true} />
       </div>
       <PageBannerContainer page="bestsellers" position="bottom-of-page" />
     </>

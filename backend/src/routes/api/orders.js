@@ -71,6 +71,19 @@ router.get('/', async (req, res) => {
   }
 });
 
+// @route   GET api/orders/user/:userId
+// @desc    Get all orders for a specific user
+// @access  Private (should be secured)
+router.get('/user/:userId', async (req, res) => {
+  try {
+    const orders = await Order.find({ userId: req.params.userId }).sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
 // @route   PUT api/orders/:id/status
 // @desc    Update order status
 // @access  Private (should be secured)

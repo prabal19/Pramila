@@ -1,3 +1,4 @@
+
 import { getProducts } from '@/lib/products';
 import { getCategories } from '@/lib/categories';
 import PageBannerContainer from '@/components/PageBannerContainer';
@@ -16,7 +17,7 @@ export default async function NewInPage() {
           New In
         </h1>
 
-        <ProductGrid products={products} allCategories={allCategories} defaultSort="newest" />
+        <ProductGrid products={products} allCategories={allCategories} defaultSort="newest" showCategoryFilter={true} />
       </div>
       <PageBannerContainer page="new-in" position="bottom-of-page" />
     </>

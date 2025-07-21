@@ -1,7 +1,8 @@
+
 'use client'
 
 import { useState, useEffect, useCallback } from 'react';
-import { getOrders } from '@/lib/orders';
+import { getAdminOrders } from '@/lib/orders';
 import { Order } from "@/lib/types";
 import { columns } from "./columns";
 import { DataTable } from "@/components/ui/data-table";
@@ -13,7 +14,7 @@ export default function AdminOrdersPage() {
 
     const fetchData = useCallback(async () => {
         setLoading(true);
-        const orders = await getOrders();
+        const orders = await getAdminOrders();
         setData(orders);
         setLoading(false);
     }, []);

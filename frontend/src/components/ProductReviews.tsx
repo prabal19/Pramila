@@ -1,18 +1,40 @@
+
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { Star } from 'lucide-react';
+import { Star, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import ReviewFormDialog from './ReviewFormDialog';
+import { getUserOrders } from '@/lib/orders';
+import type { Order } from '@/lib/types';
 
 const ProductReviews = ({ productId }: { productId: string }) => {
   const { user } = useAuth();
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [hasPurchased, setHasPurchased] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Placeholder for where you would fetch and display actual reviews
-  const reviews = []; 
+  const reviews = [];
+
+  useEffect(() => {
+    const checkPurchaseHistory = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+      setIsLoading(true);
+      const orders = await getUserOrders(user._id);
+      const purchased = orders.some(order => order.items.some(item => item.productId === productId));
+      setHasPurchased(purchased);
+      setIsLoading(false);
+    };
+
+    checkPurchaseHistory();
+  }, [user, productId]);
+
 
   const StarRatingDisplay = () => (
     <div className="flex items-center gap-1">
@@ -46,7 +68,7 @@ const ProductReviews = ({ productId }: { productId: string }) => {
                 <p className="text-sm text-muted-foreground mt-2">No reviews yet</p>
                )}
             </div>
-             {user && (
+             {!isLoading && hasPurchased && (
                 <Button 
                     onClick={() => setIsFormOpen(true)} 
                     className="bg-black hover:bg-gray-800 text-white rounded-none tracking-widest font-semibold px-8 py-3 h-auto"
@@ -56,10 +78,9 @@ const ProductReviews = ({ productId }: { productId: string }) => {
             )}
           </div>
 
-          {/* Placeholder for review list */}
-          {reviews.length === 0 && !user && (
+          {reviews.length === 0 && (
             <p className="text-center text-muted-foreground mt-8">
-              Be the first to review this product! Please log in to write a review.
+              Be the first to review this product!
             </p>
           )}
         </div>
