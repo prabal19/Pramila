@@ -1,7 +1,12 @@
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 const Product = require('../models/Product');
-const Banner = require('../models/Banner');
-const connectDB = require('../config/db');
+// const Banner = require('../models/Banner');
 const Category = require('../models/Category');
+const User = require('../models/User');
+const Order = require('../models/Order');
+const connectDB = require('../config/db');
+
 
 const allSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', 'CUSTOM SIZE'];
 const accessorySizes = ['One Size'];
@@ -588,6 +593,44 @@ const products = [
   }
 ];
 
+// const banners = [
+//   {
+//     title: "Modern Indian Wear",
+//     description: "Where tradition meets style.",
+//     imageUrl: "/images/image0.webp",
+//     buttonText: "SHOP NOW",
+//     buttonLink: "/shop",
+//     backgroundColor: "#000000",
+//     textColor: "#ffffff",
+//     position: 'top-of-page',
+//     targetPages: ['home'],
+//     order: -1,
+//     isActive: true,
+//     animation: 'fade',
+//     clickableImage: false,
+//   },
+//   {
+//     description: "Pan India Shipping | Handcrafted Luxury 🥰",
+//     backgroundColor: "#DDE2D3",
+//     textColor: "#000000",
+//     position: 'above-header',
+//     targetPages: ['all'],
+//     order: 1,
+//     isActive: true,
+//   },
+//   {
+//     description: "10% Off Sitewide - Shop Now!🛒",
+//     buttonLink: "/shop",
+//     backgroundColor: "#E45757",
+//     textColor: "#ffffff",
+//     position: 'above-header',
+//     targetPages: ['all'],
+//     order: 2,
+//     isActive: true,
+//     clickableImage: true,
+//   }
+// ];
+
 const categories = [
   // Collections
   // { name: 'Sharara Sets', slug: 'sharara-set', parent: 'collection' },
@@ -605,25 +648,96 @@ const categories = [
 ];
 
 
+let dummyUsers = [];
+let dummyOrders = [];
+
+const createDummyData = async () => {
+    // Create dummy users
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash('password123', salt);
+
+    dummyUsers = [
+        {
+            _id: new mongoose.Types.ObjectId(),
+            firstName: 'John',
+            lastName: 'Doe',
+            email: 'john.doe@example.com',
+            password: hashedPassword,
+            addresses: [{ fullAddress: '123 Main St, Anytown, USA - 12345, United States' }],
+        },
+        {
+            _id: new mongoose.Types.ObjectId(),
+            firstName: 'Jane',
+            lastName: 'Smith',
+            email: 'jane.smith@example.com',
+            password: hashedPassword,
+            addresses: [{ fullAddress: '456 Oak Ave, Anytown, USA - 12345, United States' }],
+        },
+    ];
+
+    // Create dummy orders
+    dummyOrders = [
+        {
+            userId: dummyUsers[0]._id,
+            items: [
+                { productId: products[0].productId, name: products[0].name, quantity: 1, price: products[0].price, size: 'M' },
+                { productId: products[2].productId, name: products[2].name, quantity: 1, price: products[2].price, size: 'L' },
+            ],
+            totalAmount: products[0].price + products[2].price,
+            shippingAddress: '123 Main St, Anytown, USA - 12345, United States',
+            status: 'Delivered',
+        },
+        {
+            userId: dummyUsers[1]._id,
+            items: [
+                { productId: products[4].productId, name: products[4].name, quantity: 1, price: products[4].price, size: 'S' },
+            ],
+            totalAmount: products[4].price,
+            shippingAddress: '456 Oak Ave, Anytown, USA - 12345, United States',
+            status: 'Shipped',
+        },
+        {
+            userId: dummyUsers[0]._id,
+            items: [
+                { productId: products[6].productId, name: products[6].name, quantity: 2, price: products[6].price, size: 'XL' },
+            ],
+            totalAmount: products[6].price * 2,
+            shippingAddress: '123 Main St, Anytown, USA - 12345, United States',
+            status: 'Pending',
+        },
+    ];
+};
+
+
 const seedDatabase = async () => {
     try {
+        await createDummyData();
+
         await Product.deleteMany({});
         console.log('Existing products cleared.');
-        
         await Product.insertMany(products);
         console.log(`${products.length} products seeded successfully!`);
         
         // await Banner.deleteMany({});
         // console.log('Existing banners cleared.');
-        
         // await Banner.insertMany(banners);
         // console.log(`${banners.length} banners seeded successfully!`);
 
-        
         await Category.deleteMany({});
         console.log('Existing categories cleared.');
         await Category.insertMany(categories);
         console.log(`${categories.length} categories seeded successfully!`);
+        
+        await User.deleteMany({});
+        console.log('Existing users cleared.');
+        await User.insertMany(dummyUsers);
+        console.log(`${dummyUsers.length} users seeded successfully!`);
+
+        await Order.deleteMany({});
+        console.log('Existing orders cleared.');
+        await Order.insertMany(dummyOrders);
+        console.log(`${dummyOrders.length} orders seeded successfully!`);
+
 
     } catch (err) {
         console.error('Error seeding database:', err.message);
@@ -641,5 +755,6 @@ if (require.main === module) {
         seedDatabase();
     });
 }
+
 
 module.exports = seedDatabase;
