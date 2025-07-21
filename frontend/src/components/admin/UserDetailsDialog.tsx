@@ -24,6 +24,8 @@ export default function UserDetailsDialog({ userDetails, open, onOpenChange }: U
     if (!userDetails) return null;
 
     const { user, orders } = userDetails;
+    
+    const isValidDate = user.date && !isNaN(new Date(user.date).getTime());
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -46,7 +48,10 @@ export default function UserDetailsDialog({ userDetails, open, onOpenChange }: U
                                             <div><p className="font-semibold">First Name</p><p>{user.firstName}</p></div>
                                             <div><p className="font-semibold">Last Name</p><p>{user.lastName}</p></div>
                                             <div className="col-span-2"><p className="font-semibold">Email</p><p>{user.email}</p></div>
-                                            <div className="col-span-2"><p className="font-semibold">Date Joined</p><p>{format(new Date(user.date), 'PPpp')}</p></div>
+                                            <div className="col-span-2">
+                                                <p className="font-semibold">Date Joined</p>
+                                                <p>{isValidDate ? format(new Date(user.date), 'PPpp') : '-'}</p>
+                                            </div>
                                         </CardContent>
                                     </Card>
                                 </TabsContent>
