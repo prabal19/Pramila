@@ -84,6 +84,26 @@ router.get('/user/:userId', async (req, res) => {
   }
 });
 
+
+// @route   GET api/orders/:id
+// @desc    Get order by ID
+// @access  Private (should be secured)
+router.get('/:id', async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id).populate('userId', 'firstName lastName email');
+    if (!order) {
+      return res.status(404).json({ msg: 'Order not found' });
+    }
+    res.json(order);
+  } catch (err) {
+    console.error(err.message);
+    if (err.kind === 'ObjectId') {
+        return res.status(404).json({ msg: 'Order not found' });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
 // @route   PUT api/orders/:id/status
 // @desc    Update order status
 // @access  Private (should be secured)

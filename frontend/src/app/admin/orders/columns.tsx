@@ -18,7 +18,8 @@ const StatusUpdater = ({ order, onRefresh }: { order: Order; onRefresh: () => vo
 
     const orderStatuses: OrderStatus[] = ['Pending', 'Confirmed / Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled', 'Returned'];
 
-    const handleSave = async () => {
+    const handleSave = async (e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent row click event
         setIsSaving(true);
         const result = await updateOrderStatus(order._id, currentStatus);
         setIsSaving(false);
@@ -30,9 +31,13 @@ const StatusUpdater = ({ order, onRefresh }: { order: Order; onRefresh: () => vo
             setCurrentStatus(order.status); // Revert on failure
         }
     };
+    
+    const handleSelectClick = (e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent row click event
+    }
 
     return (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" onClick={handleSelectClick}>
             <Select value={currentStatus} onValueChange={(value) => setCurrentStatus(value as OrderStatus)}>
                 <SelectTrigger className="w-[200px]">
                     <SelectValue placeholder="Select status" />
@@ -51,6 +56,7 @@ const StatusUpdater = ({ order, onRefresh }: { order: Order; onRefresh: () => vo
         </div>
     );
 };
+
 
 
 export const columns = ({ onRefresh }: { onRefresh: () => void }): ColumnDef<Order>[] => [

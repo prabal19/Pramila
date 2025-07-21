@@ -83,3 +83,17 @@ export async function getUserOrders(userId: string): Promise<Order[]> {
         return [];
     }
 }
+
+
+export async function getOrderById(orderId: string): Promise<Order | null> {
+    try {
+        const res = await fetch(`${API_URL}/api/orders/${orderId}`, { cache: 'no-store' });
+        if (!res.ok) {
+            return null;
+        }
+        return res.json();
+    } catch (error) {
+        console.error(`Error fetching order ${orderId}:`, error);
+        return null;
+    }
+}
