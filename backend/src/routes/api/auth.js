@@ -1,3 +1,4 @@
+
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
@@ -9,6 +10,12 @@ const Verification = require('../../models/Verification');
 const PasswordReset = require('../../models/PasswordReset');
 
 
+if (!process.env.RESEND_API_KEY) {
+    console.warn("******************************************************************************");
+    console.warn("WARNING: RESEND_API_KEY is not set in the backend/.env file.");
+    console.warn("Email functionality will be disabled. Please add your Resend API key.");
+    console.warn("******************************************************************************");
+}
 const resend = new Resend(process.env.RESEND_API_KEY);
 const OTP_VALIDITY_MINUTES = 5;
 
@@ -34,44 +41,50 @@ router.post('/register', async (req, res) => {
       lowerCaseAlphabets: false,
     });
     
-    // const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password);
-    const hashedOtp = await bcrypt.hash(otp);
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedOtp = await bcrypt.hash(otp, salt);
 
     await Verification.findOneAndUpdate(
       { email },
-    {$set:{ firstName, lastName, password: hashedPassword, otp: hashedOtp },},
-      { upsert: true, new: true }
+      { firstName, lastName, password: hashedPassword, otp: hashedOtp, createdAt: new Date() },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 
     try {
-      await resend.emails.send({
-        from: 'onboarding@resend.dev',
-        to: email,
-        subject: `Your Verification Code for PRAMILA`,
-        html: `
-          <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
-              <h2 style="color: #350210;">Welcome to PRAMILA!</h2>
-              <p>Thank you for registering. Please use the following One-Time Password (OTP) to complete your signup process.</p>
-              <p style="font-size: 24px; font-weight: bold; letter-spacing: 3px; margin: 20px 0; text-align: center; color: #350210;">${otp}</p>
-              <p>This code is valid for <strong>${OTP_VALIDITY_MINUTES} minutes</strong>. For your security, please do not share this code with anyone.</p>
-              <p>If you did not request this, you can safely ignore this email.</p>
-              <br>
-              <p>Best regards,<br>The PRAMILA Team</p>
-          </div>
-        `,
-      });
+      if (process.env.RESEND_API_KEY) {
+        await resend.emails.send({
+          from: 'onboarding@resend.dev',
+          to: email,
+          subject: `Your Verification Code for PRAMILA`,
+          html: `
+            <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
+                <h2 style="color: #350210;">Welcome to PRAMILA!</h2>
+                <p>Thank you for registering. Please use the following One-Time Password (OTP) to complete your signup process.</p>
+                <p style="font-size: 24px; font-weight: bold; letter-spacing: 3px; margin: 20px 0; text-align: center; color: #350210;">${otp}</p>
+                <p>This code is valid for <strong>${OTP_VALIDITY_MINUTES} minutes</strong>. For your security, please do not share this code with anyone.</p>
+                <p>If you did not request this, you can safely ignore this email.</p>
+                <br>
+                <p>Best regards,<br>The PRAMILA Team</p>
+            </div>
+          `,
+        });
+      }
     } catch (emailError) {
-      console.error("Resend email failed:", emailError);
+      console.error("Resend email failed but proceeding with registration:", emailError);
       // Even if email fails, we don't want to block registration in this step
       // The user can use the "Resend OTP" feature.
       // We will still return a success response to the client.
     }
 
+
     res.status(200).json({ msg: 'OTP sent successfully' });
 
   } catch (err) {
-    console.error(err.message);
+    console.error("!!!!!!!!!!!!!!!!! FATAL REGISTRATION ERROR !!!!!!!!!!!!!!!!!");
+    console.error("The API crashed during the /api/auth/register request.");
+    console.error("Full error object:", err);
+    console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     res.status(500).send('Server error');
   }
 });
@@ -143,26 +156,28 @@ router.post('/resend-otp', async (req, res) => {
         verificationDoc.createdAt = new Date();
         await verificationDoc.save();
 
-        await resend.emails.send({
-            from: 'onboarding@resend.dev',
-            to: email,
-            subject: `Your New Verification Code for PRAMILA`,
-            html: `
-                <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
-                    <h2 style="color: #350210;">Your New PRAMILA Verification Code</h2>
-                    <p>A new One-Time Password (OTP) has been generated for you.</p>
-                    <p style="font-size: 24px; font-weight: bold; letter-spacing: 3px; margin: 20px 0; text-align: center; color: #350210;">${otp}</p>
-                    <p>This code is valid for <strong>${OTP_VALIDITY_MINUTES} minutes</strong>. Please do not share this code with anyone.</p>
-                    <br>
-                    <p>Best regards,<br>The PRAMILA Team</p>
-                </div>
-            `,
-        });
+        if (process.env.RESEND_API_KEY) {
+            await resend.emails.send({
+                from: 'onboarding@resend.dev',
+                to: email,
+                subject: `Your New Verification Code for PRAMILA`,
+                html: `
+                    <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
+                        <h2 style="color: #350210;">Your New PRAMILA Verification Code</h2>
+                        <p>A new One-Time Password (OTP) has been generated for you.</p>
+                        <p style="font-size: 24px; font-weight: bold; letter-spacing: 3px; margin: 20px 0; text-align: center; color: #350210;">${otp}</p>
+                        <p>This code is valid for <strong>${OTP_VALIDITY_MINUTES} minutes</strong>. Please do not share this code with anyone.</p>
+                        <br>
+                        <p>Best regards,<br>The PRAMILA Team</p>
+                    </div>
+                `,
+            });
+        }
 
         res.status(200).json({ msg: 'New OTP sent successfully' });
         
     } catch (err) {
-        console.error(err.message);
+        console.error("Resend OTP Error:", err);
         res.status(500).send('Server error');
     }
 });
@@ -228,26 +243,27 @@ router.post('/forgot-password', async (req, res) => {
             { upsert: true, new: true, setDefaultsOnInsert: true }
         );
 
-        await resend.emails.send({
-            from: 'onboarding@resend.dev',
-            to: email,
-            subject: 'Your Password Reset Code for PRAMILA',
-            html: `
-               <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
-                    <h2 style="color: #350210;">Password Reset Request</h2>
-                    <p>We received a request to reset your password. Use the following One-Time Password (OTP) to proceed.</p>
-                    <p style="font-size: 24px; font-weight: bold; letter-spacing: 3px; margin: 20px 0; text-align: center; color: #350210;">${otp}</p>
-                    <p>This code is valid for <strong>${OTP_VALIDITY_MINUTES} minutes</strong>. If you did not request a password reset, please ignore this email.</p>
-                    <br>
-                    <p>Best regards,<br>The PRAMILA Team</p>
-                </div>
-            `,
-        });
-
+        if (process.env.RESEND_API_KEY) {
+            await resend.emails.send({
+                from: 'onboarding@resend.dev',
+                to: email,
+                subject: 'Your Password Reset Code for PRAMILA',
+                html: `
+                   <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
+                        <h2 style="color: #350210;">Password Reset Request</h2>
+                        <p>We received a request to reset your password. Use the following One-Time Password (OTP) to proceed.</p>
+                        <p style="font-size: 24px; font-weight: bold; letter-spacing: 3px; margin: 20px 0; text-align: center; color: #350210;">${otp}</p>
+                        <p>This code is valid for <strong>${OTP_VALIDITY_MINUTES} minutes</strong>. If you did not request a password reset, please ignore this email.</p>
+                        <br>
+                        <p>Best regards,<br>The PRAMILA Team</p>
+                    </div>
+                `,
+            });
+        }
         res.status(200).json({ msg: 'Password reset OTP sent successfully' });
 
     } catch (err) {
-        console.error(err.message);
+        console.error("Forgot Password Error:", err);
         res.status(500).send('Server Error');
     }
 });
@@ -332,7 +348,7 @@ router.post('/reset-password', async (req, res) => {
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
-   }
+    }
 });
 
 // @route   POST api/auth/silent-register
@@ -368,3 +384,6 @@ router.post('/silent-register', async (req, res) => {
 
 
 module.exports = router;
+
+    
+    
