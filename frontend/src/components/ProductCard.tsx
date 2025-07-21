@@ -45,7 +45,7 @@ const ProductCard = ({ product, className, imageClassName, textAlign = 'center' 
           </Badge>
         )}
       </CardHeader>
-      <CardContent className={cn("p-4", `text-${textAlign}`)}>
+      <CardContent className={cn("p-4 pt-6", `text-${textAlign}`)}>
           <Link href={`/product/${product.id}`} className={cn(isOutOfStock && "pointer-events-none")}>
             <h3 className={cn("font-headline text-lg leading-tight hover:text-primary transition-colors", isOutOfStock && "line-through text-muted-foreground")}>{product.name}</h3>
           </Link>
