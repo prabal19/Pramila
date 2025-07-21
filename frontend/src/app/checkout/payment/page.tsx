@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useCart } from '@/hooks/use-cart';
 import { useAuth } from '@/hooks/use-auth';
 import { getProductsByIds } from '@/lib/products';
@@ -37,7 +37,10 @@ const CheckoutStep = ({ number, label, active, completed }: { number: number; la
 
 
 export default function PaymentPage() {
-  const { cart, isLoading: isCartLoading, clearCart, shippingInfo } = useCart();
+  const searchParams = useSearchParams();
+  const isBuyNow = searchParams.get('buyNow') === 'true';
+  
+  const { cart, buyNowItem, isLoading: isCartLoading, shippingInfo } = useCart();
   const { user, loading: isAuthLoading } = useAuth();
   const router = useRouter();
   const [products, setProducts] = useState<EnrichedCartItem[]>([]);
@@ -47,12 +50,14 @@ export default function PaymentPage() {
 
   useEffect(() => {
     const fetchCartProducts = async () => {
-      if (cart.length > 0) {
+      const itemsToFetch = isBuyNow && buyNowItem ? [buyNowItem] : cart;
+
+      if (itemsToFetch.length > 0) {
         setIsProductLoading(true);
-        const productIds = cart.map(item => item.productId);
+        const productIds = itemsToFetch.map(item => item.productId);
         const fetchedProducts = await getProductsByIds(productIds);
 
-        const enrichedItems = cart.map(cartItem => {
+        const enrichedItems = itemsToFetch.map(cartItem => {
           const product = fetchedProducts.find(p => p.id === cartItem.productId);
           return { ...product!, quantity: cartItem.quantity, size: cartItem.size, cartItemId: cartItem._id };
         }).filter(item => item.id);
@@ -66,17 +71,17 @@ export default function PaymentPage() {
     };
 
     if (!isCartLoading) fetchCartProducts();
-  }, [cart, isCartLoading]);
+  }, [cart, isCartLoading, isBuyNow, buyNowItem]);
   
   useEffect(() => {
      if (!isCartLoading && !isAuthLoading) {
-        if (cart.length === 0) {
+        if (!isBuyNow && cart.length === 0) {
             router.replace('/shop');
         } else if (!shippingInfo) {
             router.replace('/checkout');
         }
     }
-  }, [isCartLoading, isAuthLoading, cart.length, router, shippingInfo]);
+  }, [isCartLoading, isAuthLoading, cart.length, router, shippingInfo, isBuyNow]);
 
 
   const handleMakePayment = async () => {
@@ -118,8 +123,8 @@ export default function PaymentPage() {
 
     if (result.success && result.data) {
         toast({ title: "Order Placed!", description: "Your order has been placed successfully."});
-        clearCart();
-        router.push(`/checkout/confirmation?orderId=${result.data._id}`);
+        const confirmationUrl = `/checkout/confirmation?orderId=${result.data._id}${isBuyNow ? '&buyNow=true' : ''}`;
+        router.push(confirmationUrl);
     } else {
         toast({ variant: 'destructive', title: "Order Failed", description: result.message });
     }

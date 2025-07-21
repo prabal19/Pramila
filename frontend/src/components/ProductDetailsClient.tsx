@@ -19,7 +19,7 @@ import WishlistIcon from './WishlistIcon';
 import { cn } from '@/lib/utils';
 
 const ProductDetailsClient = ({ product }: { product: Product }) => {
-  const { addToCart, isUpdating } = useCart();
+  const { addToCart, isUpdating, setBuyNowItem } = useCart();
   const router = useRouter();
   
   const availableSizes = product.sizes && product.sizes.length > 0
@@ -46,8 +46,13 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
     }
   };
 
-  const handleBuyNow = async () => {
-    await addToCart(product.id, quantity, selectedSize, { showToast: false });
+  const handleBuyNow = () => {
+    setBuyNowItem({ 
+        _id: 'buy-now-item', // temporary id
+        productId: product.id, 
+        quantity, 
+        size: selectedSize 
+    });
     router.push('/checkout');
   };
   

@@ -21,17 +21,20 @@ type ShippingInfo = {
 }
 
 const GUEST_CART_KEY = 'pramila-guest-cart';
+const BUY_NOW_KEY = 'pramila-buy-now-item';
 const SHIPPING_INFO_KEY = 'pramila-shipping-info';
 
 // State management that works across multiple components
 const listeners: Set<() => void> = new Set();
 let state: {
   cartItems: (LocalCartItem[] | ApiCartItem[]);
+  buyNowItem: LocalCartItem | null;
   isLoading: boolean;
   hasUnseenItems: boolean;
   isUpdating: boolean;
 } = {
   cartItems: [],
+  buyNowItem: null,
   isLoading: true,
   hasUnseenItems: false,
   isUpdating: false,
@@ -110,8 +113,12 @@ export const useCart = () => {
             if (storedShippingInfo) {
                 setLocalShippingInfo(JSON.parse(storedShippingInfo));
             }
+            const buyNowData = sessionStorage.getItem(BUY_NOW_KEY);
+            if (buyNowData) {
+                setState({ buyNowItem: JSON.parse(buyNowData) });
+            }
         } catch (error) {
-            console.error("Failed to load shipping info from sessionStorage", error);
+            console.error("Failed to load data from sessionStorage", error);
         }
         setState({ isLoading: false });
     }
@@ -228,8 +235,22 @@ export const useCart = () => {
         console.error("Could not set shipping info to session storage", e)
     }
   }, []);
+
+  const setBuyNowItem = useCallback((item: LocalCartItem) => {
+    try {
+        sessionStorage.setItem(BUY_NOW_KEY, JSON.stringify(item));
+        setState({ buyNowItem: item });
+    } catch(e) {
+        console.error("Could not set buy now item to session storage", e)
+    }
+  }, []);
+
+  const clearBuyNowItem = useCallback(() => {
+    sessionStorage.removeItem(BUY_NOW_KEY);
+    setState({ buyNowItem: null });
+  }, []);
   
   const cartCount = store.cartItems.reduce((total, item) => total + item.quantity, 0);
 
-  return { cart: store.cartItems, cartCount, isLoading: store.isLoading, isUpdating: store.isUpdating, addToCart, removeFromCart, updateQuantity, hasUnseenItems: store.hasUnseenItems, markCartAsViewed, clearCart, shippingInfo, setShippingInfo };
+  return { cart: store.cartItems, cartCount, isLoading: store.isLoading, isUpdating: store.isUpdating, addToCart, removeFromCart, updateQuantity, hasUnseenItems: store.hasUnseenItems, markCartAsViewed, clearCart, shippingInfo, setShippingInfo, buyNowItem: store.buyNowItem, setBuyNowItem, clearBuyNowItem };
 };

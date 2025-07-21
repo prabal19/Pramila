@@ -60,7 +60,7 @@ const parseAddressForForm = (fullAddress: string) => {
         const stateAndPincode = rest ? rest.split(' - ') : [];
         if (stateAndPincode.length >= 2) {
              const [state, pincodeAndCountry] = stateAndPincode;
-              const countryParts = pincodeAndCountry ? pincodeAndCountry.split(', ') : [];
+             const countryParts = pincodeAndCountry ? pincodeAndCountry.split(', ') : [];
              const pincode = countryParts[0] || '';
              const country = countryParts.length > 1 ? countryParts[1] : 'India';
              return { houseNo, landmark, city, state, pincode, country };
@@ -70,7 +70,7 @@ const parseAddressForForm = (fullAddress: string) => {
 };
 
 export default function CheckoutPage() {
-  const { cart, isLoading: isCartLoading, setShippingInfo } = useCart();
+  const { cart, buyNowItem, isLoading: isCartLoading, setShippingInfo } = useCart();
   const { user, loading: isAuthLoading, login } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
@@ -121,11 +121,12 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     const fetchCartProducts = async () => {
-      if (cart.length > 0) {
+      const itemsToFetch = buyNowItem ? [buyNowItem] : cart;
+      if (itemsToFetch.length > 0) {
         setIsProductLoading(true);
-        const productIds = cart.map(item => item.productId);
+        const productIds = itemsToFetch.map(item => item.productId);
         const fetchedProducts = await getProductsByIds(productIds);
-        const enrichedItems = cart.map(cartItem => {
+        const enrichedItems = itemsToFetch.map(cartItem => {
           const product = fetchedProducts.find(p => p.id === cartItem.productId);
           return { ...product!, quantity: cartItem.quantity, size: cartItem.size, cartItemId: cartItem._id };
         }).filter(item => item.id);
@@ -137,14 +138,14 @@ export default function CheckoutPage() {
       }
     };
     if (!isCartLoading) fetchCartProducts();
-  }, [cart, isCartLoading]);
+  }, [cart, isCartLoading, buyNowItem]);
 
   useEffect(() => {
-    if (!isCartLoading && !isAuthLoading && cart.length === 0) {
+    if (!isCartLoading && !isAuthLoading && !buyNowItem && cart.length === 0) {
       toast({ title: "Your cart is empty", description: "Redirecting you to shop.", variant: "destructive" });
       router.replace('/shop');
     }
-  }, [isAuthLoading, isCartLoading, cart, router, toast]);
+  }, [isAuthLoading, isCartLoading, cart, router, toast, buyNowItem]);
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     setIsProcessing(true);
@@ -194,7 +195,8 @@ export default function CheckoutPage() {
     });
 
     setIsProcessing(false);
-    router.push('/checkout/payment');
+    const redirectUrl = buyNowItem ? '/checkout/payment?buyNow=true' : '/checkout/payment';
+    router.push(redirectUrl);
   };
 
   const subtotal = products.reduce((acc, item) => acc + item.price * item.quantity, 0);
@@ -284,7 +286,7 @@ export default function CheckoutPage() {
 
               <div className="lg:col-span-1">
                    <Card className="sticky top-24">
-                      <CardHeader><CardTitle className="flex justify-between items-center text-base"><span>Order Summary ({cart.length} Item(s))</span></CardTitle></CardHeader>
+                      <CardHeader><CardTitle className="flex justify-between items-center text-base"><span>Order Summary ({products.length} Item(s))</span></CardTitle></CardHeader>
                       <CardContent className="space-y-2">
                         {isProductLoading ? ( <div className="space-y-2"><Skeleton className="h-5 w-full" /><Skeleton className="h-5 w-full" /></div> ) : (
                             <div className="space-y-2 text-sm text-muted-foreground max-h-60 overflow-y-auto pr-2">

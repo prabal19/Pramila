@@ -1,14 +1,26 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2 } from 'lucide-react';
+import { useCart } from '@/hooks/use-cart';
 
 function ConfirmationContent() {
     const searchParams = useSearchParams();
+    const { clearCart, clearBuyNowItem } = useCart();
     const orderId = searchParams.get('orderId');
+    const isBuyNow = searchParams.get('buyNow') === 'true';
+
+    useEffect(() => {
+        if (isBuyNow) {
+            clearBuyNowItem();
+        } else {
+            clearCart();
+        }
+    }, [isBuyNow, clearCart, clearBuyNowItem]);
+
 
     return (
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
