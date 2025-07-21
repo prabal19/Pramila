@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -53,7 +54,7 @@ function DatePickerWithRange({
             id="date"
             variant={"outline"}
             className={cn(
-              "w-[260px] justify-start text-left font-normal",
+              "w-[260px] justify-start text-left font-normal h-8",
               !date && "text-muted-foreground"
             )}
           >
@@ -100,6 +101,7 @@ interface DataTableProps<TData, TValue> {
     icon?: React.ComponentType<{ className?: string }>
   }[]
   facetedFilterTitle?: string
+  onRowClick?: (row: TData) => void
 }
 
 export function DataTable<TData, TValue>({
@@ -111,6 +113,7 @@ export function DataTable<TData, TValue>({
   facetedFilterKey,
   facetedFilterOptions,
   facetedFilterTitle,
+  onRowClick,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -153,7 +156,7 @@ export function DataTable<TData, TValue>({
               onChange={(event) =>
                 table.getColumn(searchKey)?.setFilterValue(event.target.value)
               }
-              className="max-w-sm"
+              className="max-w-sm h-8"
             />
             {facetedFilterColumn && facetedFilterOptions && (
               <DataTableFacetedFilter
@@ -191,6 +194,8 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  onClick={() => onRowClick && onRowClick(row.original)}
+                  className={onRowClick ? 'cursor-pointer' : ''}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

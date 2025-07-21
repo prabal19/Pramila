@@ -57,5 +57,27 @@ router.get('/users', async (req, res) => {
     }
 });
 
+// @route   GET api/admin/user-details/:id
+// @desc    Get a single user's full details (profile, orders)
+// @access  Private (should be secured)
+router.get('/user-details/:id', async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id).select('-password');
+        if (!user) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+
+        const orders = await Order.find({ userId: req.params.id }).sort({ createdAt: -1 });
+
+        res.json({ user, orders });
+    } catch (err) {
+        console.error(err.message);
+        if (err.kind === 'ObjectId') {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+        res.status(500).send('Server Error');
+    }
+});
+
 
 module.exports = router;

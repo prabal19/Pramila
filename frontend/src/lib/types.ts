@@ -74,7 +74,7 @@ export type OrderStatus = 'Pending' | 'Confirmed / Processing' | 'Shipped' | 'Ou
 
 export type Order = {
   _id: string;
-  userId: PopulatedUser;
+  userId: string | PopulatedUser; 
   items: OrderItem[];
   totalAmount: number;
   shippingAddress: string;
