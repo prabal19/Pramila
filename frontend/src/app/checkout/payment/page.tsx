@@ -37,7 +37,7 @@ const CheckoutStep = ({ number, label, active, completed }: { number: number; la
 
 
 export default function PaymentPage() {
-  const { cart, isLoading: isCartLoading, clearCart } = useCart();
+  const { cart, isLoading: isCartLoading, clearCart, shippingInfo } = useCart();
   const { user, loading: isAuthLoading } = useAuth();
   const router = useRouter();
   const [products, setProducts] = useState<EnrichedCartItem[]>([]);
@@ -69,28 +69,30 @@ export default function PaymentPage() {
   }, [cart, isCartLoading]);
   
   useEffect(() => {
-    if (!isCartLoading && !isAuthLoading && cart.length === 0) {
-        router.replace('/shop');
+     if (!isCartLoading && !isAuthLoading) {
+        if (cart.length === 0) {
+            router.replace('/shop');
+        } else if (!shippingInfo) {
+            router.replace('/checkout');
+        }
     }
-  }, [isCartLoading, isAuthLoading, cart.length, router]);
+  }, [isCartLoading, isAuthLoading, cart.length, router, shippingInfo]);
 
 
   const handleMakePayment = async () => {
     if (!user) {
         toast({
-            title: "Please Log In",
-            description: "You need to log in to place an order.",
+            title: "Authentication Error",
+            description: "Something went wrong, user not found.",
             variant: "destructive"
         });
-        router.push('/login?redirect=/checkout/payment');
+        router.push('/checkout');
         return;
     }
     
-    if (products.length === 0) return;
+    if (products.length === 0 || !shippingInfo) return;
 
     setIsProcessing(true);
-
-    const shippingAddress = user.addresses[0]?.fullAddress || "123 Test Street, Test City, 12345";
     
     const orderItems = products.map(p => ({
         productId: p.id,
@@ -109,7 +111,7 @@ export default function PaymentPage() {
         userId: user._id,
         items: orderItems,
         totalAmount,
-        shippingAddress
+        shippingAddress: shippingInfo.address,
     });
 
     setIsProcessing(false);
@@ -126,7 +128,7 @@ export default function PaymentPage() {
   const subtotal = products.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const isLoading = isCartLoading || isProductLoading || isAuthLoading;
 
-  if (isLoading) {
+  if (isLoading || !shippingInfo) {
       return (
          <div className="flex items-center justify-center min-h-screen">
             <Loader2 className="w-10 h-10 animate-spin" />

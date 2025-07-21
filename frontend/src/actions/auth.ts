@@ -322,3 +322,39 @@ export async function resetPassword(values: z.infer<typeof resetPasswordSchema>)
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
+
+
+// New action for checkout
+const silentRegisterSchema = z.object({
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+});
+
+export async function loginOrRegisterDuringCheckout(values: z.infer<typeof silentRegisterSchema>) {
+    // 1. Try to log in first
+    const loginResult = await loginUser({ email: values.email, password: values.password });
+    if (loginResult.success) {
+        return loginResult;
+    }
+
+    // 2. If login fails (likely because user doesn't exist), try to register
+    if (loginResult.message?.includes('not signed up')) {
+        const res = await fetch(`${API_URL}/api/auth/silent-register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(values),
+            cache: 'no-store',
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            return { success: false, message: data.errors[0]?.msg || 'Could not create account.' };
+        }
+        // Return the newly created user object
+        return { success: true, user: data };
+    }
+
+    // 3. If login fails for another reason (e.g., wrong password), return that error
+    return loginResult;
+}

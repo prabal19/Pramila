@@ -325,7 +325,38 @@ router.post('/reset-password', async (req, res) => {
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
+   }
+});
+
+// @route   POST api/auth/silent-register
+// @desc    Register user without OTP (during checkout)
+// @access  Public
+router.post('/silent-register', async (req, res) => {
+  const { firstName, lastName, email, password } = req.body;
+
+  if (!firstName || !lastName || !email || !password) {
+    return res.status(400).json({ errors: [{ msg: 'Please enter all fields' }] });
+  }
+
+  try {
+    let user = await User.findOne({ email });
+    if (user) {
+      return res.status(400).json({ errors: [{ msg: 'User already exists' }] });
     }
+
+    user = new User({ firstName, lastName, email, password });
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(password, salt);
+    await user.save();
+    
+    const userResponse = user.toObject();
+    delete userResponse.password;
+    res.status(201).json(userResponse);
+
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
 });
 
 

@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/hooks/use-auth';
 import { getCart, addItemToCart, updateCartItemQuantity, removeItemFromCart } from '@/actions/cart';
-import type { CartItem as ApiCartItem } from '@/lib/types'; // This is the type from the DB
+import type { CartItem as ApiCartItem, User } from '@/lib/types'; // This is the type from the DB
 
 // We'll use a slightly different type for local state to handle guest carts
 type LocalCartItem = {
@@ -15,20 +15,27 @@ type LocalCartItem = {
     size: string;
 }
 
+type ShippingInfo = {
+    name: string;
+    phone: string;
+    address: string;
+}
+
 const GUEST_CART_KEY = 'pramila-guest-cart';
+const SHIPPING_INFO_KEY = 'pramila-shipping-info';
 
 export const useCart = () => {
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
-  const [cartItems, setCartItems] = useState<LocalCartItem[] | ApiCartItem[]>([]);
+  const [cartItems, setCartItems] = useState<(LocalCartItem[] | ApiCartItem[])>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasUnseenItems, setHasUnseenItems] = useState(false);
+  const [shippingInfo, setLocalShippingInfo] = useState<ShippingInfo | null>(null);
 
   // Function to sync local guest cart with the backend after login
   const syncGuestCart = useCallback(async (guestCart: LocalCartItem[], userId: string) => {
     if (guestCart.length === 0) return;
     
-    // Use a loop to add items one by one to handle potential duplicates on the backend
     let finalCart: ApiCartItem[] = [];
     for (const item of guestCart) {
       const updatedCart = await addItemToCart(userId, item.productId, item.quantity, item.size);
@@ -38,54 +45,55 @@ export const useCart = () => {
     }
     setCartItems(finalCart);
     localStorage.removeItem(GUEST_CART_KEY);
-    toast({ title: "Cart Synced", description: "Your items have been moved to your account." });
-  }, [toast]);
+  }, []);
 
   // Main effect to handle cart loading and syncing
   useEffect(() => {
-    const loadCart = async () => {
+    const loadCart = async (currentUser: User | null) => {
         setIsLoading(true);
-        if (user) {
-            // User is logged in
+        if (currentUser) {
             const guestCartData = localStorage.getItem(GUEST_CART_KEY);
             const guestCart: LocalCartItem[] = guestCartData ? JSON.parse(guestCartData) : [];
             
-            const serverCart = await getCart(user._id);
+            const serverCart = await getCart(currentUser._id);
 
             if (guestCart.length > 0) {
-                await syncGuestCart(guestCart, user._id);
-                // After syncing, fetch the final state of the cart
-                const finalCart = await getCart(user._id);
+                await syncGuestCart(guestCart, currentUser._id);
+                const finalCart = await getCart(currentUser._id);
                 setCartItems(finalCart?.items || []);
+                 toast({ title: "Cart Synced", description: "Your items have been moved to your account." });
             } else {
                 setCartItems(serverCart?.items || []);
             }
         } else {
-            // User is a guest, load from localStorage
             const guestCartData = localStorage.getItem(GUEST_CART_KEY);
             setCartItems(guestCartData ? JSON.parse(guestCartData) : []);
+        }
+         try {
+            const storedShippingInfo = sessionStorage.getItem(SHIPPING_INFO_KEY);
+            if (storedShippingInfo) {
+                setLocalShippingInfo(JSON.parse(storedShippingInfo));
+            }
+        } catch (error) {
+            console.error("Failed to load shipping info from sessionStorage", error);
         }
         setIsLoading(false);
     }
     
     if (!authLoading) {
-        loadCart();
+        loadCart(user);
     }
-  }, [user, authLoading, syncGuestCart]);
+  }, [user, authLoading, syncGuestCart, toast]);
   
   const addToCart = useCallback(async (productId: string, quantity: number, size: string) => {
+    let success = false;
     if (user) {
-        // Logged-in user: use API
         const updatedCart = await addItemToCart(user._id, productId, quantity, size);
         if (updatedCart) {
             setCartItems(updatedCart.items);
-            setHasUnseenItems(true);
-            toast({ title: "Added to cart!" });
-        } else {
-            toast({ variant: 'destructive', title: "Error", description: 'Failed to add item to cart.'});
+            success = true;
         }
     } else {
-        // Guest user: use localStorage
         setCartItems(prev => {
             const typedPrev = prev as LocalCartItem[];
             const existingItemIndex = typedPrev.findIndex(item => item.productId === productId && item.size === size);
@@ -100,12 +108,18 @@ export const useCart = () => {
             localStorage.setItem(GUEST_CART_KEY, JSON.stringify(newCart));
             return newCart;
         });
-        setHasUnseenItems(true);
-        toast({ title: "Added to cart!" });
+        success = true;
+    }
+    
+    if (success) {
+      setHasUnseenItems(true);
+      toast({ title: "Added to cart!" });
+    } else {
+      toast({ variant: 'destructive', title: "Error", description: 'Failed to add item to cart.'});
     }
   }, [user, toast]);
 
-  const removeFromCart = useCallback(async (itemId: string) => { // itemId can be _id from DB or local ID
+  const removeFromCart = useCallback(async (itemId: string) => {
     let success = false;
     if (user) {
         const updatedCart = await removeItemFromCart(user._id, itemId);
@@ -156,15 +170,25 @@ export const useCart = () => {
   
   const clearCart = useCallback(() => {
     if (user) {
-      // Backend cart is cleared server-side upon order creation. We just sync the local state.
       setCartItems([]);
     } else {
       setCartItems([]);
       localStorage.removeItem(GUEST_CART_KEY);
     }
+    sessionStorage.removeItem(SHIPPING_INFO_KEY);
+    setLocalShippingInfo(null);
   }, [user]);
+
+  const setShippingInfo = useCallback((info: ShippingInfo) => {
+    try {
+        sessionStorage.setItem(SHIPPING_INFO_KEY, JSON.stringify(info));
+        setLocalShippingInfo(info);
+    } catch(e) {
+        console.error("Could not set shipping info to session storage", e)
+    }
+  }, []);
   
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
-  return { cart: cartItems, cartCount, isLoading, addToCart, removeFromCart, updateQuantity, hasUnseenItems, markCartAsViewed, clearCart };
+  return { cart: cartItems, cartCount, isLoading, addToCart, removeFromCart, updateQuantity, hasUnseenItems, markCartAsViewed, clearCart, shippingInfo, setShippingInfo };
 };

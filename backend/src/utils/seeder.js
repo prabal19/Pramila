@@ -23,7 +23,8 @@ const products = [
     category: 'sharara-set',
     bestseller: true,
     sizes: allSizes,
-    specifications: 'Fabric: Georgette; Work: Intricate Embroidery, Sequin Work; Occasion: Festive, Wedding; Fit: Regular Fit; Includes: Kurta, Sharara, Dupatta.'
+    specifications: 'Fabric: Georgette; Work: Intricate Embroidery, Sequin Work; Occasion: Festive, Wedding; Fit: Regular Fit; Includes: Kurta, Sharara, Dupatta.',
+    quantity: 5,
   },
   {
     productId: '2',
@@ -38,7 +39,8 @@ const products = [
     ],
     category: 'sharara-set',
     sizes: allSizes,
-    specifications: 'Fabric: Velvet; Work: Zari and Thread Work; Occasion: Evening, Party; Fit: Flared; Includes: Kurta, Sharara, Dupatta.'
+    specifications: 'Fabric: Velvet; Work: Zari and Thread Work; Occasion: Evening, Party; Fit: Flared; Includes: Kurta, Sharara, Dupatta.',
+    quantity: 5,
   },
   // Draped Sets (3 products)
   {
@@ -54,7 +56,9 @@ const products = [
       ],
     category: 'draped-sets',
     sizes: allSizes,
-    specifications: 'Fabric: Crepe Silk; Work: Hand Embellishment; Occasion: Cocktail, Reception; Fit: Asymmetric; Includes: Draped Tunic, Trousers.'
+    specifications: 'Fabric: Crepe Silk; Work: Hand Embellishment; Occasion: Cocktail, Reception; Fit: Asymmetric; Includes: Draped Tunic, Trousers.',
+    quantity: 5,
+    bestseller: true,
   },
   {
     productId: '4',
@@ -70,7 +74,8 @@ const products = [
     ],
     category: 'draped-sets',
     sizes: allSizes,
-    specifications: 'Fabric: Satin Georgette; Work: Crystal and Bead Work; Occasion: Formal, Party; Fit: Draped Silhouette; Includes: Draped Top, Skirt.'
+    specifications: 'Fabric: Satin Georgette; Work: Crystal and Bead Work; Occasion: Formal, Party; Fit: Draped Silhouette; Includes: Draped Top, Skirt.',
+    quantity: 5,
   },
   {
     productId: '5',
@@ -86,7 +91,8 @@ const products = [
     category: 'draped-sets',
     bestseller: true,
     sizes: allSizes,
-    specifications: 'Fabric: Chiffon; Work: Abstract Print, Sequin Highlights; Occasion: Special Occasion, Modern Events; Fit: Flowy; Includes: Draped Gown.'
+    specifications: 'Fabric: Chiffon; Work: Abstract Print, Sequin Highlights; Occasion: Special Occasion, Modern Events; Fit: Flowy; Includes: Draped Gown.',
+    quantity: 5,
   },
   // Sarees (6 products)
   {
@@ -102,7 +108,9 @@ const products = [
     ],
     category: 'saree',
     sizes: allSizes,
-    specifications: 'Fabric: Satin; Work: Corset Bodice with Pleating; Occasion: Cocktail, Sangeet; Fit: Structured; Includes: Saree with Stitched Corset Blouse.'
+    specifications: 'Fabric: Satin; Work: Corset Bodice with Pleating; Occasion: Cocktail, Sangeet; Fit: Structured; Includes: Saree with Stitched Corset Blouse.',
+    quantity: 5,
+    bestseller: true,
   },
   {
     productId: '7',
@@ -117,7 +125,8 @@ const products = [
     ],
     category: 'saree',
     sizes: allSizes,
-    specifications: 'Fabric: Micro Velvet; Work: Plain with Zari Border; Occasion: Royal Gatherings, Winter Weddings; Fit: Traditional Drape; Includes: Saree, Unstitched Blouse Piece.'
+    specifications: 'Fabric: Micro Velvet; Work: Plain with Zari Border; Occasion: Royal Gatherings, Winter Weddings; Fit: Traditional Drape; Includes: Saree, Unstitched Blouse Piece.',
+    quantity: 5,
   },
   {
     productId: '8',
@@ -133,7 +142,8 @@ const products = [
     ],
     category: 'saree',
     sizes: allSizes,
-    specifications: 'Fabric: Premium Velvet; Work: Sequin and Zari Border; Occasion: Receptions, Grand Events; Fit: Slim Drape; Includes: Saree, Unstitched Blouse Piece.'
+    specifications: 'Fabric: Premium Velvet; Work: Sequin and Zari Border; Occasion: Receptions, Grand Events; Fit: Slim Drape; Includes: Saree, Unstitched Blouse Piece.',
+    quantity: 5,
   },
   {
     productId: '9',
@@ -148,7 +158,8 @@ const products = [
     ],
     category: 'saree',
     sizes: allSizes,
-    specifications: 'Fabric: Organza Silk; Work: Gilded Embroidery, Corset Blouse; Occasion: Parties, Engagements; Fit: Modern Silhouette; Includes: Saree with Stitched Corset.'
+    specifications: 'Fabric: Organza Silk; Work: Gilded Embroidery, Corset Blouse; Occasion: Parties, Engagements; Fit: Modern Silhouette; Includes: Saree with Stitched Corset.',
+    quantity: 5,
   },
   {
     productId: '10',
@@ -164,7 +175,8 @@ const products = [
     category: 'saree',
     bestseller: true,
     sizes: allSizes,
-    specifications: 'Fabric: Georgette; Work: Heavy Thread and Sequin Embroidery; Occasion: Weddings, Festive; Fit: Classic; Includes: Saree, Unstitched Blouse Piece.'
+    specifications: 'Fabric: Georgette; Work: Heavy Thread and Sequin Embroidery; Occasion: Weddings, Festive; Fit: Classic; Includes: Saree, Unstitched Blouse Piece.',
+    quantity: 5,
   },
   {
     productId: '11',
@@ -179,7 +191,8 @@ const products = [
     ],
     category: 'saree',
     sizes: allSizes,
-    specifications: 'Fabric: Pure Satin Silk; Work: Minimalist, Solid Color; Occasion: Casual, Formal; Fit: Fluid Drape; Includes: Saree, Unstitched Blouse Piece.'
+    specifications: 'Fabric: Pure Satin Silk; Work: Minimalist, Solid Color; Occasion: Casual, Formal; Fit: Fluid Drape; Includes: Saree, Unstitched Blouse Piece.',
+    quantity: 5,
      },
   // Ethnic Sets (3 products)
   {
@@ -195,7 +208,8 @@ const products = [
     ],
     category: 'ethnic-sets',
     sizes: allSizes,
-    specifications: 'Fabric: Silk; Includes: Anarkali, Churidar, Dupatta.'
+    specifications: 'Fabric: Silk; Includes: Anarkali, Churidar, Dupatta.',
+    quantity: 5,
   },
   {
     productId: '13',
@@ -210,7 +224,8 @@ const products = [
     ],
     category: 'ethnic-sets',
     sizes: allSizes,
-    specifications: 'Fabric: Cotton; Includes: Kurta, Palazzo, Dupatta.'
+    specifications: 'Fabric: Cotton; Includes: Kurta, Palazzo, Dupatta.',
+    quantity: 5,
   },
   {
     productId: '14',
@@ -225,7 +240,8 @@ const products = [
     ],
     category: 'ethnic-sets',
     sizes: allSizes,
-    specifications: 'Fabric: Rayon; Includes: Kurta, Trousers.'
+    specifications: 'Fabric: Rayon; Includes: Kurta, Trousers.',
+    quantity: 5,
   },
   // Dresses (3 products)
   {
@@ -241,7 +257,8 @@ const products = [
     ],
     category: 'dresses',
     sizes: allSizes,
-    specifications: 'Fabric: Georgette; Fit: Maxi.'
+    specifications: 'Fabric: Georgette; Fit: Maxi.',
+    quantity: 5,
   },
   {
     productId: '16',
@@ -256,7 +273,8 @@ const products = [
     ],
     category: 'dresses',
     sizes: allSizes,
-    specifications: 'Fabric: Satin; Fit: Sheath.'
+    specifications: 'Fabric: Satin; Fit: Sheath.',
+    quantity: 5,
   },
   {
     productId: '17',
@@ -271,7 +289,8 @@ const products = [
     ],
     category: 'dresses',
     sizes: allSizes,
-    specifications: 'Fabric: Linen; Fit: A-Line.'
+    specifications: 'Fabric: Linen; Fit: A-Line.',
+    quantity: 5,
   },
   // Pre-drape Sarees (3 products)
   {
@@ -287,7 +306,8 @@ const products = [
     ],
     category: 'pre-drape-sarees',
     sizes: allSizes,
-    specifications: 'Fabric: Georgette with Sequins; Includes: Saree, Blouse.'
+    specifications: 'Fabric: Georgette with Sequins; Includes: Saree, Blouse.',
+    quantity: 5,
   },
   {
     productId: '19',
@@ -302,7 +322,8 @@ const products = [
     ],
     category: 'pre-drape-sarees',
     sizes: allSizes,
-    specifications: 'Fabric: Chiffon; Includes: Saree, Blouse.'
+    specifications: 'Fabric: Chiffon; Includes: Saree, Blouse.',
+    quantity: 5,
   },
   {
     productId: '20',
@@ -317,7 +338,8 @@ const products = [
     ],
     category: 'pre-drape-sarees',
     sizes: allSizes,
-    specifications: 'Fabric: Crepe; Includes: Saree, Blouse.'
+    specifications: 'Fabric: Crepe; Includes: Saree, Blouse.',
+    quantity: 5,
   },
   // Chains (3 products)
   {
@@ -333,7 +355,8 @@ const products = [
     ],
     category: 'chains',
     sizes: accessorySizes,
-    specifications: 'Material: Brass; Plating: Gold.'
+    specifications: 'Material: Brass; Plating: Gold.',
+    quantity: 5,
   },
   {
     productId: '22',
@@ -348,7 +371,8 @@ const products = [
     ],
     category: 'chains',
     sizes: accessorySizes,
-    specifications: 'Material: Sterling Silver.'
+    specifications: 'Material: Sterling Silver.',
+    quantity: 5,
   },
   {
     productId: '23',
@@ -363,7 +387,8 @@ const products = [
     ],
     category: 'chains',
     sizes: accessorySizes,
-    specifications: 'Material: Copper Alloy; Plating: Rose Gold.'
+    specifications: 'Material: Copper Alloy; Plating: Rose Gold.',
+    quantity: 5,
   },
   // Studs (3 products)
   {
@@ -379,7 +404,8 @@ const products = [
     ],
     category: 'studs',
     sizes: accessorySizes,
-    specifications: 'Material: Cubic Zirconia, Alloy.'
+    specifications: 'Material: Cubic Zirconia, Alloy.',
+    quantity: 5,
   },
   {
     productId: '25',
@@ -394,7 +420,8 @@ const products = [
     ],
     category: 'studs',
     sizes: accessorySizes,
-    specifications: 'Material: Faux Pearl, Stainless Steel.'
+    specifications: 'Material: Faux Pearl, Stainless Steel.',
+    quantity: 5,
   },
   {
     productId: '26',
@@ -409,7 +436,8 @@ const products = [
     ],
     category: 'studs',
     sizes: accessorySizes,
-    specifications: 'Material: Kundan, Brass.'
+    specifications: 'Material: Kundan, Brass.',
+    quantity: 5,
   },
   // Anklets (3 products)
   {
@@ -425,7 +453,8 @@ const products = [
     ],
     category: 'anklets',
     sizes: accessorySizes,
-    specifications: 'Material: German Silver.'
+    specifications: 'Material: German Silver.',
+    quantity: 5,
   },
   {
     productId: '28',
@@ -440,7 +469,8 @@ const products = [
     ],
     category: 'anklets',
     sizes: accessorySizes,
-    specifications: 'Material: Brass, Gold Plating.'
+    specifications: 'Material: Brass, Gold Plating.',
+    quantity: 5,
   },
   {
     productId: '29',
@@ -455,7 +485,8 @@ const products = [
     ],
     category: 'anklets',
     sizes: accessorySizes,
-    specifications: 'Material: Thread, Glass Beads.'
+    specifications: 'Material: Thread, Glass Beads.',
+    quantity: 5,
   },
   // Bracelets (3 products)
   {
@@ -471,7 +502,8 @@ const products = [
     ],
     category: 'bracelets',
     sizes: accessorySizes,
-    specifications: 'Material: Cubic Zirconia, Rhodium Plating.'
+    specifications: 'Material: Cubic Zirconia, Rhodium Plating.',
+    quantity: 5,
   },
   {
     productId: '31',
@@ -486,7 +518,8 @@ const products = [
     ],
     category: 'bracelets',
     sizes: accessorySizes,
-    specifications: 'Material: Mixed Metal Alloys.'
+    specifications: 'Material: Mixed Metal Alloys.',
+    quantity: 5,
   },
   {
     productId: '32',
@@ -501,7 +534,8 @@ const products = [
     ],
     category: 'bracelets',
     sizes: accessorySizes,
-    specifications: 'Material: Brass, Enamel Work.'
+    specifications: 'Material: Brass, Enamel Work.',
+    quantity: 5,
   },
   // Danglers (3 products)
   {
@@ -517,7 +551,8 @@ const products = [
     ],
     category: 'danglers',
     sizes: accessorySizes,
-    specifications: 'Material: Alloy, Faux Pearls.'
+    specifications: 'Material: Alloy, Faux Pearls.',
+    quantity: 5,
   },
   {
     productId: '34',
@@ -532,7 +567,8 @@ const products = [
     ],
     category: 'danglers',
     sizes: accessorySizes,
-    specifications: 'Material: High-quality Crystals, Metal Alloy.'
+    specifications: 'Material: High-quality Crystals, Metal Alloy.',
+    quantity: 5,
   },
   {
     productId: '35',
@@ -547,7 +583,8 @@ const products = [
     ],
     category: 'danglers',
     sizes: accessorySizes,
-    specifications: 'Material: Thread Tassels, Mixed Metal.'
+    specifications: 'Material: Thread Tassels, Mixed Metal.',
+    quantity: 5,
   }
 ];
 

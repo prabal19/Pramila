@@ -4,20 +4,23 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useForm, FormProvider } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { useCart } from '@/hooks/use-cart';
 import { useAuth } from '@/hooks/use-auth';
 import { getProductsByIds } from '@/lib/products';
-import type { Product, Address } from '@/lib/types';
+import { loginOrRegisterDuringCheckout, addAddress } from '@/actions/auth';
+import type { Product, Address as AddressType } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { ArrowLeft, Check } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowLeft, Check, Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type EnrichedCartItem = Product & {
   quantity: number;
@@ -34,7 +37,22 @@ const CheckoutStep = ({ number, label, active, completed }: { number: number; la
   </div>
 );
 
-// This parser is best-effort. A more robust solution would store address fields separately.
+const formSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string().email("Invalid email address"),
+  password: z.string().optional(),
+  phone: z.string().min(10, "A valid phone number is required"),
+  houseNo: z.string().min(1, "House/Flat No. is required"),
+  landmark: z.string().min(1, "Nearest Landmark is required"),
+  city: z.string().min(1, "City is required"),
+  state: z.string().min(1, "State is required"),
+  pincode: z.string().min(6, "A valid pincode is required"),
+  country: z.string().min(1, "Country is required"),
+  addressId: z.string().optional(),
+});
+
+// Best-effort parser
 const parseAddressForForm = (fullAddress: string) => {
     const parts = fullAddress.split(', ');
     if (parts.length >= 4) {
@@ -43,43 +61,74 @@ const parseAddressForForm = (fullAddress: string) => {
         if (stateAndPincode.length >= 2) {
              const [state, pincodeAndCountry] = stateAndPincode;
              const countryParts = pincodeAndCountry.split(', ');
-             const pincode = countryParts[0];
-             const country = countryParts.length > 1 ? countryParts[1] : 'India'; // Default country if not present
+             const pincode = countryParts[0] || '';
+             const country = countryParts.length > 1 ? countryParts[1] : 'India';
              return { houseNo, landmark, city, state, pincode, country };
         }
     }
-    // Fallback for any format that doesn't match
     return { houseNo: fullAddress, landmark: '', city: '', state: '', pincode: '', country: 'India' };
 };
 
-
 export default function CheckoutPage() {
-  const { cart, isLoading: isCartLoading } = useCart();
-  const { user, loading: isAuthLoading } = useAuth();
+  const { cart, isLoading: isCartLoading, setShippingInfo } = useCart();
+  const { user, loading: isAuthLoading, login } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
   const [products, setProducts] = useState<EnrichedCartItem[]>([]);
   const [isProductLoading, setIsProductLoading] = useState(true);
-  const [selectedAddress, setSelectedAddress] = useState<string>('new');
+  const [isProcessing, setIsProcessing] = useState(false);
   
+  const formMethods = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+        firstName: '', lastName: '', email: '', password: '', phone: '',
+        houseNo: '', landmark: '', city: '', state: '', pincode: '', country: 'India',
+        addressId: 'new',
+    }
+  });
+  
+  const { control, handleSubmit, reset, watch } = formMethods;
+  const selectedAddressId = watch('addressId');
+
+  useEffect(() => {
+    if (user) {
+      const defaultAddress = user.addresses?.[0];
+      const parsedAddress = defaultAddress ? parseAddressForForm(defaultAddress.fullAddress) : {};
+      reset({
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: '',
+        addressId: defaultAddress?._id || 'new',
+        ...parsedAddress
+      });
+    }
+  }, [user, reset]);
+
+  useEffect(() => {
+    if (user && selectedAddressId && selectedAddressId !== 'new') {
+        const selected = user.addresses.find(a => a._id === selectedAddressId);
+        if (selected) {
+            const parsed = parseAddressForForm(selected.fullAddress);
+            reset({ ...watch(), ...parsed });
+        }
+    } else if (selectedAddressId === 'new') {
+        reset({ ...watch(), houseNo: '', landmark: '', city: '', state: '', pincode: '', country: 'India' });
+    }
+  }, [selectedAddressId, user, reset, watch]);
+
+
   useEffect(() => {
     const fetchCartProducts = async () => {
       if (cart.length > 0) {
         setIsProductLoading(true);
         const productIds = cart.map(item => item.productId);
         const fetchedProducts = await getProductsByIds(productIds);
-
         const enrichedItems = cart.map(cartItem => {
           const product = fetchedProducts.find(p => p.id === cartItem.productId);
-          return {
-            ...product!,
-            quantity: cartItem.quantity,
-            size: cartItem.size,
-            cartItemId: cartItem._id
-          };
+          return { ...product!, quantity: cartItem.quantity, size: cartItem.size, cartItemId: cartItem._id };
         }).filter(item => item.id);
-
         setProducts(enrichedItems);
         setIsProductLoading(false);
       } else {
@@ -87,25 +136,71 @@ export default function CheckoutPage() {
         setIsProductLoading(false);
       }
     };
-
-    if (!isCartLoading) {
-      fetchCartProducts();
-    }
+    if (!isCartLoading) fetchCartProducts();
   }, [cart, isCartLoading]);
 
   useEffect(() => {
-    if (!isAuthLoading && cart.length === 0) {
+    if (!isCartLoading && !isAuthLoading && cart.length === 0) {
       toast({ title: "Your cart is empty", description: "Redirecting you to shop.", variant: "destructive" });
       router.replace('/shop');
     }
-  }, [isAuthLoading, cart, router, toast]);
+  }, [isAuthLoading, isCartLoading, cart, router, toast]);
+
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    setIsProcessing(true);
+    let finalUser = user;
+
+    if (!finalUser) {
+        if (!data.password) {
+            formMethods.setError("password", { type: "manual", message: "Password is required for new accounts." });
+            setIsProcessing(false);
+            return;
+        }
+        const result = await loginOrRegisterDuringCheckout({
+            firstName: data.firstName,
+            lastName: data.lastName,
+            email: data.email,
+            password: data.password,
+        });
+
+        if (result.success && result.user) {
+            login(result.user); // Update global auth state
+            finalUser = result.user;
+            toast({ title: 'Welcome!', description: 'Your account has been created.' });
+        } else {
+            toast({ variant: 'destructive', title: 'Authentication Failed', description: result.message });
+            setIsProcessing(false);
+            return;
+        }
+    }
+
+    const shippingAddress = { houseNo: data.houseNo, landmark: data.landmark, city: data.city, state: data.state, pincode: data.pincode, country: data.country };
+
+    // If it's a new address for a logged-in user, save it
+    if (finalUser && data.addressId === 'new') {
+        const addResult = await addAddress(finalUser._id, shippingAddress);
+        if (addResult.success && addResult.user) {
+            login(addResult.user); // Update user with new address list
+            toast({ title: 'Address Saved!' });
+        } else {
+            toast({ variant: 'destructive', title: 'Could not save address', description: addResult.message });
+        }
+    }
+    
+    setShippingInfo({
+        name: `${data.firstName} ${data.lastName}`,
+        phone: data.phone,
+        address: `${data.houseNo}, ${data.landmark}, ${data.city}, ${data.state} - ${data.pincode}, ${data.country}`
+    });
+
+    setIsProcessing(false);
+    router.push('/checkout/payment');
+  };
 
   const subtotal = products.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const isLoading = isCartLoading || isProductLoading || isAuthLoading;
-  
-  const defaultAddress = user?.addresses?.[0]?.fullAddress 
-    ? parseAddressForForm(user.addresses[0].fullAddress) 
-    : { houseNo: '', landmark: '', city: '', state: '', pincode: '', country: 'India' };
+
+  if (isLoading && !user) return <div className="flex justify-center items-center h-screen"><Loader2 className="w-10 h-10 animate-spin"/></div>
 
   return (
     <div className="bg-gray-50/50 min-h-screen">
@@ -129,117 +224,88 @@ export default function CheckoutPage() {
             <CheckoutStep number={3} label="Order Confirmation" active={false} completed={false} />
           </div>
 
-          {isLoading ? (
-             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                <div className="lg:col-span-2 space-y-4">
-                    <Skeleton className="h-48 w-full" />
-                    <Skeleton className="h-64 w-full" />
-                </div>
-                <div className="lg:col-span-1">
-                    <Skeleton className="h-96 w-full" />
-                </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          <FormProvider {...formMethods}>
+            <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
               <div className="lg:col-span-2 space-y-6">
-                  {user ? (
-                    <Card>
-                        <CardHeader><CardTitle>Delivery Address</CardTitle></CardHeader>
-                        <CardContent>
-                            <Select value={selectedAddress} onValueChange={setSelectedAddress}>
-                                <SelectTrigger><SelectValue placeholder="Select an address" /></SelectTrigger>
-                                <SelectContent>
-                                    {user.addresses.map((address: Address) => (
-                                        <SelectItem key={address._id} value={address.fullAddress}>{address.fullAddress}</SelectItem>
-                                    ))}
-                                    <SelectItem value="new">Use a new address</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </CardContent>
-                    </Card>
-                  ) : (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Contact Information</CardTitle>
-                            <CardContent className="pt-4 px-0 pb-0">
-                                <Input type="email" placeholder="Email Address *" />
-                                <p className="text-xs text-muted-foreground mt-2">Already have an account? <Link href="/login" className="text-primary hover:underline">Log in</Link></p>
-                            </CardContent>
-                        </CardHeader>
-                    </Card>
-                  )}
+                  <Card>
+                      <CardHeader><CardTitle>Contact Information</CardTitle></CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                           <FormField name="firstName" control={control} render={({ field }) => (<FormItem><FormLabel>First Name*</FormLabel><FormControl><Input {...field} disabled={!!user} /></FormControl><FormMessage /></FormItem>)} />
+                           <FormField name="lastName" control={control} render={({ field }) => (<FormItem><FormLabel>Last Name*</FormLabel><FormControl><Input {...field} disabled={!!user} /></FormControl><FormMessage /></FormItem>)} />
+                        </div>
+                        <FormField name="email" control={control} render={({ field }) => (<FormItem><FormLabel>Email*</FormLabel><FormControl><Input type="email" {...field} disabled={!!user} /></FormControl><FormMessage /></FormItem>)} />
+                        {!user && (
+                            <FormField name="password" control={control} render={({ field }) => (<FormItem><FormLabel>Password*</FormLabel><FormControl><Input type="password" {...field} placeholder="Create a password for your new account" /></FormControl><FormMessage /></FormItem>)} />
+                        )}
+                        <FormField name="phone" control={control} render={({ field }) => (<FormItem><FormLabel>Phone*</FormLabel><FormControl><Input type="tel" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                      </CardContent>
+                  </Card>
+                  
+                  <Card>
+                      <CardHeader><CardTitle>Shipping Address</CardTitle></CardHeader>
+                      <CardContent className="space-y-4">
+                          {user && user.addresses.length > 0 && (
+                            <FormField name="addressId" control={control} render={({ field }) => (
+                                <FormItem>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                        <FormControl><SelectTrigger><SelectValue placeholder="Select a saved address" /></SelectTrigger></FormControl>
+                                        <SelectContent>
+                                            {user.addresses.map((address: AddressType) => (
+                                                <SelectItem key={address._id} value={address._id}>{address.fullAddress}</SelectItem>
+                                            ))}
+                                            <SelectItem value="new">Use a new address</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </FormItem>
+                            )} />
+                          )}
 
-                  { (selectedAddress === 'new' || !user) && (
-                      <Card>
-                          <CardHeader><CardTitle>{user ? 'Add New Address' : 'Shipping Address'}</CardTitle></CardHeader>
-                          <CardContent className="space-y-4">
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                  <Input placeholder="First Name *" defaultValue={user?.firstName || ''}/>
-                                  <Input placeholder="Last Name *" defaultValue={user?.lastName || ''}/>
-                              </div>
-                              <Input placeholder="Street Address *" defaultValue={defaultAddress.houseNo || ''} />
-                              <Input placeholder="Apt/Suite/Floor (Optional)" defaultValue={defaultAddress.landmark || ''} />
-                               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                  <Input placeholder="City *" defaultValue={defaultAddress.city || ''} />
-                                   <Input placeholder="State *" defaultValue={defaultAddress.state || ''}/>
-                                  <Input placeholder="Zip Code *" defaultValue={defaultAddress.pincode || ''}/>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                  <Checkbox id="billing-address" defaultChecked/>
-                                  <Label htmlFor="billing-address" className="font-normal">Use as billing address</Label>
-                              </div>
-                          </CardContent>
-                      </Card>
-                  )}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <FormField name="houseNo" control={control} render={({ field }) => (<FormItem><FormLabel>House/Flat No.*</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                              <FormField name="landmark" control={control} render={({ field }) => (<FormItem><FormLabel>Nearest Landmark*</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                              <FormField name="city" control={control} render={({ field }) => (<FormItem><FormLabel>City*</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                              <FormField name="state" control={control} render={({ field }) => (<FormItem><FormLabel>State*</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                              <FormField name="pincode" control={control} render={({ field }) => (<FormItem><FormLabel>Pincode*</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                          </div>
+                          <FormField name="country" control={control} render={({ field }) => (<FormItem><FormLabel>Country*</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                      </CardContent>
+                  </Card>
                   
                   <div className="flex justify-end">
-                      <Button size="lg" className="w-full md:w-auto" asChild>
-                          <Link href="/checkout/payment">Proceed to Payment</Link>
+                      <Button size="lg" className="w-full md:w-auto" type="submit" disabled={isProcessing}>
+                          {isProcessing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                          Proceed to Payment
                       </Button>
                   </div>
               </div>
 
               <div className="lg:col-span-1">
                    <Card className="sticky top-24">
-                      <CardHeader>
-                          <CardTitle className="flex justify-between items-center text-base">
-                              <span>Order Summary ({cart.length} Item(s))</span>
-                               <Button variant="link" size="sm" asChild className="p-0 h-auto text-sm"><Link href="/cart">Details</Link></Button>
-                          </CardTitle>
-                      </CardHeader>
+                      <CardHeader><CardTitle className="flex justify-between items-center text-base"><span>Order Summary ({cart.length} Item(s))</span></CardTitle></CardHeader>
                       <CardContent className="space-y-2">
-                          <div className="flex justify-between text-sm">
-                              <span>Order Subtotal</span>
-                              <span>Rs. {subtotal.toLocaleString('en-IN')}</span>
-                          </div>
-                          <div className="flex justify-between text-sm text-red-600">
-                              <span>Sale Discount</span>
-                              <span>-Rs. 0.00</span>
-                          </div>
+                        {isProductLoading ? ( <div className="space-y-2"><Skeleton className="h-5 w-full" /><Skeleton className="h-5 w-full" /></div> ) : (
+                            <div className="space-y-2 text-sm text-muted-foreground max-h-60 overflow-y-auto pr-2">
+                                {products.map(item => (
+                                    <div key={item.cartItemId} className="flex gap-4">
+                                        <div className="flex-grow"><p className="font-semibold text-foreground">{item.name} <span className="text-muted-foreground">x{item.quantity}</span></p></div>
+                                        <p className="font-semibold text-foreground">Rs. {(item.price * item.quantity).toLocaleString('en-IN')}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                           <Separator/>
-                          <div className="flex justify-between font-semibold text-sm">
-                              <span>Net Order Subtotal</span>
-                              <span>Rs. {subtotal.toLocaleString('en-IN')}</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                              <span>Shipping</span>
-                              <span>FREE</span>
-                          </div>
+                          <div className="flex justify-between text-sm"><span>Order Subtotal</span><span>Rs. {subtotal.toLocaleString('en-IN')}</span></div>
+                          <div className="flex justify-between text-sm"><span>Shipping</span><span>FREE</span></div>
                           <Separator/>
-                          <div className="flex justify-between font-bold text-base">
-                              <span>Pre-Tax Total</span>
-                              <span>Rs. {subtotal.toLocaleString('en-IN')}</span>
-                          </div>
-                          <Separator/>
-                          <div className="flex justify-between font-semibold text-red-600 text-sm">
-                              <span>Total Savings</span>
-                              <span>Rs. 0.00</span>
-                          </div>
+                          <div className="flex justify-between font-bold text-base"><span>Total</span><span>Rs. {subtotal.toLocaleString('en-IN')}</span></div>
                       </CardContent>
                    </Card>
               </div>
-            </div>
-          )}
+            </form>
+          </FormProvider>
         </div>
       </div>
     </div>
