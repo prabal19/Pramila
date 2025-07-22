@@ -44,7 +44,7 @@ const categorySchema = z.object({
     parent: z.enum(['collection', 'accessory']),
 });
 
-const allSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', 'CUSTOM SIZE'];
+const allSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', 'CUSTOM SIZE', 'ONE SIZE'];
 
 interface ProductFormProps {
     open: boolean;

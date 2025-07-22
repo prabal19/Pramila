@@ -8,7 +8,7 @@ const Order = require('../models/Order');
 const connectDB = require('../config/db');
 
 
-const allSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', 'CUSTOM SIZE'];
+const allSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', 'CUSTOM SIZE', 'ONE SIZE'];
 const accessorySizes = ['One Size'];
 
 const products = [

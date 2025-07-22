@@ -24,7 +24,7 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
   
   const availableSizes = product.sizes && product.sizes.length > 0
     ? product.sizes
-    : ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', 'CUSTOM SIZE'];
+    : ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', 'CUSTOM SIZE', 'ONE SIZE'];
 
   const [selectedImage, setSelectedImage] = useState(product.images[0]);
   const [selectedSize, setSelectedSize] = useState(availableSizes[0]);

@@ -1,3 +1,4 @@
+
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
@@ -33,7 +34,8 @@ import {
 const ActionsCell = ({ product, onEdit, onRefresh }: { product: Product, onEdit: (product: Product) => void, onRefresh: () => void }) => {
     const { toast } = useToast();
 
-    const handleDelete = async () => {
+    const handleDelete = async (e: React.MouseEvent) => {
+        e.stopPropagation();
         const result = await deleteProduct(product.id);
         if(result.success) {
             toast({ title: "Success", description: "Product deleted successfully." });
@@ -46,12 +48,12 @@ const ActionsCell = ({ product, onEdit, onRefresh }: { product: Product, onEdit:
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
+                <Button variant="ghost" className="h-8 w-8 p-0" onClick={(e) => e.stopPropagation()}>
                     <span className="sr-only">Open menu</span>
                     <MoreHorizontal className="h-4 w-4" />
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                 <DropdownMenuItem onClick={() => onEdit(product)}>
                     <Edit className="mr-2 h-4 w-4" />
@@ -65,7 +67,7 @@ const ActionsCell = ({ product, onEdit, onRefresh }: { product: Product, onEdit:
                             <span>Delete</span>
                         </DropdownMenuItem>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogContent onClick={(e) => e.stopPropagation()}>
                         <AlertDialogHeader>
                             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                             <AlertDialogDescription>
@@ -84,6 +86,7 @@ const ActionsCell = ({ product, onEdit, onRefresh }: { product: Product, onEdit:
         </DropdownMenu>
     );
 };
+
 
 
 export const columns = ({ onEdit, onRefresh }: { onEdit: (product: Product) => void, onRefresh: () => void }): ColumnDef<Product>[] => [
