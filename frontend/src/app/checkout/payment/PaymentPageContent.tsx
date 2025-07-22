@@ -117,6 +117,7 @@ export default function PaymentPageContent() {
         items: orderItems,
         totalAmount,
         shippingAddress: shippingInfo.address,
+        phone: shippingInfo.phone,
     });
 
     setIsProcessing(false);

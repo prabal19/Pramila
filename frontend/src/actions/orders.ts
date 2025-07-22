@@ -10,6 +10,7 @@ export async function createOrder(orderData: {
     items: { productId: string; name: string; quantity: number; price: number; size: string; }[];
     totalAmount: number;
     shippingAddress: string;
+    phone: string;
 }): Promise<{ success: boolean; message: string; data?: Order }> {
      try {
         const res = await fetch(`${API_URL}/api/orders`, {

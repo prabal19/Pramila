@@ -1,14 +1,18 @@
 
-'use client'
+'use client';
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Card, CardContent } from "@/components/ui/card"
+import { useRef } from 'react';
+import html2canvas from 'html2canvas';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import type { Order, OrderStatus, PopulatedUser } from "@/lib/types"
-import { format } from "date-fns"
-import { cn } from "@/lib/utils"
+import { Button } from '@/components/ui/button';
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import type { Order, OrderStatus, PopulatedUser } from "@/lib/types";
+import { format } from "date-fns";
+import { Printer, Download } from 'lucide-react';
+import { ScrollArea } from '../ui/scroll-area';
+import { cn } from '@/lib/utils';
 
 interface OrderDetailsDialogProps {
     order: Order | null;
@@ -30,29 +34,98 @@ function getStatusVariant(status: OrderStatus) {
 }
 
 export default function OrderDetailsDialog({ order, open, onOpenChange }: OrderDetailsDialogProps) {
+    const slipRef = useRef<HTMLDivElement>(null);
+
+    const handlePrint = () => {
+        window.print();
+    };
+
+    const handleDownload = () => {
+        if (slipRef.current) {
+            html2canvas(slipRef.current, { scale: 2 }).then((canvas) => {
+                const link = document.createElement('a');
+                link.download = `order-summary-${order?._id.slice(-6).toUpperCase()}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+    };
+
+
     if (!order) return null;
 
     const user = order.userId as PopulatedUser;
 
     return (
+        <>
+        <style jsx global>{`
+            @media print {
+                body * {
+                    visibility: hidden;
+                }
+                .printable-area, .printable-area * {
+                    visibility: visible;
+                }
+                .printable-area {
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    height: auto;
+                    overflow: visible;
+                    background: white;
+                    color: black;
+                }
+                .print-hidden {
+                    display: none;
+                }
+            }
+        `}</style>
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-4xl h-[80vh] flex flex-col p-0">
-                <DialogHeader className="p-6 border-b">
-                    <DialogTitle>Order Details - #{(order._id as string).slice(-6).toUpperCase()}</DialogTitle>
+            <DialogContent className="max-w-3xl w-full p-0 flex flex-col h-full sm:h-auto sm:max-h-[90vh]">
+                <DialogHeader className="p-4 sm:p-6 border-b print-hidden">
+                    <DialogTitle>Order Summary - #{(order._id as string).slice(-6).toUpperCase()}</DialogTitle>
                 </DialogHeader>
                 <ScrollArea className="flex-grow">
-                     <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <Card className="md:col-span-2">
-                            <CardContent className="pt-6">
-                                <h3 className="font-semibold mb-4">Items Ordered</h3>
+                    <div id="packing-slip" ref={slipRef} className="bg-white text-black printable-area">
+                         <div className="p-4 sm:p-8">
+                            <header className="text-center mb-8">
+                                <h1 className="text-3xl sm:text-4xl font-bold font-headline text-primary" style={{fontFamily: "'Cormorant Garamond', serif"}}>PRAMILA</h1>
+                                <p className="text-xs sm:text-sm text-gray-500">Jaypee greens wishtown, sector 128, Noida-201304</p>
+                            </header>
+                            
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6 text-sm">
+                                <div className="space-y-2">
+                                    <p><strong className="font-semibold text-gray-600 w-28 inline-block">Order Number:</strong> #{(order._id as string).slice(-6).toUpperCase()}</p>
+                                    <p><strong className="font-semibold text-gray-600 w-28 inline-block">Order Date:</strong> {format(new Date(order.createdAt), 'dd MMM, yyyy')}</p>
+                                    <p><strong className="font-semibold text-gray-600 w-28 inline-block">Shipping Method:</strong> Standard</p>
+                                    <p><strong className="font-semibold text-gray-600 w-28 inline-block">Payment Status:</strong> Paid</p>
+                                </div>
+                                <div className="space-y-2 sm:text-right">
+                                    <p className="font-semibold">Order Status:</p>
+                                    <Badge variant="outline" className={cn('capitalize', getStatusVariant(order.status))}>{order.status}</Badge>
+                                </div>
+                            </div>
+
+                            <Separator className="my-6 bg-gray-200"/>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-8 text-sm">
+                                <div className="space-y-1">
+                                    <h3 className="font-semibold text-gray-600 mb-1">SHIPPING TO:</h3>
+                                    <p className="font-bold">{user.firstName} {user.lastName}</p>
+                                    <p>{order.phone}</p>
+                                    <p>{user.email}</p>
+                                    <p>{order.shippingAddress}</p>
+                                </div>
+                            </div>
+
+                            <div className="rounded-lg border w-full overflow-x-auto">
                                 <Table>
                                     <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Product</TableHead>
-                                            <TableHead>Size</TableHead>
-                                            <TableHead>Quantity</TableHead>
-                                            <TableHead>Price</TableHead>
-                                            <TableHead className="text-right">Total</TableHead>
+                                        <TableRow className="bg-gray-50">
+                                            <TableHead className="w-[60%]">Item Name</TableHead>
+                                            <TableHead>Variant</TableHead>
+                                            <TableHead className="text-right">Quantity</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -60,40 +133,25 @@ export default function OrderDetailsDialog({ order, open, onOpenChange }: OrderD
                                             <TableRow key={item._id}>
                                                 <TableCell className="font-medium">{item.name}</TableCell>
                                                 <TableCell>{item.size}</TableCell>
-                                                <TableCell>{item.quantity}</TableCell>
-                                                <TableCell>Rs. {item.price.toLocaleString('en-IN')}</TableCell>
-                                                <TableCell className="text-right">Rs. {(item.price * item.quantity).toLocaleString('en-IN')}</TableCell>
+                                                <TableCell className="text-right">{item.quantity}</TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
                                 </Table>
-                            </CardContent>
-                        </Card>
-                        <div className="space-y-6">
-                            <Card>
-                                <CardContent className="pt-6 text-sm space-y-2">
-                                     <div className="flex justify-between"><span>Status</span> <Badge variant="outline" className={cn('capitalize', getStatusVariant(order.status))}>{order.status}</Badge></div>
-                                     <div className="flex justify-between"><span>Date</span> <span>{format(new Date(order.createdAt), 'MMM d, yyyy')}</span></div>
-                                     <div className="flex justify-between font-bold text-base"><span>Total</span> <span>Rs. {order.totalAmount.toLocaleString('en-IN')}</span></div>
-                                </CardContent>
-                            </Card>
-                             <Card>
-                                <CardContent className="pt-6 text-sm space-y-2">
-                                     <h3 className="font-semibold mb-2">Customer Details</h3>
-                                     <p>{user.firstName} {user.lastName}</p>
-                                     <p>{user.email}</p>
-                                </CardContent>
-                            </Card>
-                             <Card>
-                                <CardContent className="pt-6 text-sm space-y-2">
-                                     <h3 className="font-semibold mb-2">Shipping Address</h3>
-                                     <p>{order.shippingAddress}</p>
-                                </CardContent>
-                            </Card>
+                            </div>
                         </div>
-                     </div>
+                    </div>
                 </ScrollArea>
+                <DialogFooter className="p-4 bg-muted border-t print-hidden flex-shrink-0">
+                    <Button variant="outline" onClick={handleDownload}>
+                        <Download className="mr-2 h-4 w-4" /> Download
+                    </Button>
+                    <Button onClick={handlePrint}>
+                        <Printer className="mr-2 h-4 w-4" /> Print
+                    </Button>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
+        </>
     )
 }

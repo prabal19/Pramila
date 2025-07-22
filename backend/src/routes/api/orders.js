@@ -1,3 +1,4 @@
+
 const express = require('express');
 const router = express.Router();
 const Order = require('../../models/Order');
@@ -8,11 +9,11 @@ const Product = require('../../models/Product');
 // @desc    Create an order and deduct product quantity
 // @access  Private (should be secured)
 router.post('/', async (req, res) => {
-  const { userId, items, totalAmount, shippingAddress } = req.body;
+  const { userId, items, totalAmount, shippingAddress, phone } = req.body;
   
   try {
     // Basic validation
-    if (!userId || !items || items.length === 0 || !totalAmount || !shippingAddress) {
+    if (!userId || !items || items.length === 0 || !totalAmount || !shippingAddress || !phone) {
       return res.status(400).json({ msg: 'Missing required order information.' });
     }
 
@@ -33,6 +34,7 @@ router.post('/', async (req, res) => {
       items,
       totalAmount,
       shippingAddress,
+      phone,
     });
     
     // Deduct quantities from products

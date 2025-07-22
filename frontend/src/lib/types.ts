@@ -79,6 +79,7 @@ export type Order = {
   items: OrderItem[];
   totalAmount: number;
   shippingAddress: string;
+    phone: string;
   status: OrderStatus;
   createdAt: string;
   updatedAt: string;
