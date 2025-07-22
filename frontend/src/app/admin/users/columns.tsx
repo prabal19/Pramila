@@ -26,12 +26,12 @@ export const columns: ColumnDef<User>[] = [
     ),
   },
   {
-    accessorKey: "date",
+    accessorKey: "createdAt",
     header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Date Joined" />
     ),
      cell: ({ row }) => {
-        const dateValue = row.getValue("date") as string;
+        const dateValue = row.getValue("createdAt") as string;
         if (!dateValue || isNaN(new Date(dateValue).getTime())) {
             return <span>-</span>;
         }

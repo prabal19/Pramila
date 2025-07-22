@@ -68,7 +68,7 @@ export default function AdminUsersPage() {
                 data={data} 
                 searchKey="email" 
                 searchPlaceholder="Search by email..." 
-                dateFilterKey="date"
+                dateFilterKey="createdAt"
                 onRowClick={handleRowClick}
             />
             {selectedUser && (
