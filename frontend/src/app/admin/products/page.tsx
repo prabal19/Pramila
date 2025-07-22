@@ -1,35 +1,45 @@
 
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { getProducts, getProductById } from '@/lib/products';
-import { Product } from "@/lib/types";
+import { getCategories } from '@/lib/categories';
+import { Product, Category } from "@/lib/types";
 import { columns } from "./columns";
 import { DataTable } from "@/components/ui/data-table";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, ShoppingBag } from 'lucide-react';
 import ProductForm from '@/components/admin/ProductForm';
 import ProductDetailsDialog from '@/components/admin/ProductDetailsDialog';
 
 export default function AdminProductsPage() {
     const [data, setData] = useState<Product[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
-    const fetchProducts = async () => {
+    const fetchData = async () => {
         setLoading(true);
-        const products = await getProducts();
+        const [products, fetchedCategories] = await Promise.all([getProducts(), getCategories()]);
         setData(products);
+        setCategories(fetchedCategories);
         setLoading(false);
     }
 
     useEffect(() => {
-        fetchProducts();
+        fetchData();
     }, [])
     
+    const categoryFilterOptions = useMemo(() => 
+        categories.map(cat => ({
+            value: cat.slug,
+            label: cat.name,
+            icon: ShoppingBag
+        })), [categories]);
+
     const handleOpenForm = (product: Product | null = null) => {
         setSelectedProduct(product);
         setIsFormOpen(true);
@@ -47,7 +57,7 @@ export default function AdminProductsPage() {
         setIsFormOpen(false);
         setSelectedProduct(null);
         if (refresh) {
-            fetchProducts();
+            fetchData();
         }
     }
 
@@ -86,12 +96,15 @@ export default function AdminProductsPage() {
                 </Button>
             </div>
             <DataTable 
-                columns={columns({ onEdit: handleOpenForm, onRefresh: fetchProducts })} 
+                columns={columns({ onEdit: handleOpenForm, onRefresh: fetchData })} 
                 data={data} 
                 searchKey="name" 
                 searchPlaceholder="Search by name..." 
                 dateFilterKey="createdAt" 
                 onRowClick={handleRowClick}
+                facetedFilterKey="category"
+                facetedFilterOptions={categoryFilterOptions}
+                facetedFilterTitle="Category"
             />
             {isFormOpen && (
                 <ProductForm

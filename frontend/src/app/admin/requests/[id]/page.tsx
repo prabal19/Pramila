@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -29,6 +29,7 @@ export default function TicketDetailPage() {
     const [loading, setLoading] = useState(true);
     const [newMessage, setNewMessage] = useState('');
     const [isSending, setIsSending] = useState(false);
+    const [currentStatus, setCurrentStatus] = useState<RequestStatus | undefined>(undefined);
     
     useEffect(() => {
         const fetchTicket = async () => {
@@ -36,19 +37,24 @@ export default function TicketDetailPage() {
             setLoading(true);
             const data = await getRequestById(id);
             setTicket(data);
+            if (data) {
+                setCurrentStatus(data.status);
+            }
             setLoading(false);
         };
         fetchTicket();
     }, [id]);
 
-    const handleUpdateStatus = async (status: RequestStatus) => {
-        if (!ticket) return;
-        const result = await updateTicketStatus(ticket._id, status);
+    const handleUpdateStatus = async () => {
+        if (!ticket || !currentStatus || currentStatus === ticket.status) return;
+        
+        const result = await updateTicketStatus(ticket._id, currentStatus);
         if (result.success && result.data) {
             setTicket(result.data);
-            toast({ title: 'Status Updated', description: `Request status changed to ${status}.` });
+            toast({ title: 'Status Updated', description: `Request status changed to ${currentStatus}.` });
         } else {
             toast({ variant: 'destructive', title: 'Error', description: result.message });
+            setCurrentStatus(ticket.status); // Revert on failure
         }
     };
     
@@ -63,6 +69,7 @@ export default function TicketDetailPage() {
         
         if (result.success && result.data) {
             setTicket(result.data);
+            setCurrentStatus(result.data.status);
             setNewMessage('');
         } else {
             toast({ variant: 'destructive', title: 'Error', description: result.message });
@@ -92,9 +99,16 @@ export default function TicketDetailPage() {
 
     return (
         <div className="space-y-6">
-            <Button variant="ghost" onClick={() => router.push('/admin/requests')} className="text-muted-foreground">
-                <ArrowLeft className="mr-2 h-4 w-4" /> Back to All Requests
-            </Button>
+            <div className="flex justify-between items-center">
+                <Button variant="ghost" onClick={() => router.push('/admin/requests')} className="text-muted-foreground">
+                    <ArrowLeft className="mr-2 h-4 w-4" /> Back to All Requests
+                </Button>
+                 <Button asChild>
+                    <a href={`mailto:${ticket.contactEmail}`}>
+                        <Mail className="mr-2 h-4 w-4" /> Reply via Email
+                    </a>
+                </Button>
+            </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                 <div className="lg:col-span-2">
                     <Card>
@@ -145,16 +159,19 @@ export default function TicketDetailPage() {
                     </CardHeader>
                     <CardContent className="space-y-4 text-sm">
                         <div>
-                            <p className="font-semibold">Status</p>
-                            <Select value={ticket.status} onValueChange={(val) => handleUpdateStatus(val as RequestStatus)}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Open">Open</SelectItem>
-                                    <SelectItem value="Pending">Pending</SelectItem>
-                                    <SelectItem value="Closed">Closed</SelectItem>
-                                     {ticket.type === 'Newsletter' && <SelectItem value="New Subscriber">New Subscriber</SelectItem>}
-                                </SelectContent>
-                            </Select>
+                            <p className="font-semibold mb-1">Status</p>
+                            <div className="flex items-center gap-2">
+                                <Select value={currentStatus} onValueChange={(val) => setCurrentStatus(val as RequestStatus)}>
+                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Open">Open</SelectItem>
+                                        <SelectItem value="Pending">Pending</SelectItem>
+                                        <SelectItem value="Closed">Closed</SelectItem>
+                                         {ticket.type === 'Newsletter' && <SelectItem value="New Subscriber">New Subscriber</SelectItem>}
+                                    </SelectContent>
+                                </Select>
+                                 <Button size="sm" onClick={handleUpdateStatus} disabled={currentStatus === ticket.status}>Save</Button>
+                            </div>
                         </div>
                         <Separator />
                          <div>
