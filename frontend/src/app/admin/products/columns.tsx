@@ -120,12 +120,14 @@ export const columns = ({ onEdit, onRefresh }: { onEdit: (product: Product) => v
         return <span className="capitalize">{category.replace(/-/g, ' ')}</span>;
     },
   },
-       {
+   {
     accessorKey: "quantity",
     header: ({ column }) => (
+      <div className="text-right">
         <DataTableColumnHeader column={column} title="Stock" />
+      </div>
     ),
-    cell: ({ row }) => row.getValue("quantity"),
+    cell: ({ row }) => <div className="text-right">{row.getValue("quantity")}</div>,
   },
   // {
   //   accessorKey: "bestseller",
