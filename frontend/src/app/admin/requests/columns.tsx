@@ -65,13 +65,13 @@ export const columns: ColumnDef<SupportRequest>[] = [
   },
   {
     accessorKey: "updatedAt",
-    header: ({ column }) => <div className="text-right"><DataTableColumnHeader column={column} title="Last Updated" /></div>,
-    cell: ({ row }) => <div className="text-right">{format(new Date(row.getValue("updatedAt") as string), 'MMM d, yyyy')}</div>,
+    header: ({ column }) => <div><DataTableColumnHeader column={column} title="Last Updated" /></div>,
+    cell: ({ row }) => <div>{format(new Date(row.getValue("updatedAt") as string), 'MMM d, yyyy')}</div>,
   },
   {
     id: "actions",
     cell: ({ row }) => (
-        <Button asChild variant="ghost" size="sm">
+        <Button asChild variant="secondary" size="sm">
             <Link href={`/admin/requests/${row.original._id}`}>
                 View <ArrowRight className="ml-2 h-4 w-4" />
             </Link>

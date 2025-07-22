@@ -117,13 +117,13 @@ export const columns: ColumnDef<Order>[] = [
   {
     accessorKey: "totalAmount",
     header: ({ column }) => (
-      <div className="text-right">
+      <div>
         <DataTableColumnHeader column={column} title="Amount" />
       </div>
     ),
     cell: ({ row }) => {
       const amount = row.getValue("totalAmount") as number;
-      return <div className="text-right font-medium">Rs. {amount.toLocaleString('en-IN')}</div>
+      return <div className="font-medium">Rs. {amount.toLocaleString('en-IN')}</div>
     },
   },
 ]

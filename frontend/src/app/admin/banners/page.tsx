@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useState, useEffect } from 'react';
@@ -9,12 +10,14 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import BannerForm from '@/components/admin/BannerForm';
 import { getBanners } from '@/lib/banners';
+import BannerDetailsDialog from '@/components/admin/BannerDetailsDialog';
 
 
 export default function AdminBannersPage() {
     const [data, setData] = useState<Banner[]>([]);
     const [loading, setLoading] = useState(true);
     const [isFormOpen, setIsFormOpen] = useState(false);
+    const [isDetailsOpen, setIsDetailsOpen] = useState(false);
     const [selectedBanner, setSelectedBanner] = useState<Banner | null>(null);
 
     const fetchBanners = async () => {
@@ -31,6 +34,11 @@ export default function AdminBannersPage() {
     const handleOpenForm = (banner: Banner | null = null) => {
         setSelectedBanner(banner);
         setIsFormOpen(true);
+    }
+    
+    const handleRowClick = (banner: Banner) => {
+        setSelectedBanner(banner);
+        setIsDetailsOpen(true);
     }
 
     const handleFormClose = (refresh: boolean) => {
@@ -75,13 +83,20 @@ export default function AdminBannersPage() {
                     <PlusCircle className="mr-2 h-4 w-4" /> Add Banner
                 </Button>
             </div>
-            <DataTable columns={columns({ onEdit: handleOpenForm, onRefresh: fetchBanners })} data={data} searchKey="title" searchPlaceholder="Search by title..."/>
+            <DataTable columns={columns({ onEdit: handleOpenForm, onRefresh: fetchBanners })} data={data} searchKey="title" searchPlaceholder="Search by title..." onRowClick={handleRowClick} />
              {isFormOpen && (
                 <BannerForm
                     open={isFormOpen}
                     onOpenChange={setIsFormOpen}
                     onFormSubmit={handleFormClose}
                     banner={selectedBanner}
+                />
+            )}
+            {isDetailsOpen && selectedBanner && (
+                <BannerDetailsDialog
+                    banner={selectedBanner}
+                    open={isDetailsOpen}
+                    onOpenChange={setIsDetailsOpen}
                 />
             )}
         </div>

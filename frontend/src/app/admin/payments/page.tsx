@@ -7,7 +7,7 @@ import { Order } from "@/lib/types";
 import { columns } from "./columns";
 import { DataTable } from "@/components/ui/data-table";
 import { Skeleton } from '@/components/ui/skeleton';
-import OrderDetailsDialog from '@/components/admin/OrdersDetailsDialog';
+import PaymentInvoiceDialog from '@/components/admin/PaymentInvoiceDialog';
 
 export default function AdminPaymentsPage() {
     const [data, setData] = useState<Order[]>([]);
@@ -70,7 +70,7 @@ export default function AdminPaymentsPage() {
                 onRowClick={handleRowClick}
             />
             {selectedOrder && (
-                <OrderDetailsDialog
+                <PaymentInvoiceDialog
                     order={selectedOrder}
                     open={isDialogOpen}
                     onOpenChange={setIsDialogOpen}

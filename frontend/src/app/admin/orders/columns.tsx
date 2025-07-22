@@ -58,7 +58,6 @@ const StatusUpdater = ({ order, onRefresh }: { order: Order; onRefresh: () => vo
 };
 
 
-
 export const columns = ({ onRefresh }: { onRefresh: () => void }): ColumnDef<Order>[] => [
   {
     accessorKey: "_id",
@@ -125,13 +124,13 @@ export const columns = ({ onRefresh }: { onRefresh: () => void }): ColumnDef<Ord
   {
     accessorKey: "totalAmount",
     header: ({ column }) => (
-      <div className="text-right">
+      <div>
         <DataTableColumnHeader column={column} title="Total" />
       </div>
     ),
     cell: ({ row }) => {
       const amount = row.getValue("totalAmount") as number;
-      return <div className="text-right font-medium">Rs. {amount.toLocaleString('en-IN')}</div>
+      return <div className="font-medium">Rs. {amount.toLocaleString('en-IN')}</div>
     },
   },
 ]

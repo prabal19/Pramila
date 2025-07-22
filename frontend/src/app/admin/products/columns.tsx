@@ -144,7 +144,7 @@ export const columns = ({ onEdit, onRefresh }: { onEdit: (product: Product) => v
   {
     accessorKey: "price",
     header: ({ column }) => (
-      <div className="text-right">
+      <div >
         <DataTableColumnHeader column={column} title="Price" />
       </div>
     ),
