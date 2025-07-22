@@ -3,16 +3,17 @@
 
 import { useRef } from 'react';
 import html2canvas from 'html2canvas';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import jsPDF from 'jspdf';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from '@/components/ui/button';
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import type { Order, OrderStatus, PopulatedUser } from "@/lib/types";
 import { format } from "date-fns";
-import { Printer, Download } from 'lucide-react';
-import { ScrollArea } from '../ui/scroll-area';
+import { Printer, Download, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useState } from 'react';
 
 interface OrderDetailsDialogProps {
     order: Order | null;
@@ -35,18 +36,37 @@ function getStatusVariant(status: OrderStatus) {
 
 export default function OrderDetailsDialog({ order, open, onOpenChange }: OrderDetailsDialogProps) {
     const slipRef = useRef<HTMLDivElement>(null);
+    const [isDownloading, setIsDownloading] = useState(false);
 
     const handlePrint = () => {
         window.print();
     };
 
     const handleDownload = () => {
-        if (slipRef.current) {
-            html2canvas(slipRef.current, { scale: 2 }).then((canvas) => {
-                const link = document.createElement('a');
-                link.download = `order-summary-${order?._id.slice(-6).toUpperCase()}.png`;
-                link.href = canvas.toDataURL('image/png');
-                link.click();
+        const input = slipRef.current;
+        if (input) {
+            setIsDownloading(true);
+            html2canvas(input, {
+                scale: 2,
+                scrollY: -window.scrollY,
+                windowWidth: input.scrollWidth,
+                windowHeight: input.scrollHeight,
+                useCORS: true,
+            }).then((canvas) => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+                const imgWidth = canvas.width;
+                const imgHeight = canvas.height;
+                const ratio = imgWidth / imgHeight;
+                const canvasHeight = pdfWidth / ratio;
+
+                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, canvasHeight);
+                pdf.save(`packing-slip-${order?._id.slice(-6).toUpperCase()}.pdf`);
+                setIsDownloading(false);
+            }).catch(() => {
+                setIsDownloading(false);
             });
         }
     };
@@ -58,37 +78,39 @@ export default function OrderDetailsDialog({ order, open, onOpenChange }: OrderD
 
     return (
         <>
-        <style jsx global>{`
-            @media print {
-                body * {
-                    visibility: hidden;
+            <style jsx global>{`
+                @media print {
+                    @page {
+                        margin: 0;
+                    }
+                    body, html {
+                        visibility: hidden;
+                    }
+                    .printable-area, .printable-area * {
+                        visibility: visible;
+                    }
+                    .printable-area {
+                        position: absolute;
+                        left: 0;
+                        top: 0;
+                        width: 100%;
+                        height: auto;
+                        overflow: visible;
+                        background: white;
+                        color: black;
+                    }
+                    .print-hidden {
+                        display: none;
+                    }
                 }
-                .printable-area, .printable-area * {
-                    visibility: visible;
-                }
-                .printable-area {
-                    position: absolute;
-                    left: 0;
-                    top: 0;
-                    width: 100%;
-                    height: auto;
-                    overflow: visible;
-                    background: white;
-                    color: black;
-                }
-                .print-hidden {
-                    display: none;
-                }
-            }
-        `}</style>
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-3xl w-full p-0 flex flex-col h-full sm:h-auto sm:max-h-[90vh]">
-                <DialogHeader className="p-4 sm:p-6 border-b print-hidden">
-                    <DialogTitle>Order Summary - #{(order._id as string).slice(-6).toUpperCase()}</DialogTitle>
-                </DialogHeader>
-                <ScrollArea className="flex-grow">
-                    <div id="packing-slip" ref={slipRef} className="bg-white text-black printable-area">
-                         <div className="p-4 sm:p-8">
+            `}</style>
+            <Dialog open={open} onOpenChange={onOpenChange}>
+                <DialogContent className="max-w-3xl w-full p-0 flex flex-col h-full sm:h-auto sm:max-h-[90vh]">
+                    <DialogHeader className="p-4 sm:p-6 border-b print-hidden flex-shrink-0">
+                        <DialogTitle>Order Summary - #{(order._id as string).slice(-6).toUpperCase()}</DialogTitle>
+                    </DialogHeader>
+                    <div ref={slipRef} className="flex-grow overflow-y-auto printable-area bg-white text-black">
+                        <div className="p-4 sm:p-8">
                             <header className="text-center mb-8">
                                 <h1 className="text-3xl sm:text-4xl font-bold font-headline text-primary" style={{fontFamily: "'Cormorant Garamond', serif"}}>PRAMILA</h1>
                                 <p className="text-xs sm:text-sm text-gray-500">Jaypee greens wishtown, sector 128, Noida-201304</p>
@@ -141,17 +163,17 @@ export default function OrderDetailsDialog({ order, open, onOpenChange }: OrderD
                             </div>
                         </div>
                     </div>
-                </ScrollArea>
-                <DialogFooter className="p-4 bg-muted border-t print-hidden flex-shrink-0">
-                    <Button variant="outline" onClick={handleDownload}>
-                        <Download className="mr-2 h-4 w-4" /> Download
-                    </Button>
-                    <Button onClick={handlePrint}>
-                        <Printer className="mr-2 h-4 w-4" /> Print
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+                    <DialogFooter className="p-4 bg-muted border-t print-hidden flex-shrink-0">
+                        <Button variant="outline" onClick={handleDownload} disabled={isDownloading}>
+                            {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                             Download PDF
+                        </Button>
+                        <Button onClick={handlePrint}>
+                            <Printer className="mr-2 h-4 w-4" /> Print
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </>
     )
 }
