@@ -108,6 +108,7 @@ export const columns = ({ onEdit, onRefresh }: { onEdit: (product: Product) => v
         <DataTableColumnHeader column={column} title="Name" />
     ),
   },
+
   {
     accessorKey: "category",
     header: ({ column }) => (
@@ -119,20 +120,40 @@ export const columns = ({ onEdit, onRefresh }: { onEdit: (product: Product) => v
         return <span className="capitalize">{category.replace(/-/g, ' ')}</span>;
     },
   },
-  {
-    accessorKey: "bestseller",
+       {
+    accessorKey: "quantity",
     header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Bestseller" />
+        <DataTableColumnHeader column={column} title="Stock" />
     ),
-    cell: ({ row }) => (
-      row.getValue("bestseller") ? (
-        <Badge variant="outline">Yes</Badge>
-      ) : (
-        <Badge variant="secondary">No</Badge>
-      )
-    ),
+    cell: ({ row }) => row.getValue("quantity"),
   },
+  // {
+  //   accessorKey: "bestseller",
+  //   header: ({ column }) => (
+  //       <DataTableColumnHeader column={column} title="Bestseller" />
+  //   ),
+  //   cell: ({ row }) => (
+  //     row.getValue("bestseller") ? (
+  //       <Badge variant="outline">Yes</Badge>
+  //     ) : (
+  //       <Badge variant="secondary">No</Badge>
+  //     )
+  //   ),
+  // },
+
   {
+    accessorKey: "price",
+    header: ({ column }) => (
+      <div className="text-right">
+        <DataTableColumnHeader column={column} title="Price" />
+      </div>
+    ),
+    cell: ({ row }) => {
+      const amount = row.getValue("price") as number
+      return <div className="text-right font-medium">Rs. {amount.toLocaleString('en-IN')}</div>
+    },
+  },
+    {
     accessorKey: "createdAt",
     header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Added On" />
@@ -158,18 +179,6 @@ export const columns = ({ onEdit, onRefresh }: { onEdit: (product: Product) => v
           return date >= fromDate && date <= toDate;
         }
         return true;
-    },
-  },
-  {
-    accessorKey: "price",
-    header: ({ column }) => (
-      <div className="text-right">
-        <DataTableColumnHeader column={column} title="Price" />
-      </div>
-    ),
-    cell: ({ row }) => {
-      const amount = row.getValue("price") as number
-      return <div className="text-right font-medium">Rs. {amount.toLocaleString('en-IN')}</div>
     },
   },
   {
