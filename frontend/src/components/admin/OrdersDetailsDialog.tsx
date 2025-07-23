@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from '@/components/ui/button';
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import type { Order, OrderStatus, PopulatedUser } from "@/lib/types";
+import type { Order, PopulatedUser } from "@/lib/types";
 import { format } from "date-fns";
 import { Printer, Download, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -21,18 +21,7 @@ interface OrderDetailsDialogProps {
     onOpenChange: (open: boolean) => void;
 }
 
-function getStatusVariant(status: OrderStatus) {
-    switch (status) {
-        case 'Delivered': return 'bg-green-100 text-green-800 border-green-200';
-        case 'Out for Delivery': return 'bg-sky-100 text-sky-800 border-sky-200';
-        case 'Shipped': return 'bg-blue-100 text-blue-800 border-blue-200';
-        case 'Confirmed / Processing': return 'bg-orange-100 text-orange-800 border-orange-200';
-        case 'Cancelled':
-        case 'Returned': return 'bg-red-100 text-red-800 border-red-200';
-        case 'Pending':
-        default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-}
+
 
 export default function OrderDetailsDialog({ order, open, onOpenChange }: OrderDetailsDialogProps) {
     const slipRef = useRef<HTMLDivElement>(null);
@@ -149,14 +138,10 @@ export default function OrderDetailsDialog({ order, open, onOpenChange }: OrderD
                             
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6 text-sm">
                                 <div className="space-y-2">
-                                    <p><strong className="font-semibold text-gray-600 w-28 inline-block">Order Number:</strong> #{(order._id as string).slice(-6).toUpperCase()}</p>
-                                    <p><strong className="font-semibold text-gray-600 w-28 inline-block">Order Date:</strong> {format(new Date(order.createdAt), 'dd MMM, yyyy')}</p>
-                                    <p><strong className="font-semibold text-gray-600 w-28 inline-block">Shipping Method:</strong> Standard</p>
-                                    <p><strong className="font-semibold text-gray-600 w-28 inline-block">Payment Status:</strong> Paid</p>
-                                </div>
-                                <div className="space-y-2 sm:text-right">
-                                    <p className="font-semibold">Order Status:</p>
-                                    <Badge variant="outline" className={cn('capitalize', getStatusVariant(order.status))}>{order.status}</Badge>
+                                    <p><strong className="font-semibold text-gray-600  inline-block">Order Number:</strong> #{(order._id as string).slice(-6).toUpperCase()}</p>
+                                    <p><strong className="font-semibold text-gray-600  inline-block">Order Date:</strong> {format(new Date(order.createdAt), 'dd MMM, yyyy')}</p>
+                                    <p><strong className="font-semibold text-gray-600  inline-block">Shipping Method:</strong> Standard</p>
+                                    <p><strong className="font-semibold text-gray-600 inline-block">Payment Status:</strong> Paid</p>
                                 </div>
                             </div>
 
@@ -215,14 +200,10 @@ export default function OrderDetailsDialog({ order, open, onOpenChange }: OrderD
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6 text-sm">
                         <div className="space-y-2">
-                            <p><strong className="font-semibold text-gray-600 w-28 inline-block">Order Number:</strong> #{(order._id as string).slice(-6).toUpperCase()}</p>
-                            <p><strong className="font-semibold text-gray-600 w-28 inline-block">Order Date:</strong> {format(new Date(order.createdAt), 'dd MMM, yyyy')}</p>
-                            <p><strong className="font-semibold text-gray-600 w-28 inline-block">Shipping Method:</strong> Standard</p>
-                            <p><strong className="font-semibold text-gray-600 w-28 inline-block">Payment Status:</strong> Paid</p>
-                        </div>
-                        <div className="space-y-2 sm:text-right">
-                            <p className="font-semibold">Order Status:</p>
-                            <Badge variant="outline" className={cn('capitalize', getStatusVariant(order.status))}>{order.status}</Badge>
+                            <p><strong className="font-semibold text-gray-600 inline-block">Order Number:</strong> #{(order._id as string).slice(-6).toUpperCase()}</p>
+                            <p><strong className="font-semibold text-gray-600 inline-block">Order Date:</strong> {format(new Date(order.createdAt), 'dd MMM, yyyy')}</p>
+                            <p><strong className="font-semibold text-gray-600 inline-block">Shipping Method:</strong> Standard</p>
+                            <p><strong className="font-semibold text-gray-600 inline-block">Payment Status:</strong> Paid</p>
                         </div>
                     </div>
 
