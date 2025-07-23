@@ -12,7 +12,7 @@ import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { updateUser as updateUserAction, addAddress, updateAddress as updateAddressAction, deleteAddress as deleteAddressAction, deleteUser as deleteUserAction } from '@/actions/auth';
 import { useToast } from '@/hooks/use-toast';
-import type { Address } from '@/lib/types';
+import type { Address, Order ,Product} from '@/lib/types';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,7 +24,18 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, ShoppingBag } from 'lucide-react';
+import { getUserOrders } from '@/lib/orders';
+import { getProductsByIds } from '@/lib/products';
+import { format } from 'date-fns';
+import { Separator } from '@/components/ui/separator';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import Image from 'next/image';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
+import Link from 'next/link';
+
 
 // Sidebar component
 const AccountSidebar = ({ activeView, onNavigate, onLogout }: { activeView: string, onNavigate: (view: string) => void, onLogout: () => void }) => {
@@ -300,7 +311,138 @@ const AddressesView = () => {
 
 
 // Placeholder Orders View
-const OrdersView = () => <h1 className="text-xl font-bold">Orders & Returns</h1>;
+
+
+function getStatusVariant(status: string) {
+    switch (status) {
+        case 'Delivered': return 'bg-green-100 text-green-800 border-green-200';
+        case 'Out for Delivery': return 'bg-sky-100 text-sky-800 border-sky-200';
+        case 'Shipped': return 'bg-blue-100 text-blue-800 border-blue-200';
+        case 'Confirmed / Processing': return 'bg-orange-100 text-orange-800 border-orange-200';
+        case 'Cancelled': case 'Returned': return 'bg-red-100 text-red-800 border-red-200';
+        case 'Pending': default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+}
+
+const OrdersView = () => {
+    const { user } = useAuth();
+    const [orders, setOrders] = useState<Order[]>([]);
+    const [products, setProducts] = useState<Map<string, Product>>(new Map());
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchOrdersAndProducts = async () => {
+            if (user) {
+                setLoading(true);
+                const userOrders = await getUserOrders(user._id);
+                setOrders(userOrders);
+
+                if (userOrders.length > 0) {
+                    const productIds = [...new Set(userOrders.flatMap(o => o.items.map(i => i.productId)))];
+                    const fetchedProducts = await getProductsByIds(productIds);
+                    const productMap = new Map(fetchedProducts.map(p => [p.id, p]));
+                    setProducts(productMap);
+                }
+                setLoading(false);
+            }
+        };
+        fetchOrdersAndProducts();
+    }, [user]);
+
+    if (loading) {
+        return (
+            <div>
+                <h1 className="text-xl font-bold mb-8">Orders & Returns</h1>
+                <div className="space-y-4">
+                    <Skeleton className="h-24 w-full" />
+                    <Skeleton className="h-24 w-full" />
+                    <Skeleton className="h-24 w-full" />
+                </div>
+            </div>
+        );
+    }
+    
+    if (orders.length === 0) {
+        return (
+             <div>
+                <h1 className="text-xl font-bold mb-8">Orders & Returns</h1>
+                <div className="text-center py-20 border-2 border-dashed rounded-lg">
+                    <ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground" />
+                    <h2 className="mt-4 text-xl font-semibold">No Orders Yet</h2>
+                    <p className="mt-2 text-sm text-muted-foreground">You haven't placed any orders with us yet. Let's change that!</p>
+                    <Button asChild className="mt-6">
+                        <Link href="/shop">Start Shopping</Link>
+                    </Button>
+                </div>
+            </div>
+        )
+    }
+
+    return (
+        <div>
+            <h1 className="text-xl font-bold mb-8">Orders & Returns</h1>
+            <div className="space-y-6">
+                {orders.map(order => (
+                    <Accordion key={order._id} type="single" collapsible className="border rounded-lg">
+                        <AccordionItem value={order._id} className="border-b-0">
+                            <AccordionTrigger className="p-4 hover:no-underline hover:bg-muted/50 rounded-t-lg">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full text-left gap-2 sm:gap-4">
+                                    <div className="flex-1">
+                                        <p className="font-bold text-base">Order #{order._id.slice(-6).toUpperCase()}</p>
+                                        <p className="text-xs text-muted-foreground">{format(new Date(order.createdAt), 'PPP')}</p>
+                                    </div>
+                                    <div className="flex-1 text-right sm:text-left">
+                                         <p className="text-xs text-muted-foreground">Total</p>
+                                         <p className="font-semibold">Rs. {order.totalAmount.toLocaleString('en-IN')}</p>
+                                    </div>
+                                    <div className="sm:flex-1 text-right">
+                                        <Badge variant="outline" className={cn('capitalize', getStatusVariant(order.status))}>
+                                            {order.status}
+                                        </Badge>
+                                    </div>
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                               <div className="p-4 border-t">
+                                   <h3 className="font-semibold mb-4">Items in your order:</h3>
+                                   <div className="space-y-4">
+                                       {order.items.map(item => {
+                                           const product = products.get(item.productId);
+                                           return (
+                                                <div key={item._id} className="flex gap-4">
+                                                    <div className="w-20 h-24 bg-muted rounded-md shrink-0 relative">
+                                                        {product ? (
+                                                            <Image src={product.images[0]} alt={product.name} fill className="object-cover rounded-md" />
+                                                        ) : (
+                                                            <div className="w-full h-full bg-muted rounded-md"></div>
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-semibold">{item.name}</p>
+                                                        <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                                                        <p className="text-sm text-muted-foreground">Size: {item.size}</p>
+                                                        <p className="text-sm text-muted-foreground">Price: Rs. {item.price.toLocaleString('en-IN')}</p>
+                                                    </div>
+                                                </div>
+                                           )
+                                        })}
+                                   </div>
+                                    <Separator className="my-4" />
+                                    <div>
+                                        <h3 className="font-semibold mb-2">Shipping Address</h3>
+                                        <p className="text-sm text-muted-foreground">{order.shippingAddress}</p>
+                                    </div>
+                               </div>
+                            </AccordionContent>
+                        </AccordionItem>
+                    </Accordion>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+
 
 // Delete Account View
 const DeleteAccountView = () => {
@@ -374,6 +516,15 @@ export default function AccountPage() {
     const { user, loading, logout } = useAuth();
     const router = useRouter();
     const [view, setView] = useState('overview');
+
+
+useEffect(() => {
+        const queryParams = new URLSearchParams(window.location.search);
+        const viewParam = queryParams.get('view');
+        if (viewParam) {
+            setView(viewParam);
+        }
+    }, []);
 
     useEffect(() => {
         if (!loading && !user) {
