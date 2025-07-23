@@ -29,16 +29,35 @@ const listeners: Set<() => void> = new Set();
 let state: {
   cartItems: (LocalCartItem[] | ApiCartItem[]);
   buyNowItem: LocalCartItem | null;
+    shippingInfo: ShippingInfo | null;
   isLoading: boolean;
   hasUnseenItems: boolean;
   isUpdating: boolean;
 } = {
   cartItems: [],
   buyNowItem: null,
+  shippingInfo: null,
   isLoading: true,
   hasUnseenItems: false,
   isUpdating: false,
 };
+
+// Initialize state from sessionStorage on script load
+if (typeof window !== 'undefined') {
+    try {
+        const storedShippingInfo = sessionStorage.getItem(SHIPPING_INFO_KEY);
+        if (storedShippingInfo) {
+            state.shippingInfo = JSON.parse(storedShippingInfo);
+        }
+        const buyNowData = sessionStorage.getItem(BUY_NOW_KEY);
+        if (buyNowData) {
+            state.buyNowItem = JSON.parse(buyNowData);
+        }
+    } catch (error) {
+        console.error("Failed to initialize state from sessionStorage", error);
+    }
+}
+
 
 const emitChange = () => {
   for (const listener of listeners) {
@@ -67,7 +86,7 @@ export const useCart = () => {
   const store = useCartStore();
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
-  const [shippingInfo, setLocalShippingInfo] = useState<ShippingInfo | null>(null);
+
 
   const syncGuestCart = useCallback(async (guestCart: LocalCartItem[], userId: string) => {
     if (guestCart.length === 0) return;
@@ -108,18 +127,18 @@ export const useCart = () => {
             const guestCartData = localStorage.getItem(GUEST_CART_KEY);
             setState({ cartItems: guestCartData ? JSON.parse(guestCartData) : [] });
         }
-         try {
-            const storedShippingInfo = sessionStorage.getItem(SHIPPING_INFO_KEY);
-            if (storedShippingInfo) {
-                setLocalShippingInfo(JSON.parse(storedShippingInfo));
-            }
-            const buyNowData = sessionStorage.getItem(BUY_NOW_KEY);
-            if (buyNowData) {
-                setState({ buyNowItem: JSON.parse(buyNowData) });
-            }
-        } catch (error) {
-            console.error("Failed to load data from sessionStorage", error);
-        }
+        //  try {
+        //     const storedShippingInfo = sessionStorage.getItem(SHIPPING_INFO_KEY);
+        //     if (storedShippingInfo) {
+        //         setLocalShippingInfo(JSON.parse(storedShippingInfo));
+        //     }
+        //     const buyNowData = sessionStorage.getItem(BUY_NOW_KEY);
+        //     if (buyNowData) {
+        //         setState({ buyNowItem: JSON.parse(buyNowData) });
+        //     }
+        // } catch (error) {
+        //     console.error("Failed to load data from sessionStorage", error);
+        // }
         setState({ isLoading: false });
     }
     
@@ -224,13 +243,13 @@ export const useCart = () => {
       localStorage.removeItem(GUEST_CART_KEY);
     }
     sessionStorage.removeItem(SHIPPING_INFO_KEY);
-    setLocalShippingInfo(null);
+     setState({ shippingInfo: null });
   }, [user]);
 
   const setShippingInfo = useCallback((info: ShippingInfo) => {
     try {
         sessionStorage.setItem(SHIPPING_INFO_KEY, JSON.stringify(info));
-        setLocalShippingInfo(info);
+         setState({ shippingInfo: info });
     } catch(e) {
         console.error("Could not set shipping info to session storage", e)
     }
@@ -252,5 +271,5 @@ export const useCart = () => {
   
   const cartCount = store.cartItems.reduce((total, item) => total + item.quantity, 0);
 
-  return { cart: store.cartItems, cartCount, isLoading: store.isLoading, isUpdating: store.isUpdating, addToCart, removeFromCart, updateQuantity, hasUnseenItems: store.hasUnseenItems, markCartAsViewed, clearCart, shippingInfo, setShippingInfo, buyNowItem: store.buyNowItem, setBuyNowItem, clearBuyNowItem };
+  return { cart: store.cartItems, cartCount, isLoading: store.isLoading, isUpdating: store.isUpdating, addToCart, removeFromCart, updateQuantity, hasUnseenItems: store.hasUnseenItems, markCartAsViewed, clearCart, shippingInfo: store.shippingInfo, setShippingInfo, buyNowItem: store.buyNowItem, setBuyNowItem, clearBuyNowItem };
 };

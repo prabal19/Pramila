@@ -20,6 +20,7 @@ import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { subscribeToNewsletter } from '@/actions/newsletter';
+import { useRouter } from 'next/navigation';
 
 
 type EnrichedCartItem = Product & { 
@@ -64,10 +65,11 @@ function CartItem({ item, updateQuantity, removeFromCart }: { item: EnrichedCart
 }
 
 export default function CartPage() {
-  const { cart, cartCount, updateQuantity, removeFromCart, isLoading: isCartLoading } = useCart();
+  const { cart, cartCount, updateQuantity, removeFromCart, isLoading: isCartLoading,clearBuyNowItem } = useCart();
   const [products, setProducts] = useState<EnrichedCartItem[]>([]);
   const [isProductLoading, setIsProductLoading] = useState(true);
   const { toast } = useToast();
+    const router = useRouter();
 
   const form = useForm<z.infer<typeof newsletterSchema>>({
     resolver: zodResolver(newsletterSchema),
@@ -90,6 +92,10 @@ export default function CartPage() {
       });
     }
   };
+    const handleProceedToCheckout = () => {
+      clearBuyNowItem();
+      router.push('/checkout');
+  }
 
   useEffect(() => {
     const fetchCartProducts = async () => {
@@ -260,8 +266,8 @@ export default function CartPage() {
                                 <span>+ Rs. 0</span>
                             </div>
                         </div>
-                        <Button asChild size="lg" className="w-full">
-                           <Link href="/checkout">Proceed to Checkout</Link>
+                        <Button size="lg" className="w-full" onClick={handleProceedToCheckout}>
+                           Proceed to Checkout
                         </Button>
                     </CardContent>
                 </Card>

@@ -15,6 +15,7 @@ import WishlistIcon from './WishlistIcon';
 import { cn } from '@/lib/utils';
 import { getCategories } from '@/lib/categories';
 import type { Category } from '@/lib/types';
+import { Separator } from './ui/separator';
 
 
 const InstagramIcon = () => (
@@ -84,7 +85,7 @@ const Header = () => {
                         <Menu className="w-6 h-6" />
                       </Button>
                     </SheetTrigger>
-                    <SheetContent side="left" className="w-full max-w-sm p-6">
+                    <SheetContent side="left" className="w-full max-w-sm p-6 flex flex-col">
                       <nav className="flex flex-col gap-2 text-lg font-medium">
                         {navItems.map((item) => (
                           !('dropdown' in item) || !item.dropdown ? (
@@ -107,6 +108,26 @@ const Header = () => {
                           )
                         ))}
                       </nav>
+                      {/* <Separator className="my-6" /> */}
+                       <div className="space-y-4">
+                           <Button
+                              variant="ghost"
+                              className="w-full justify-start gap-2 text-lg font-medium p-0 h-auto"
+                              onClick={() => {
+                                  setIsMobileMenuOpen(false);
+                                  setIsSearchOpen(true);
+                              }}
+                           >
+                              <Search className="w-5 h-5" />
+                              Search
+                           </Button>
+                           <SheetClose asChild>
+                             <Link href="/wishlist" className="flex items-center gap-2 text-lg font-medium">
+                                <Heart className="w-5 h-5" />
+                                Wishlist
+                             </Link>
+                           </SheetClose>
+                       </div>
                     </SheetContent>
                   </Sheet>
               </div>
@@ -144,21 +165,25 @@ const Header = () => {
               ))}
             </nav>
 
-            <div className="flex items-center justify-end gap-2 md:gap-3">
+            <div className="flex items-center justify-end gap-2">
               <Button asChild variant="ghost" size="icon" className="hidden md:inline-flex">
                 <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram">
                   <InstagramIcon />
                 </a>
               </Button>
+              <Button  variant="ghost" size="icon" className="hidden md:inline-flex" aria-label="Open search" onClick={() => setIsSearchOpen(true)}>
+                  <Search className="w-5 h-5" />
+              </Button>
+              <div className="hidden md:block"><WishlistIcon /></div>
               <Button asChild variant="ghost" size="icon">
                 <Link href={user ? "/account" : "/login"}>
                   <User className="w-5 h-5" />
                 </Link>
               </Button>
-              <WishlistIcon />
+              {/* <WishlistIcon />
               <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(true)}>
                 <Search className="w-5 h-5" />
-              </Button>
+              </Button> */}
               <Button  id="cart-sheet-trigger" variant="ghost" size="icon" className="relative" onClick={handleCartClick}>
                 <ShoppingBag className="w-5 h-5" />
                  {cartCount > 0 && (

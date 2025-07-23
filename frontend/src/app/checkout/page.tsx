@@ -1,9 +1,9 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect ,Suspense} from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -69,7 +69,11 @@ const parseAddressForForm = (fullAddress: string) => {
     return { houseNo: fullAddress, landmark: '', city: '', state: '', pincode: '', country: 'India' };
 };
 
-export default function CheckoutPage() {
+
+function CheckoutPageContent() {
+  const searchParams = useSearchParams();
+  const isBuyNow = searchParams.get('buyNow') === 'true';
+
   const { cart, buyNowItem, isLoading: isCartLoading, setShippingInfo } = useCart();
   const { user, loading: isAuthLoading, login } = useAuth();
   const router = useRouter();
@@ -121,7 +125,8 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     const fetchCartProducts = async () => {
-      const itemsToFetch = buyNowItem ? [buyNowItem] : cart;
+      const itemsToFetch = isBuyNow && buyNowItem ? [buyNowItem] : cart;
+
       if (itemsToFetch.length > 0) {
         setIsProductLoading(true);
         const productIds = itemsToFetch.map(item => item.productId);
@@ -138,14 +143,19 @@ export default function CheckoutPage() {
       }
     };
     if (!isCartLoading) fetchCartProducts();
-  }, [cart, isCartLoading, buyNowItem]);
+  }, [cart, isCartLoading, isBuyNow, buyNowItem]);
 
   useEffect(() => {
-    if (!isCartLoading && !isAuthLoading && !buyNowItem && cart.length === 0) {
-      toast({ title: "Your cart is empty", description: "Redirecting you to shop.", variant: "destructive" });
-      router.replace('/shop');
+    // This effect handles redirection if the cart is truly empty
+    const allLoadsComplete = !isCartLoading && !isAuthLoading && !isProductLoading;
+    if (allLoadsComplete) {
+      const hasItemsForCheckout = (isBuyNow && buyNowItem) || (!isBuyNow && cart.length > 0);
+      if (!hasItemsForCheckout) {
+        toast({ title: "Your cart is empty", description: "Redirecting you to shop.", variant: "destructive" });
+        router.replace('/shop');
+      }
     }
-  }, [isAuthLoading, isCartLoading, cart, router, toast, buyNowItem]);
+  }, [isAuthLoading, isCartLoading, isProductLoading, cart, buyNowItem, isBuyNow, router, toast]);
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     setIsProcessing(true);
@@ -195,7 +205,7 @@ export default function CheckoutPage() {
     });
 
     setIsProcessing(false);
-    const redirectUrl = buyNowItem ? '/checkout/payment?buyNow=true' : '/checkout/payment';
+    const redirectUrl = isBuyNow ? '/checkout/payment?buyNow=true' : '/checkout/payment';
     router.push(redirectUrl);
   };
 
@@ -211,9 +221,9 @@ export default function CheckoutPage() {
           <div className="flex justify-between items-center mb-8">
             <Link href="/" className="text-2xl font-bold tracking-widest" style={{fontFamily: "'Cormorant Garamond', serif"}}>PRAMILA</Link>
             <Button variant="link" asChild className="p-0 h-auto">
-                <Link href="/cart" className="flex items-center gap-2 text-muted-foreground hover:text-primary">
+                <Link href="/" className="flex items-center gap-2 text-muted-foreground hover:text-primary">
                     <ArrowLeft className="w-4 h-4" />
-                    Back to Cart
+                    Back to Home
                 </Link>
             </Button>
           </div>
@@ -312,4 +322,11 @@ export default function CheckoutPage() {
       </div>
     </div>
   );
+}
+export default function CheckoutPage() {
+    return (
+        <Suspense fallback={<div className="flex justify-center items-center h-screen"><Loader2 className="w-10 h-10 animate-spin"/></div>}>
+            <CheckoutPageContent />
+        </Suspense>
+    )
 }

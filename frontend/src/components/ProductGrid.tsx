@@ -11,6 +11,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 import { Filter } from 'lucide-react';
+import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationEllipsis, PaginationNext } from '@/components/ui/pagination';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ProductGridProps {
   products: Product[];
@@ -19,9 +21,13 @@ interface ProductGridProps {
   defaultSort?: string;
 }
 
+const PRODUCTS_PER_PAGE = 9;
+
 export default function ProductGrid({ products, allCategories, showCategoryFilter = false, defaultSort = "featured" }: ProductGridProps) {
   const [sortOption, setSortOption] = useState(defaultSort);
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Filter States
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 50000]);
@@ -29,7 +35,6 @@ export default function ProductGrid({ products, allCategories, showCategoryFilte
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   useEffect(() => {
-    // Find min and max price from the initial product list to set slider bounds
     if (products.length > 0) {
       const prices = products.map(p => p.price);
       const min = Math.floor(Math.min(...prices) / 1000) * 1000;
@@ -47,30 +52,40 @@ export default function ProductGrid({ products, allCategories, showCategoryFilte
   const filteredAndSortedProducts = useMemo(() => {
     let filtered = [...products];
 
-    // Apply filters
     filtered = filtered.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
-
     if (selectedSizes.length > 0) {
       filtered = filtered.filter(p => p.sizes?.some(s => selectedSizes.includes(s)));
     }
-    
     if (showCategoryFilter && selectedCategories.length > 0) {
         filtered = filtered.filter(p => selectedCategories.includes(p.category));
     }
 
-    // Apply sorting
     switch (sortOption) {
-      case 'price-asc':
-        return filtered.sort((a, b) => a.price - b.price);
-      case 'price-desc':
-        return filtered.sort((a, b) => b.price - a.price);
-      case 'newest':
-        return filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      case 'price-asc': return filtered.sort((a, b) => a.price - b.price);
+      case 'price-desc': return filtered.sort((a, b) => b.price - a.price);
+      case 'newest': return filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       case 'featured':
-      default:
-        return filtered; // or any default sorting logic
+      default: return filtered;
     }
   }, [products, sortOption, priceRange, selectedSizes, selectedCategories, showCategoryFilter]);
+  
+  // Reset to page 1 when filters change
+  useEffect(() => {
+      setCurrentPage(1);
+  }, [sortOption, priceRange, selectedSizes, selectedCategories]);
+
+  const totalPages = Math.ceil(filteredAndSortedProducts.length / PRODUCTS_PER_PAGE);
+  const paginatedProducts = useMemo(() => {
+      const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
+      const endIndex = startIndex + PRODUCTS_PER_PAGE;
+      return filteredAndSortedProducts.slice(startIndex, endIndex);
+  }, [filteredAndSortedProducts, currentPage]);
+
+  const handlePageChange = (page: number) => {
+    setIsLoading(true);
+    setCurrentPage(page);
+    setTimeout(() => setIsLoading(false), 300); // Simulate loading
+  };
 
   const handleSizeChange = (size: string, checked: boolean) => {
     setSelectedSizes(prev => checked ? [...prev, size] : prev.filter(s => s !== size));
@@ -92,6 +107,35 @@ export default function ProductGrid({ products, allCategories, showCategoryFilte
     setSelectedSizes([]);
     setSelectedCategories([]);
   };
+  
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+    const pageNumbers = [];
+    // Logic for creating pagination items (e.g., with ellipsis)
+    // For simplicity, we'll show all page numbers for now
+    for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.push(
+            <PaginationItem key={i}>
+                <PaginationLink href="#" isActive={i === currentPage} onClick={(e) => { e.preventDefault(); handlePageChange(i); }}>
+                    {i}
+                </PaginationLink>
+            </PaginationItem>
+        );
+    }
+    return (
+        <Pagination className="mt-12">
+            <PaginationContent>
+                <PaginationItem>
+                    <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); handlePageChange(Math.max(1, currentPage - 1)); }} />
+                </PaginationItem>
+                {pageNumbers}
+                <PaginationItem>
+                    <PaginationNext href="#" onClick={(e) => { e.preventDefault(); handlePageChange(Math.min(totalPages, currentPage + 1)); }}/>
+                </PaginationItem>
+            </PaginationContent>
+        </Pagination>
+    );
+  }
 
   return (
     <>
@@ -173,12 +217,27 @@ export default function ProductGrid({ products, allCategories, showCategoryFilte
         </div>
       </div>
 
-      {filteredAndSortedProducts.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-          {filteredAndSortedProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+      {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+            {[...Array(PRODUCTS_PER_PAGE)].map((_, i) => (
+                <div key={i} className="flex flex-col space-y-3">
+                    <Skeleton className="h-[400px] w-full" />
+                    <div className="space-y-2 pt-2 text-center">
+                        <Skeleton className="h-4 w-3/4 mx-auto" />
+                        <Skeleton className="h-4 w-1/2 mx-auto" />
+                    </div>
+                </div>
+            ))}
+          </div>
+      ) : paginatedProducts.length > 0 ? (
+        <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+              {paginatedProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+            {renderPagination()}
+        </>
       ) : (
         <div className="text-center py-20">
           <h2 className="text-2xl font-headline mb-4">No Products Found</h2>

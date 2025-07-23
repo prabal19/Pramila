@@ -13,6 +13,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Minus, Plus, X } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
+import { useRouter } from 'next/navigation';  
 
 type EnrichedCartItem = Product & { 
   quantity: number; 
@@ -26,9 +27,10 @@ interface CartSheetProps {
 }
 
 export default function CartSheet({ open, onOpenChange }: CartSheetProps) {
-  const { cart, cartCount, updateQuantity, removeFromCart, isLoading: isCartLoading } = useCart();
+  const { cart, cartCount, updateQuantity, removeFromCart, isLoading: isCartLoading ,clearBuyNowItem} = useCart();
   const [products, setProducts] = useState<EnrichedCartItem[]>([]);
   const [isProductLoading, setIsProductLoading] = useState(false);
+    const router = useRouter();
 
   useEffect(() => {
     const fetchCartProducts = async () => {
@@ -56,6 +58,12 @@ export default function CartSheet({ open, onOpenChange }: CartSheetProps) {
 
     fetchCartProducts();
   }, [cart]);
+
+    const handleCheckout = () => {
+    clearBuyNowItem();
+    onOpenChange(false);
+    router.push('/checkout');
+  }
 
   const subtotal = products.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
@@ -131,8 +139,8 @@ export default function CartSheet({ open, onOpenChange }: CartSheetProps) {
                     </div>
                 </div>
                  <div className="space-y-3">
-                    <Button asChild className="w-full rounded-none bg-black hover:bg-gray-800 text-white tracking-widest font-semibold" size="lg" onClick={() => onOpenChange(false)}>
-                        <Link href="/checkout">QUICK CHECKOUT</Link>
+                    <Button onClick={handleCheckout} className="w-full rounded-none bg-black hover:bg-gray-800 text-white tracking-widest font-semibold" size="lg">
+                        QUICK CHECKOUT
                     </Button>
                      <Button asChild variant="outline" className="w-full rounded-none tracking-widest font-semibold" size="lg" onClick={() => onOpenChange(false)}>
                         <Link href="/cart">VIEW CART</Link>

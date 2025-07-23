@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from './ui/badge';
 import WishlistIcon from './WishlistIcon';
 import { cn } from '@/lib/utils';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 const ProductDetailsClient = ({ product }: { product: Product }) => {
   const { addToCart, isUpdating, setBuyNowItem } = useCart();
@@ -53,7 +54,7 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
         quantity, 
         size: selectedSize 
     });
-    router.push('/checkout');
+    router.push('/checkout?buyNow=true');
   };
   
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -84,58 +85,66 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
       <SizeChartDialog open={isSizeChartOpen} onOpenChange={setIsSizeChartOpen} />
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-16">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-col gap-3 shrink-0 order-first hidden sm:flex">
-              {product.images.map((img, index) => (
-              <button
-                  key={index}
-                  onClick={() => setSelectedImage(img)}
-                  className={`w-20 h-28 relative rounded-sm overflow-hidden border-2 ${selectedImage === img ? 'border-primary' : 'border-transparent'} transition-colors`}
-                  title={`View image ${index + 1} of ${product.name}`}
-                  aria-label={`View image ${index + 1} of ${product.name}`}
-                >
-                  <Image
-                    src={img}
-                    alt={`${product.name} thumbnail ${index + 1}`}
-                    fill
-                    className="object-cover"
-                  />
-                </button>
-              ))}
+          
+          {/* Image Gallery Section */}
+          <div className="md:sticky md:top-24 md:self-start">
+            <div className="flex flex-col-reverse md:flex-row gap-4">
+              {/* Desktop Thumbnails */}
+              <div className="hidden md:flex flex-col gap-3 shrink-0">
+                {product.images.map((img, index) => (
+                  <button key={index} onClick={() => setSelectedImage(img)} className={`w-20 h-28 relative rounded-sm overflow-hidden border-2 ${selectedImage === img ? 'border-primary' : 'border-transparent'} transition-colors flex-shrink-0`}
+                                    title={`View image ${index + 1} of ${product.name}`}
+                  aria-label={`View image ${index + 1} of ${product.name}`}>
+                    <Image
+                      src={img}
+                      alt={`${product.name} thumbnail ${index + 1}`}
+                      fill
+                      className="object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+
+              {/* Main Image */}
+              <div className="relative w-full aspect-[3/4]">
+                <Image
+                  src={selectedImage}
+                  alt={product.name}
+                  fill
+                  className="object-cover rounded-lg"
+                  priority
+                />
+                <div className="absolute top-4 right-4">
+                      <WishlistIcon productId={product.id} variant="button" />
+                  </div>
+              </div>
             </div>
-            <div className="relative w-full aspect-[3/4]">
-               <Image
-                src={selectedImage}
-                alt={product.name}
-                fill
-                className="object-cover rounded-lg"
-                priority
-              />
-               <div className="absolute top-4 right-4">
-                    <WishlistIcon productId={product.id} variant="button" />
-                </div>
-            </div>
-             <div className="flex sm:hidden flex-row gap-3 overflow-x-auto absolute bottom-4 left-4 right-4 pb-2">
-              {product.images.map((img, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedImage(img)}
-                  className={`w-16 h-24 flex-shrink-0 relative rounded-sm overflow-hidden border-2 ${selectedImage === img ? 'border-primary' : 'border-transparent'} transition-colors`}
-                  title={`View image ${index + 1} of ${product.name}`}
-                  aria-label={`View image ${index + 1} of ${product.name}`}
-                >
-                  <Image
-                    src={img}
-                    alt={`${product.name} thumbnail ${index + 1}`}
-                    fill
-                    className="object-cover"
-                  />
-                </button>
-              ))}
+
+            {/* Mobile Thumbnails */}
+            <div className="md:hidden mt-4">
+              <ScrollArea className="w-full whitespace-nowrap rounded-md">
+                  <div className="flex space-x-3 pb-2">
+                    {product.images.map((img, index) => (
+                      <button key={index} onClick={() => setSelectedImage(img)} className={`w-20 h-28 relative rounded-sm overflow-hidden border-2 ${selectedImage === img ? 'border-primary' : 'border-transparent'} transition-colors flex-shrink-0`}
+                                        title={`View image ${index + 1} of ${product.name}`}
+                  aria-label={`View image ${index + 1} of ${product.name}`}>
+                        <Image
+                          src={img}
+                          alt={`${product.name} thumbnail ${index + 1}`}
+                          fill
+                          className="object-cover"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                  <ScrollBar orientation="horizontal" />
+              </ScrollArea>
             </div>
           </div>
 
-          <div className="md:sticky top-24 self-start">
+
+          {/* Product Info Section */}
+          <div className="md:py-4">
             {product.bestseller && !isOutOfStock && (
               <div className="flex items-center gap-2 text-sm font-semibold text-primary mb-2 tracking-widest">
                 <Shirt className="w-5 h-5" />
@@ -218,12 +227,12 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
                 <TabsContent value="wash" className="text-sm text-muted-foreground leading-relaxed">{washInstructions}</TabsContent>
               </Tabs>
               
-              <div className="flex justify-end">
+              {/* <div className="flex justify-end">
                   <Button variant="link" className="text-green-600 hover:text-green-700">
                       <MessageCircle className="w-5 h-5 mr-2"/>
                       Chat With Us
                   </Button>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>

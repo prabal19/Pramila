@@ -47,7 +47,7 @@ export default function ContactClientPage() {
           <div className="space-y-2 text-muted-foreground mb-10">
               <p>+91 9266748866 (Mon - Fri 9am-7pm IST)</p>
               <p>Jaypee greens wishtown, sector 128, Noida-201304</p>
-              <p><Link href="#" className="underline hover:text-primary">Whatsapp Support</Link></p>
+              {/* <p><Link href="#" className="underline hover:text-primary">Whatsapp Support</Link></p> */}
               <p>contact@pramila.shop</p>
           </div>
           <p className="text-muted-foreground mb-12 max-w-xl mx-auto">
