@@ -87,49 +87,48 @@ export default function PaymentInvoiceDialog({ order, open, onOpenChange }: Paym
 
     return (
         <>
-            <div id="print-styles" className="print-only">
-                <style jsx global>{`
-                    @media print {
-                        @page {
-                            margin: 0;
-                            size: A4;
-                        }
-                        body > *:not(.printable-area) {
-                            display: none !important;
-                        }
-                        body {
-                           margin: 0 !important;
-                           padding: 0 !important;
-                           -webkit-print-color-adjust: exact;
-                           print-color-adjust: exact;
-                        }
-                        .printable-area {
-                            display: block !important;
-                            position: absolute;
-                            top: 0;
-                            left: 0;
-                            width: 100%;
-                            height: auto;
-                            overflow: visible !important;
-                             -ms-overflow-style: none; /* IE and Edge */
-                            scrollbar-width: none; /* Firefox */
-                        }
-                        .printable-area::-webkit-scrollbar {
-                            display: none; /* Chrome, Safari, and Opera */
-                        }
-                        .print-hidden {
-                           display: none !important;
-                        }
+            {/* <div id="print-styles" className="print-only"> */}
+ <style jsx global>{`
+                @media print {
+                    @page {
+                        margin: 0;
                     }
-                `}</style>
-            </div>
+
+                    .print-hidden {
+                        display: none !important;
+                    }
+
+                    .printable-area {
+                        display: block !important;
+                        position: absolute !important;
+                        top: 0 !important;
+                        left: 0 !important;
+                        width: 100% !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        transform: none !important;
+                        background: white !important;
+                        z-index: 9999;
+                    }
+
+                    .printable-area * {
+                        color: black !important;
+                        box-shadow: none !important;
+                    }
+
+                    body {
+                        background: white !important;
+                    }
+                }
+            `}</style>
+            {/* </div> */}
             <Dialog open={open} onOpenChange={onOpenChange}>
                 <DialogContent className="max-w-3xl w-full p-0 flex flex-col h-full sm:h-auto sm:max-h-[90vh]">
                      <DialogHeader className="p-4 sm:p-6 border-b print-hidden flex-shrink-0">
                         <DialogTitle>Invoice - #{(order._id as string).slice(-6).toUpperCase()}</DialogTitle>
                     </DialogHeader>
                     <div className="flex-grow overflow-y-auto">
-                        <div ref={invoiceRef} className="bg-white text-black p-4 sm:p-8">
+                        <div ref={invoiceRef} className="bg-white text-black p-4 sm:p-8 printable-area">
                             <header className="text-center mb-8">
                                 <h1 className="text-3xl sm:text-4xl font-bold font-headline text-primary" style={{fontFamily: "'Cormorant Garamond', serif"}}>PRAMILA</h1>
                                 <p className="text-xs sm:text-sm text-gray-500">22 Park Street, Mumbai - 400001</p>
@@ -220,87 +219,7 @@ export default function PaymentInvoiceDialog({ order, open, onOpenChange }: Paym
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-            <div className="printable-area hidden">
-                 <div ref={invoiceRef} className="bg-white text-black p-4 sm:p-8">
-                    <header className="text-center mb-8">
-                        <h1 className="text-3xl sm:text-4xl font-bold font-headline text-primary" style={{fontFamily: "'Cormorant Garamond', serif"}}>PRAMILA</h1>
-                        <p className="text-xs sm:text-sm text-gray-500">22 Park Street, Mumbai - 400001</p>
-                    </header>
-                    <Separator className="my-6 bg-gray-300"/>
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-xl sm:text-2xl font-semibold">Invoice</h2>
-                        <div className="text-right text-xs sm:text-sm">
-                            <p><span className="font-semibold">Invoice #:</span> {(order._id as string).slice(-6).toUpperCase()}</p>
-                            <p><span className="font-semibold">Date:</span> {format(new Date(order.createdAt), 'dd MMM, yyyy')}</p>
-                        </div>
-                    </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-8 text-xs sm:text-sm">
-                        <div className="space-y-1">
-                            <h3 className="font-semibold text-gray-600">BILLED TO:</h3>
-                            <p className="font-bold">{user.firstName} {user.lastName}</p>
-                            <p>{order.shippingAddress}</p>
-                            <p>{user.email}</p>
-                        </div>
-                        <div className="space-y-1 sm:text-right">
-                            <h3 className="font-semibold text-gray-600">FROM:</h3>
-                            <p className="font-bold">PRAMILA Fashions</p>
-                            <p>22 Park Street, Mumbai - 400001</p>
-                            <p>contact@pramila.shop</p>
-                            <p>GSTIN: 27AAPFP1234F1Z5</p>
-                        </div>
-                    </div>
-
-                    <div className="rounded-lg border w-full overflow-x-auto">
-                        <Table>
-                            <TableHeader>
-                                <TableRow className="bg-gray-50">
-                                    <TableHead className="w-[40%] sm:w-[50%]">Item</TableHead>
-                                    <TableHead>Qty</TableHead>
-                                    <TableHead>Rate</TableHead>
-                                    <TableHead className="text-right">Total</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {order.items.map((item) => (
-                                    <TableRow key={item._id}>
-                                        <TableCell className="font-medium">
-                                            {item.name}
-                                            <span className="text-gray-500 ml-2">({item.size})</span>
-                                        </TableCell>
-                                        <TableCell>{item.quantity}</TableCell>
-                                        <TableCell>₹{item.price.toLocaleString('en-IN')}</TableCell>
-                                        <TableCell className="text-right">₹{(item.price * item.quantity).toLocaleString('en-IN')}</TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </div>
-
-                    <div className="flex justify-end mt-6">
-                        <div className="w-full max-w-xs space-y-2 text-sm">
-                            <div className="flex justify-between">
-                                <span className="text-gray-600">Subtotal:</span>
-                                <span>₹{subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-gray-600">GST (18%):</span>
-                                <span>₹{totalGst.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                            </div>
-                            <Separator className="bg-gray-300 my-2"/>
-                            <div className="flex justify-between font-bold text-base sm:text-lg">
-                                <span>Grand Total:</span>
-                                <span>₹{grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <footer className="mt-12 text-center text-xs text-gray-500">
-                        <p>This is a computer-generated invoice and does not require a signature.</p>
-                        <p>Thank you for your business!</p>
-                    </footer>
-                </div>
-            </div>
         </>
     )
 }

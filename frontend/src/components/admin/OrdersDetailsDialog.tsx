@@ -88,35 +88,32 @@ export default function OrderDetailsDialog({ order, open, onOpenChange }: OrderD
             {/* <div id="print-styles" className="print-only"> */}
  <style jsx global>{`
                 @media print {
-                    @page {
-                        margin: 0;
-                    }
+  body * {
+    visibility: hidden;
+  }
 
-                    .print-hidden {
-                        display: none !important;
-                    }
+  .printable-area, .printable-area * {
+    visibility: visible;
+  }
 
-                    .printable-area {
-                        display: block !important;
-                        position: absolute !important;
-                        top: 0 !important;
-                        left: 0 !important;
-                        width: 100% !important;
-                        margin: 0 !important;
-                        padding: 0 !important;
-                        transform: none !important;
-                        background: white !important;
-                        z-index: 9999;
-                    }
+  .printable-area {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    z-index: 9999 !important;
+  }
 
-                    .printable-area * {
-                        color: black !important;
-                        box-shadow: none !important;
-                    }
+  .print-hidden {
+    display: none !important;
+  }
 
-                    body {
-                        background: white !important;
-                    }
+  @page {
+    margin: 0;
+  }
                 }
             `}</style>
             {/* </div> */}
