@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from "@/components/ui/separator";
 import type { Order, PopulatedUser } from "@/lib/types";
 import { format } from "date-fns";
-import { Printer, Download, Loader2 } from 'lucide-react';
+import { Download, Loader2 } from 'lucide-react';
 // import { cn } from '@/lib/utils';
 
 interface OrderDetailsDialogProps {
@@ -25,9 +25,9 @@ export default function OrderDetailsDialog({ order, open, onOpenChange }: OrderD
     const slipRef = useRef<HTMLDivElement>(null);
     const [isDownloading, setIsDownloading] = useState(false);
 
-    const handlePrint = () => {
-        window.print();
-    };
+    // const handlePrint = () => {
+    //     window.print();
+    // };
 
     const handleDownload = async () => {
         const input = slipRef.current;
@@ -85,38 +85,6 @@ export default function OrderDetailsDialog({ order, open, onOpenChange }: OrderD
 
     return (
         <>
-            {/* <div id="print-styles" className="print-only"> */}
- <style jsx global>{`
-                @media print {
-  body * {
-    visibility: hidden;
-  }
-
-  .printable-area, .printable-area * {
-    visibility: visible;
-  }
-
-  .printable-area {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    background: white !important;
-    z-index: 9999 !important;
-  }
-
-  .print-hidden {
-    display: none !important;
-  }
-
-  @page {
-    margin: 0;
-  }
-                }
-            `}</style>
-            {/* </div> */}
             <Dialog open={open} onOpenChange={onOpenChange}>
                 <DialogContent className="max-w-3xl w-full p-0 flex flex-col h-full sm:h-auto sm:max-h-[90vh]">
                     <DialogHeader className="p-4 sm:p-6 border-b print-hidden flex-shrink-0">
@@ -179,9 +147,9 @@ export default function OrderDetailsDialog({ order, open, onOpenChange }: OrderD
                             {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
                              Download PDF
                         </Button>
-                        <Button onClick={handlePrint}>
+                        {/* <Button onClick={handlePrint}>
                             <Printer className="mr-2 h-4 w-4" /> Print
-                        </Button>
+                        </Button> */}
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

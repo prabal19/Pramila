@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from "@/components/ui/separator";
 import type { Order, PopulatedUser } from "@/lib/types";
 import { format } from "date-fns";
-import { Printer, Download, Loader2 } from 'lucide-react';
+import { Download, Loader2 } from 'lucide-react';
 
 interface PaymentInvoiceDialogProps {
     order: Order | null;
@@ -22,9 +22,9 @@ export default function PaymentInvoiceDialog({ order, open, onOpenChange }: Paym
     const invoiceRef = useRef<HTMLDivElement>(null);
     const [isDownloading, setIsDownloading] = useState(false);
 
-    const handlePrint = () => {
-        window.print();
-    };
+    // const handlePrint = () => {
+    //     window.print();
+    // };
 
     const handleDownload = async () => {
         const input = invoiceRef.current;
@@ -87,41 +87,7 @@ export default function PaymentInvoiceDialog({ order, open, onOpenChange }: Paym
 
     return (
         <>
-            {/* <div id="print-styles" className="print-only"> */}
- <style jsx global>{`
-                @media print {
-                    @page {
-                        margin: 0;
-                    }
 
-                    .print-hidden {
-                        display: none !important;
-                    }
-
-                    .printable-area {
-                        display: block !important;
-                        position: absolute !important;
-                        top: 0 !important;
-                        left: 0 !important;
-                        width: 100% !important;
-                        margin: 0 !important;
-                        padding: 0 !important;
-                        transform: none !important;
-                        background: white !important;
-                        z-index: 9999;
-                    }
-
-                    .printable-area * {
-                        color: black !important;
-                        box-shadow: none !important;
-                    }
-
-                    body {
-                        background: white !important;
-                    }
-                }
-            `}</style>
-            {/* </div> */}
             <Dialog open={open} onOpenChange={onOpenChange}>
                 <DialogContent className="max-w-3xl w-full p-0 flex flex-col h-full sm:h-auto sm:max-h-[90vh]">
                      <DialogHeader className="p-4 sm:p-6 border-b print-hidden flex-shrink-0">
@@ -213,9 +179,9 @@ export default function PaymentInvoiceDialog({ order, open, onOpenChange }: Paym
                             {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
                              Download PDF
                         </Button>
-                        <Button onClick={handlePrint}>
+                        {/* <Button onClick={handlePrint}>
                             <Printer className="mr-2 h-4 w-4" /> Print
-                        </Button>
+                        </Button> */}
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
