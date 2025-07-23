@@ -86,31 +86,36 @@ export default function OrderDetailsDialog({ order, open, onOpenChange }: OrderD
     return (
         <>
             {/* <div id="print-styles" className="print-only"> */}
-            <style jsx global>{`
+ <style jsx global>{`
                 @media print {
                     @page {
                         margin: 0;
                     }
-                    body, html {
-                        visibility: hidden;
-                        padding: 0;
-                        margin: 0;
+
+                    .print-hidden {
+                        display: none !important;
                     }
-                    .printable-area, .printable-area * {
-                        visibility: visible;
-                    }
+
                     .printable-area {
-                        position: fixed !important;
+                        display: block !important;
+                        position: absolute !important;
                         top: 0 !important;
                         left: 0 !important;
                         width: 100% !important;
-                        height: auto;
-                        background: white;
-                        color: black;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        transform: none !important;
+                        background: white !important;
                         z-index: 9999;
                     }
-                    .print-hidden {
-                        display: none !important;
+
+                    .printable-area * {
+                        color: black !important;
+                        box-shadow: none !important;
+                    }
+
+                    body {
+                        background: white !important;
                     }
                 }
             `}</style>
