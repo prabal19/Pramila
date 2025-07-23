@@ -8,12 +8,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from '@/components/ui/button';
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 import type { Order, PopulatedUser } from "@/lib/types";
 import { format } from "date-fns";
 import { Printer, Download, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { ScrollArea } from '../ui/scroll-area';
+// import { cn } from '@/lib/utils';
 
 interface OrderDetailsDialogProps {
     order: Order | null;
@@ -87,42 +85,36 @@ export default function OrderDetailsDialog({ order, open, onOpenChange }: OrderD
 
     return (
         <>
-            <div id="print-styles" className="print-only">
-                <style jsx global>{`
-                    @media print {
-                        @page {
-                            margin: 0;
-                            size: A4;
-                        }
-                        body > *:not(.printable-area) {
-                            display: none !important;
-                        }
-                        body {
-                            margin: 0 !important;
-                            padding: 0 !important;
-                            -webkit-print-color-adjust: exact;
-                            print-color-adjust: exact;
-                        }
-                        .printable-area {
-                            display: block !important;
-                            position: absolute;
-                            top: 0;
-                            left: 0;
-                            width: 100%;
-                            height: auto;
-                            overflow: visible !important;
-                            -ms-overflow-style: none; /* IE and Edge */
-                            scrollbar-width: none; /* Firefox */
-                        }
-                        .printable-area::-webkit-scrollbar {
-                            display: none; /* Chrome, Safari, and Opera */
-                        }
-                        .print-hidden {
-                           display: none !important;
-                        }
+            {/* <div id="print-styles" className="print-only"> */}
+            <style jsx global>{`
+                @media print {
+                    @page {
+                        margin: 0;
                     }
-                `}</style>
-            </div>
+                    body, html {
+                        visibility: hidden;
+                        padding: 0;
+                        margin: 0;
+                    }
+                    .printable-area, .printable-area * {
+                        visibility: visible;
+                    }
+                    .printable-area {
+                        position: fixed !important;
+                        top: 0 !important;
+                        left: 0 !important;
+                        width: 100% !important;
+                        height: auto;
+                        background: white;
+                        color: black;
+                        z-index: 9999;
+                    }
+                    .print-hidden {
+                        display: none !important;
+                    }
+                }
+            `}</style>
+            {/* </div> */}
             <Dialog open={open} onOpenChange={onOpenChange}>
                 <DialogContent className="max-w-3xl w-full p-0 flex flex-col h-full sm:h-auto sm:max-h-[90vh]">
                     <DialogHeader className="p-4 sm:p-6 border-b print-hidden flex-shrink-0">
@@ -191,7 +183,7 @@ export default function OrderDetailsDialog({ order, open, onOpenChange }: OrderD
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-            <div className="printable-area hidden">
+            {/* <div className="printable-area hidden">
                  <div ref={slipRef} className="bg-white text-black p-4 sm:p-8">
                     <header className="text-center mb-8">
                         <h1 className="text-3xl sm:text-4xl font-bold font-headline text-primary" style={{fontFamily: "'Cormorant Garamond', serif"}}>PRAMILA</h1>
@@ -240,7 +232,7 @@ export default function OrderDetailsDialog({ order, open, onOpenChange }: OrderD
                         </Table>
                     </div>
                 </div>
-            </div>
+            </div> */}
         </>
     )
 }
