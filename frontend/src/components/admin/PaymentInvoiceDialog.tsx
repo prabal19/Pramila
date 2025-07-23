@@ -8,9 +8,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from '@/components/ui/button';
 import { Separator } from "@/components/ui/separator";
-import type { Order, PopulatedUser } from "@/lib/types";
+import type { Order, PopulatedUser, Product } from "@/lib/types";
 import { format } from "date-fns";
 import { Download, Loader2 } from 'lucide-react';
+import { getProductById } from '@/lib/products';
+import ProductDetailsDialog from './ProductDetailsDialog';
 
 interface PaymentInvoiceDialogProps {
     order: Order | null;
@@ -21,6 +23,8 @@ interface PaymentInvoiceDialogProps {
 export default function PaymentInvoiceDialog({ order, open, onOpenChange }: PaymentInvoiceDialogProps) {
     const invoiceRef = useRef<HTMLDivElement>(null);
     const [isDownloading, setIsDownloading] = useState(false);
+        const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+    const [isProductDetailsOpen, setIsProductDetailsOpen] = useState(false);
 
     // const handlePrint = () => {
     //     window.print();
@@ -74,7 +78,15 @@ export default function PaymentInvoiceDialog({ order, open, onOpenChange }: Paym
             }
         }
     };
-
+    const handleProductClick = async (productId: string) => {
+        const productDetails = await getProductById(productId);
+        if (productDetails) {
+            setSelectedProduct(productDetails);
+            setIsProductDetailsOpen(true);
+        } else {
+            console.error("Product not found");
+        }
+    };
 
     if (!order) return null;
 
@@ -136,7 +148,7 @@ export default function PaymentInvoiceDialog({ order, open, onOpenChange }: Paym
                                     </TableHeader>
                                     <TableBody>
                                         {order.items.map((item) => (
-                                            <TableRow key={item._id}>
+                                            <TableRow key={item._id} onClick={() => handleProductClick(item.productId)} className="cursor-pointer hover:bg-muted/50">
                                                 <TableCell className="font-medium">
                                                     {item.name}
                                                     <span className="text-gray-500 ml-2">({item.size})</span>
@@ -185,7 +197,13 @@ export default function PaymentInvoiceDialog({ order, open, onOpenChange }: Paym
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-
+            {selectedProduct && (
+                <ProductDetailsDialog
+                    product={selectedProduct}
+                    open={isProductDetailsOpen}
+                    onOpenChange={setIsProductDetailsOpen}
+                />
+            )}
         </>
     )
 }
