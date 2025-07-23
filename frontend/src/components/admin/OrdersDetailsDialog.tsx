@@ -122,7 +122,7 @@ export default function OrderDetailsDialog({ order, open, onOpenChange }: OrderD
                     </DialogHeader>
                     
                     <div className="flex-grow overflow-y-auto">
-                        <div ref={slipRef} className="bg-white text-black p-4 sm:p-8">
+                        <div ref={slipRef} className="bg-white text-black p-4 sm:p-8 printable-area">
                             <header className="text-center mb-8">
                                 <h1 className="text-3xl sm:text-4xl font-bold font-headline text-primary" style={{fontFamily: "'Cormorant Garamond', serif"}}>PRAMILA</h1>
                                 <p className="text-xs sm:text-sm text-gray-500">Jaypee greens wishtown, sector 128, Noida-201304</p>
