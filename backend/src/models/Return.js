@@ -20,7 +20,6 @@ const ReturnSchema = new mongoose.Schema({
   productId: {
     type: String,
     required: true,
-    ref: 'product'
   },
   reason: {
     type: String,

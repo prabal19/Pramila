@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const Return = require('../../models/Return');
 const Order = require('../../models/Order');
+const Product = require('../../models/Product');
 
 // @route   POST api/returns
 // @desc    Create a return request
@@ -51,22 +52,39 @@ router.post('/', async (req, res) => {
     }
 });
 
+const fetchAndPopulateReturns = async (query) => {
+    const returns = await query.lean(); // Use .lean() for plain JS objects
+    
+    // Get all unique product IDs from the returns
+    const productIds = [...new Set(returns.map(r => r.productId))];
+
+    // Fetch all needed products in one go
+    const products = await Product.find({ productId: { $in: productIds } }).lean();
+    const productMap = new Map(products.map(p => [p.productId, p]));
+
+    // Manually "populate" the product details
+    return returns.map(ret => ({
+        ...ret,
+        productId: productMap.get(ret.productId) || { name: 'Product Not Found', images: [] },
+    }));
+};
+
+
 // @route   GET api/returns/user/:userId
 // @desc    Get all return requests for a user
 // @access  Private
 router.get('/user/:userId', async (req, res) => {
     try {
-        const returns = await Return.find({ userId: req.params.userId })
+        const query = Return.find({ userId: req.params.userId })
             .populate({
                 path: 'orderId',
                 select: 'createdAt totalAmount'
             })
-            .populate({
-                path: 'productId',
-                select: 'name images'
-            })
             .sort({ createdAt: -1 });
-        res.json(returns);
+
+        const populatedReturns = await fetchAndPopulateReturns(query);
+        res.json(populatedReturns);
+
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
@@ -78,15 +96,16 @@ router.get('/user/:userId', async (req, res) => {
 // @access  Private
 router.get('/admin', async (req, res) => {
     try {
-        const returns = await Return.find()
+         const query = Return.find()
             .populate('userId', 'firstName lastName email')
             .populate({
                 path: 'orderId',
                 select: 'createdAt totalAmount'
             })
-            .populate('productId', 'name images')
             .sort({ createdAt: -1 });
-        res.json(returns);
+
+        const populatedReturns = await fetchAndPopulateReturns(query);
+        res.json(populatedReturns);
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
@@ -128,23 +147,45 @@ router.put('/:id/status', async (req, res) => {
     }
 
     try {
-        const returnRequest = await Return.findById(req.params.id);
+        let returnRequest = await Return.findById(req.params.id);
         if (!returnRequest) {
             return res.status(404).json({ msg: 'Return request not found.' });
         }
         
+        // Update status on Return document
         returnRequest.status = status;
         await returnRequest.save();
 
-        const populatedReturn = await Return.findById(req.params.id)
+        // Update status on the corresponding Order item
+        const order = await Order.findById(returnRequest.orderId);
+        if(order) {
+            const item = order.items.id(returnRequest.orderItemId);
+            if(item) {
+                // Map return status to a simplified order item return status
+                let itemReturnStatus = 'Requested';
+                 if (status === 'Approved' || status === 'Item Picked Up' || status === 'Refunded') {
+                    itemReturnStatus = 'Approved';
+                } else if (status === 'Rejected') {
+                    itemReturnStatus = 'Rejected';
+                }
+                 if(status === 'Refunded') {
+                    itemReturnStatus = 'Completed';
+                }
+                item.returnStatus = itemReturnStatus;
+                await order.save();
+            }
+        }
+        
+        const query = Return.findById(req.params.id)
             .populate('userId', 'firstName lastName email')
             .populate({
                 path: 'orderId',
                 select: 'createdAt totalAmount'
-            })
-            .populate('productId', 'name images');
+            });
 
-        res.json(populatedReturn);
+        const populatedReturns = await fetchAndPopulateReturns(query.toConstructor()());
+        res.json(populatedReturns[0]);
+
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
