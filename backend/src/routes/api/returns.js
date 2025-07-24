@@ -123,11 +123,16 @@ router.get('/:id', async (req, res) => {
                 path: 'orderId',
                 select: 'createdAt totalAmount'
             })
-            .populate('productId', 'name images');
+            .lean(); // Use lean for better performance
 
         if (!returnRequest) {
             return res.status(404).json({ msg: 'Return request not found' });
         }
+        
+        // Manual population for product
+        const product = await Product.findOne({ productId: returnRequest.productId }).lean();
+        returnRequest.productId = product || { name: 'Product Not Found', images: [] };
+        
         res.json(returnRequest);
     } catch (err) {
         console.error(err.message);
@@ -161,30 +166,25 @@ router.put('/:id/status', async (req, res) => {
         if(order) {
             const item = order.items.id(returnRequest.orderItemId);
             if(item) {
-                // Map return status to a simplified order item return status
-                let itemReturnStatus = 'Requested';
-                 if (status === 'Approved' || status === 'Item Picked Up' || status === 'Refunded') {
-                    itemReturnStatus = 'Approved';
-                } else if (status === 'Rejected') {
-                    itemReturnStatus = 'Rejected';
-                }
-                 if(status === 'Refunded') {
-                    itemReturnStatus = 'Completed';
-                }
-                item.returnStatus = itemReturnStatus;
+                // Keep the status consistent between the return request and the order item
+                item.returnStatus = status;
                 await order.save();
             }
         }
         
-        const query = Return.findById(req.params.id)
+        // Fetch the fully populated updated document to send back
+        const updatedReturnRequest = await Return.findById(req.params.id)
             .populate('userId', 'firstName lastName email')
             .populate({
                 path: 'orderId',
                 select: 'createdAt totalAmount'
-            });
+            })
+            .lean();
+        
+        const product = await Product.findOne({ productId: updatedReturnRequest.productId }).lean();
+        updatedReturnRequest.productId = product || { name: 'Product Not Found', images: [] };
 
-        const populatedReturns = await fetchAndPopulateReturns(query.toConstructor()());
-        res.json(populatedReturns[0]);
+        res.json(updatedReturnRequest);
 
     } catch (err) {
         console.error(err.message);

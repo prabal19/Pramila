@@ -314,6 +314,7 @@ const AddressesView = () => {
 
 // Placeholder Orders View
 
+
 function getStatusVariant(status: string) {
     switch (status) {
         case 'Delivered': return 'bg-green-100 text-green-800 border-green-200';
@@ -331,7 +332,7 @@ const OrdersView = () => {
     const [returns, setReturns] = useState<ReturnRequest[]>([]);
     const [products, setProducts] = useState<Map<string, Product>>(new Map());
     const [loading, setLoading] = useState(true);
-    const [view, setView] = useState<'orders' | 'returns'>('orders');
+    const [view, setView] = useState<'orders' | 'returns' | 'all'>('all');
     const [returnItem, setReturnItem] = useState<{order: Order, item: Order['items'][0]} | null>(null);
 
     const fetchData = async () => {
@@ -387,111 +388,107 @@ const OrdersView = () => {
         )
     }
 
+    const filteredReturns = view === 'all' || view === 'returns' ? returns : [];
+    const filteredOrders = view === 'all' || view === 'orders' ? orders : [];
+
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-xl font-bold">Orders & Returns</h1>
                 <div className="flex items-center gap-2">
+                    <Button variant={view === 'all' ? 'default' : 'outline'} onClick={() => setView('all')}>All</Button>
                     <Button variant={view === 'orders' ? 'default' : 'outline'} onClick={() => setView('orders')}>My Orders</Button>
                     <Button variant={view === 'returns' ? 'default' : 'outline'} onClick={() => setView('returns')}>My Returns</Button>
                 </div>
             </div>
 
-            {view === 'orders' && (
-                <div className="space-y-6">
-                    {orders.map(order => (
-                        <Accordion key={order._id} type="single" collapsible className="border rounded-lg">
-                            <AccordionItem value={order._id} className="border-b-0">
-                                <AccordionTrigger className="p-4 hover:no-underline hover:bg-muted/50 rounded-t-lg">
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full text-left gap-2 sm:gap-4">
-                                        <div className="flex-1">
-                                            <p className="font-bold text-base">Order #{order._id.slice(-6).toUpperCase()}</p>
-                                            <p className="text-xs text-muted-foreground">{format(new Date(order.createdAt), 'PPP')}</p>
-                                        </div>
-                                        <div className="flex-1 text-right sm:text-left">
-                                             <p className="text-xs text-muted-foreground">Total</p>
-                                             <p className="font-semibold">Rs. {order.totalAmount.toLocaleString('en-IN')}</p>
-                                        </div>
-                                        <div className="sm:flex-1 text-right">
-                                            <Badge variant="outline" className={cn('capitalize', getStatusVariant(order.status))}>
-                                                {order.status}
-                                            </Badge>
-                                        </div>
+            <div className="space-y-6">
+                {filteredOrders.map(order => (
+                    <Accordion key={order._id} type="single" collapsible className="border rounded-lg">
+                        <AccordionItem value={order._id} className="border-b-0">
+                            <AccordionTrigger className="p-4 hover:no-underline hover:bg-muted/50 rounded-t-lg">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full text-left gap-2 sm:gap-4">
+                                    <div className="flex-1">
+                                        <p className="font-bold text-base">Order #{order._id.slice(-6).toUpperCase()}</p>
+                                        <p className="text-xs text-muted-foreground">{format(new Date(order.createdAt), 'PPP')}</p>
                                     </div>
-                                </AccordionTrigger>
-                                <AccordionContent>
-                                   <div className="p-4 border-t">
-                                       <h3 className="font-semibold mb-4">Items in your order:</h3>
-                                       <div className="space-y-4">
-                                           {order.items.map(item => {
-                                               const product = products.get(item.productId);
-                                               return (
-                                                    <div key={item._id} className="flex gap-4 justify-between items-start">
-                                                        <div className="flex gap-4">
-                                                          <div className="w-20 h-24 bg-muted rounded-md shrink-0 relative">
-                                                              {product ? (
-                                                                  <Image src={product.images[0]} alt={product.name} fill className="object-cover rounded-md" />
-                                                              ) : (
-                                                                  <div className="w-full h-full bg-muted rounded-md"></div>
-                                                              )}
-                                                          </div>
-                                                          <div>
-                                                              <p className="font-semibold">{item.name}</p>
-                                                              <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
-                                                              <p className="text-sm text-muted-foreground">Size: {item.size}</p>
-                                                              <p className="text-sm text-muted-foreground">Price: Rs. {item.price.toLocaleString('en-IN')}</p>
-                                                          </div>
-                                                        </div>
-                                                        {order.status === 'Delivered' && !item.returnStatus && (
-                                                            <Button variant="outline" size="sm" onClick={() => setReturnItem({order, item})}>Return Item</Button>
-                                                        )}
-                                                         {item.returnStatus && (
-                                                            <Badge variant="outline" className={cn('capitalize text-xs', getStatusVariant(item.returnStatus))}>Return {item.returnStatus}</Badge>
-                                                         )}
-                                                    </div>
-                                               )
-                                            })}
-                                       </div>
-                                        <Separator className="my-4" />
-                                        <div>
-                                            <h3 className="font-semibold mb-2">Shipping Address</h3>
-                                            <p className="text-sm text-muted-foreground">{order.shippingAddress}</p>
-                                        </div>
-                                   </div>
-                                </AccordionContent>
-                            </AccordionItem>
-                        </Accordion>
-                    ))}
-                </div>
-            )}
-             {view === 'returns' && (
-                <div className="space-y-6">
-                    {returns.length > 0 ? returns.map(ret => (
-                         <div key={ret._id} className="border rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start gap-4">
-                            <div className="flex gap-4">
-                                {ret.productId.images?.[0] && (
-                                    <div className="w-20 h-24 bg-muted rounded-md shrink-0 relative">
-                                        <Image src={ret.productId.images[0]} alt={ret.productId.name} fill className="object-cover rounded-md" />
+                                    <div className="flex-1 text-right sm:text-left">
+                                         <p className="text-xs text-muted-foreground">Total</p>
+                                         <p className="font-semibold">Rs. {order.totalAmount.toLocaleString('en-IN')}</p>
                                     </div>
-                                )}
-                                <div>
-                                    <p className="font-bold text-sm">RETURN ID #{ret.returnId}</p>
-                                    <p className="font-semibold">{ret.productId.name}</p>
-                                    <p className="text-sm text-muted-foreground">Reason: {ret.reason}</p>
-                                    <p className="text-xs text-muted-foreground">Requested on {format(new Date(ret.createdAt), 'PP')}</p>
+                                    <div className="sm:flex-1 text-right">
+                                        <Badge variant="outline" className={cn('capitalize', getStatusVariant(order.status))}>
+                                            {order.status}
+                                        </Badge>
+                                    </div>
                                 </div>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                               <div className="p-4 border-t">
+                                   <h3 className="font-semibold mb-4">Items in your order:</h3>
+                                   <div className="space-y-4">
+                                       {order.items.map(item => {
+                                           const product = products.get(item.productId);
+                                           return (
+                                                <div key={item._id} className="flex gap-4 justify-between items-start">
+                                                    <Link href={`/product/${item.productId}`} className="flex gap-4 group">
+                                                      <div className="w-20 h-24 bg-muted rounded-md shrink-0 relative">
+                                                          {product ? (
+                                                              <Image src={product.images[0]} alt={product.name} fill className="object-cover rounded-md" />
+                                                          ) : (
+                                                              <div className="w-full h-full bg-muted rounded-md"></div>
+                                                          )}
+                                                      </div>
+                                                      <div>
+                                                          <p className="font-semibold group-hover:underline">{item.name}</p>
+                                                          <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                                                          <p className="text-sm text-muted-foreground">Size: {item.size}</p>
+                                                          <p className="text-sm text-muted-foreground">Price: Rs. {item.price.toLocaleString('en-IN')}</p>
+                                                      </div>
+                                                    </Link>
+                                                    {order.status === 'Delivered' && !item.returnStatus && (
+                                                        <Button variant="outline" size="sm" onClick={() => setReturnItem({order, item})}>Return Item</Button>
+                                                    )}
+                                                     {item.returnStatus && (
+                                                        <Badge variant="outline" className={cn('capitalize text-xs', getStatusVariant(item.returnStatus))}>Return {item.returnStatus}</Badge>
+                                                     )}
+                                                </div>
+                                           )
+                                        })}
+                                   </div>
+                                    <Separator className="my-4" />
+                                    <div>
+                                        <h3 className="font-semibold mb-2">Shipping Address</h3>
+                                        <p className="text-sm text-muted-foreground">{order.shippingAddress}</p>
+                                    </div>
+                               </div>
+                            </AccordionContent>
+                        </AccordionItem>
+                    </Accordion>
+                ))}
+            </div>
+
+            <div className="space-y-6 mt-6">
+                {filteredReturns.map(ret => (
+                     <Link key={ret._id} href={`/product/${ret.productId._id}`} className="border rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start gap-4 hover:bg-muted/50 transition-colors">
+                        <div className="flex gap-4">
+                            {ret.productId.images?.[0] && (
+                                <div className="w-20 h-24 bg-muted rounded-md shrink-0 relative">
+                                    <Image src={ret.productId.images[0]} alt={ret.productId.name} fill className="object-cover rounded-md" />
+                                </div>
+                            )}
+                            <div>
+                                <p className="font-bold text-sm">RETURN ID #{ret.returnId}</p>
+                                <p className="font-semibold">{ret.productId.name}</p>
+                                <p className="text-sm text-muted-foreground">Reason: {ret.reason}</p>
+                                <p className="text-xs text-muted-foreground">Requested on {format(new Date(ret.createdAt), 'PP')}</p>
                             </div>
-                            <Badge variant="outline" className={cn('capitalize self-end sm:self-center', getStatusVariant(ret.status))}>{ret.status}</Badge>
-                         </div>
-                    )) : (
-                        <div className="text-center py-20 border-2 border-dashed rounded-lg">
-                            <RefreshCw className="mx-auto h-12 w-12 text-muted-foreground" />
-                            <h2 className="mt-4 text-xl font-semibold">No Return Requests</h2>
-                            <p className="mt-2 text-sm text-muted-foreground">You haven't requested any returns yet.</p>
                         </div>
-                    )}
-                </div>
-            )}
+                        <Badge variant="outline" className={cn('capitalize self-end sm:self-center', getStatusVariant(ret.status))}>{ret.status}</Badge>
+                     </Link>
+                ))}
+            </div>
+
             {returnItem && (
                  <ReturnItemDialog
                     isOpen={!!returnItem}
@@ -504,6 +501,7 @@ const OrdersView = () => {
         </div>
     );
 };
+
 
 
 // Delete Account View

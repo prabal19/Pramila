@@ -20,6 +20,7 @@ export default function ReturnDetailsDialog({ returnRequest, open, onOpenChange 
     if (!returnRequest) return null;
 
     const user = returnRequest.userId as PopulatedUser;
+    const product = returnRequest.productId;
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -34,13 +35,13 @@ export default function ReturnDetailsDialog({ returnRequest, open, onOpenChange 
                                 <CardContent className="pt-6">
                                      <h3 className="font-semibold mb-2">Product Information</h3>
                                      <div className="flex gap-4">
-                                        {returnRequest.productId.images?.[0] && (
+                                        {product.images?.[0] && (
                                             <div className="relative w-24 h-32 shrink-0">
-                                                <Image src={returnRequest.productId.images[0]} alt={returnRequest.productId.name} fill className="object-cover rounded-md"/>
+                                                <Image src={product.images[0]} alt={product.name} fill className="object-cover rounded-md"/>
                                             </div>
                                         )}
                                         <div className="text-sm">
-                                            <p className="font-bold">{returnRequest.productId.name}</p>
+                                            <p className="font-bold">{product.name}</p>
                                         </div>
                                      </div>
                                 </CardContent>
