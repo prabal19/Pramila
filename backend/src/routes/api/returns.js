@@ -173,7 +173,7 @@ router.put('/:id/status', async (req, res) => {
         }
         
         // Fetch the fully populated updated document to send back
-        const updatedReturnRequest = await Return.findById(req.params.id)
+        const populatedReturn = await Return.findById(req.params.id)
             .populate('userId', 'firstName lastName email')
             .populate({
                 path: 'orderId',
@@ -181,14 +181,14 @@ router.put('/:id/status', async (req, res) => {
             })
             .lean();
         
-        const product = await Product.findOne({ productId: updatedReturnRequest.productId }).lean();
-        updatedReturnRequest.productId = product || { name: 'Product Not Found', images: [] };
+        const product = await Product.findOne({ productId: populatedReturn.productId }).lean();
+        populatedReturn.productId = product || { name: 'Product Not Found', images: [] };
 
-        res.json(updatedReturnRequest);
+        res.json(populatedReturn);
 
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server Error');
+        console.error("Error in PUT /api/returns/:id/status:", err);
+        return res.status(500).json({ msg: 'Server Error' });
     }
 });
 

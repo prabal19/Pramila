@@ -70,7 +70,7 @@ export type OrderItem = {
   price: number;
   size: string;
   _id: string;
-    returnStatus: 'Requested' | 'Approved' | 'Rejected' | 'Completed' | null;
+  returnStatus: ReturnStatus | null;
 };
 
 export type OrderStatus = 'Pending' | 'Confirmed / Processing' | 'Shipped' | 'Out for Delivery' | 'Delivered' | 'Cancelled' | 'Returned';
@@ -172,6 +172,7 @@ export type ReturnRequest = {
   orderId: string | { _id: string; totalAmount: number };
   orderItemId: string;
   productId: {
+    id: string;
     _id: string;
     name: string;
     images: string[];
