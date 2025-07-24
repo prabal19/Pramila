@@ -28,6 +28,11 @@ const OrderSchema = new mongoose.Schema({
         type: String,
         required: true,
       },
+            returnStatus: {
+        type: String,
+        enum: [null, 'Requested', 'Approved', 'Rejected', 'Completed'],
+        default: null,
+      }
     },
   ],
   totalAmount: {

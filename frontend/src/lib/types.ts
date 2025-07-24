@@ -70,6 +70,7 @@ export type OrderItem = {
   price: number;
   size: string;
   _id: string;
+    returnStatus: 'Requested' | 'Approved' | 'Rejected' | 'Completed' | null;
 };
 
 export type OrderStatus = 'Pending' | 'Confirmed / Processing' | 'Shipped' | 'Out for Delivery' | 'Delivered' | 'Cancelled' | 'Returned';
@@ -157,6 +158,27 @@ export type Category = {
   name: string;
   slug: string;
   parent: 'collection' | 'accessory';
+  createdAt: string;
+  updatedAt: string;
+};
+
+
+export type ReturnStatus = 'Pending Approval' | 'Approved' | 'Rejected' | 'Item Picked Up' | 'Refunded';
+
+export type ReturnRequest = {
+  _id: string;
+  returnId: number;
+  userId: string | PopulatedUser;
+  orderId: string | { _id: string; totalAmount: number };
+  orderItemId: string;
+  productId: {
+    _id: string;
+    name: string;
+    images: string[];
+  };
+  reason: string;
+  description?: string;
+  status: ReturnStatus;
   createdAt: string;
   updatedAt: string;
 };
