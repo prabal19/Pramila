@@ -9,8 +9,9 @@ export type Product = {
   bestseller?: boolean;
   sizes?: string[];
   specifications?: string;
+  washInstructions?: string;
   createdAt: string;
-    quantity: number;
+  quantity: number;
 };
 
 export type CartItem = {

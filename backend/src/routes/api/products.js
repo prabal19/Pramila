@@ -55,7 +55,7 @@ router.post('/batch', async (req, res) => {
 // @desc    Create a product (for admin purposes)
 // @access  Private (should be secured later)
 router.post('/', async (req, res) => {
-    const { name, description, category, price, strikeoutPrice, images, bestseller, sizes, specifications } = req.body;
+    const { name, description, category, price, strikeoutPrice, images, bestseller, sizes, specifications,washInstructions,quantity } = req.body;
     try {
         // Generate a unique product ID
         const nanoid = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 8);
@@ -71,7 +71,9 @@ router.post('/', async (req, res) => {
             images,
             bestseller,
             sizes,
-            specifications
+            specifications,
+            washInstructions,
+            quantity
         });
 
         await product.save();

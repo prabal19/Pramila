@@ -34,7 +34,8 @@ const addProductSchema = z.object({
   bestseller: z.boolean().default(false),
   sizes: z.array(z.string()).optional(),
   specifications: z.string().optional(),
-  quantity: z.coerce.number().min(0, "Quantity can't be negative").default(0),
+  washInstructions: z.string().optional(),
+quantity: z.coerce.number().min(0, 'Quantity cannot be negative.'),
 });
 
 const updateProductSchema = addProductSchema;
@@ -109,6 +110,7 @@ export default function ProductForm({ open, onOpenChange, onFormSubmit, product 
         bestseller: false,
         sizes: allSizes,
         specifications: '',
+        washInstructions: '',
         quantity: 0,
     };
 
@@ -282,6 +284,7 @@ export default function ProductForm({ open, onOpenChange, onFormSubmit, product 
                         <FormField name="name" control={form.control} render={({ field }) => (<FormItem><FormLabel>Name*</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
                         <FormField name="description" control={form.control} render={({ field }) => (<FormItem><FormLabel>Description*</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>)} />
                         <FormField name="specifications" control={form.control} render={({ field }) => (<FormItem><FormLabel>Specifications</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>)} />
+                         <FormField name="washInstructions" control={form.control} render={({ field }) => (<FormItem><FormLabel>Wash Instructions</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>)} />
                         
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                             <FormField name="category" control={form.control} render={({ field }) => (

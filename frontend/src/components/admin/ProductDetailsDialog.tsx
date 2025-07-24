@@ -47,6 +47,9 @@ export default function ProductDetailsDialog({ product, open, onOpenChange }: Pr
                                      <Separator className="my-4"/>
                                      <h3 className="font-semibold mb-2">Specifications</h3>
                                      <p className="text-sm text-muted-foreground">{product.specifications || 'N/A'}</p>
+                                    <Separator className="my-4"/>
+                                     <h3 className="font-semibold mb-2">Wash Instructions</h3>
+                                     <p className="text-sm text-muted-foreground">{product.washInstructions || 'N/A'}</p>
                                 </CardContent>
                             </Card>
                         </div>

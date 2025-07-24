@@ -83,7 +83,7 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
     return slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   }
   
-  const washInstructions = "To maintain the beauty of your handcrafted garment, we recommend dry cleaning only. Avoid direct exposure to sunlight for prolonged periods. Store in a cool, dry place."
+ 
 
   const hasDiscount = product.strikeoutPrice && product.strikeoutPrice > product.price;
   const discountPercentage = hasDiscount
@@ -250,11 +250,11 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
                 <TabsList className="grid w-full grid-cols-3 bg-transparent p-0 border-b rounded-none mb-4">
                   <TabsTrigger value="description" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent hover:underline hover:text-primary transition-none pb-2">Description</TabsTrigger>
                   <TabsTrigger value="specifications" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent hover:underline hover:text-primary transition-none pb-2">Specifications</TabsTrigger>
-                  <TabsTrigger value="wash" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent hover:underline hover:text-primary transition-none pb-2">Wash Instructions</TabsTrigger>
+                  {product.washInstructions && <TabsTrigger value="wash" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent hover:underline hover:text-primary transition-none pb-2">Wash Instructions</TabsTrigger>}
                 </TabsList>
                 <TabsContent value="description" className="text-sm text-muted-foreground leading-relaxed">{product.description}</TabsContent>
                 <TabsContent value="specifications" className="text-sm text-muted-foreground leading-relaxed">{product.specifications || 'No specifications available.'}</TabsContent>
-                <TabsContent value="wash" className="text-sm text-muted-foreground leading-relaxed">{washInstructions}</TabsContent>
+                 {product.washInstructions && <TabsContent value="wash" className="text-sm text-muted-foreground leading-relaxed">{product.washInstructions}</TabsContent>}
               </Tabs>
               
               {/* <div className="flex justify-end">

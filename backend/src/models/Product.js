@@ -40,6 +40,9 @@ const ProductSchema = new mongoose.Schema({
   specifications: {
     type: String,
   },
+    washInstructions: {
+    type: String,
+  },
   quantity: {
     type: Number,
     required: true,
