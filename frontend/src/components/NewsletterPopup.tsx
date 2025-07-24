@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -34,23 +35,19 @@ export default function NewsletterPopup({ open, onOpenChange }: NewsletterPopupP
     const result = await subscribeToNewsletter(values);
     if (result.success) {
       toast({
-        title: 'Subscription Successful!',
+        title: 'Subscribed!',
         description: "You're now on our mailing list.",
       });
       onOpenChange(false);
       form.reset();
     } else {
-      toast({
-        variant: 'destructive',
-        title: 'Subscription Failed',
-        description: result.message,
-      });
+      toast({ variant: 'destructive', title: 'Error', description: result.message });
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg p-10 text-center bg-white shadow-2xl rounded-none">      
+      <DialogContent className="max-w-lg p-10 text-center bg-white shadow-2xl rounded-none w-[calc(100%-2rem)] sm:w-full sm:rounded-lg">
         <DialogHeader className="sr-only">
           <DialogTitle>Newsletter: Come Join Us</DialogTitle>
           <DialogDescription>Get 10% off on your first purchase by subscribing to our newsletter.</DialogDescription>

@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 const CollectionsSection = () => {
   return (
-    <section className="grid grid-cols-1 md:grid-cols-2">
+    <section className="grid grid-cols-1 md:grid-cols-2 space-y-4 md:space-y-0">
       <div className="relative h-[60vh] md:h-screen group text-white">
         <Image
           src="/images/image1.webp"
@@ -16,9 +16,9 @@ const CollectionsSection = () => {
         <div className="absolute inset-0 bg-black/10" />
         <div className="relative z-10 flex flex-col items-center justify-end h-full text-center pb-12 md:pb-20">
           <h3 className="text-3xl font-headline mb-3" style={{fontFamily: "'Cormorant Garamond', serif"}}>Timeless Elegance, Modern Twist</h3>
-          <Button asChild variant="link" className="text-white tracking-[0.2em] font-semibold text-xs underline-offset-4 hover:underline">
-            <Link href="/shop">DISCOVER</Link>
-          </Button>
+              <Button asChild size="lg" className="bg-white hover:bg-gray-100 text-black rounded-none tracking-widest font-semibold px-12 py-3 h-auto border-0">
+                  <Link href="/shop">DISCOVER</Link>
+              </Button>
         </div>
       </div>
       <div className="relative h-[60vh] md:h-screen group text-white">

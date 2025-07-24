@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import type { Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/hooks/use-cart';
-import { Shirt, MessageCircle, Minus, Plus } from 'lucide-react';
+import { Shirt,  Minus, Plus , ChevronLeft, ChevronRight } from 'lucide-react';
 import { SizeChartDialog } from './SizeChartDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RelatedProducts from './RelatedProducts';
@@ -56,6 +56,18 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
     });
     router.push('/checkout?buyNow=true');
   };
+
+    const navigateImages = (direction: 'next' | 'prev') => {
+    const currentIndex = product.images.indexOf(selectedImage);
+    let newIndex;
+    if (direction === 'next') {
+        newIndex = (currentIndex + 1) % product.images.length;
+    } else {
+        newIndex = (currentIndex - 1 + product.images.length) % product.images.length;
+    }
+    setSelectedImage(product.images[newIndex]);
+  };
+
   
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
@@ -106,7 +118,7 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
               </div>
 
               {/* Main Image */}
-              <div className="relative w-full aspect-[3/4]">
+              <div className="relative w-full aspect-[3/4] group">
                 <Image
                   src={selectedImage}
                   alt={product.name}
@@ -114,6 +126,24 @@ const ProductDetailsClient = ({ product }: { product: Product }) => {
                   className="object-cover rounded-lg"
                   priority
                 />
+                                 {product.images.length > 1 && (
+                    <>
+                        <Button
+                            onClick={() => navigateImages('prev')}
+                            variant="ghost" size="icon"
+                            className="absolute left-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-white/50 text-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white hover:text-black"
+                        >
+                            <ChevronLeft className="h-6 w-6" />
+                        </Button>
+                        <Button
+                            onClick={() => navigateImages('next')}
+                            variant="ghost" size="icon"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-white/50 text-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white hover:text-black"
+                        >
+                            <ChevronRight className="h-6 w-6" />
+                        </Button>
+                    </>
+                )}
                 <div className="absolute top-4 right-4">
                       <WishlistIcon productId={product.id} variant="button" />
                   </div>
