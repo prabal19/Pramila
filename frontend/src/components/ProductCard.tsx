@@ -7,15 +7,17 @@ import type { Product } from '@/lib/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { Badge } from './ui/badge';
+import WishlistIcon from './WishlistIcon';
 
 interface ProductCardProps {
   product: Product;
   className?: string;
   imageClassName?: string;
   textAlign?: 'left' | 'center';
+  children?: React.ReactNode;
 }
 
-const ProductCard = ({ product, className, imageClassName, textAlign = 'center' }: ProductCardProps) => {
+const ProductCard = ({ product, className, imageClassName, textAlign = 'center', children }: ProductCardProps) => {
   const hasDiscount = product.strikeoutPrice && product.strikeoutPrice > product.price;
   const discountPercentage = hasDiscount
     ? Math.round(((product.strikeoutPrice! - product.price) / product.strikeoutPrice!) * 100)
@@ -23,7 +25,8 @@ const ProductCard = ({ product, className, imageClassName, textAlign = 'center' 
   const isOutOfStock = product.quantity === 0;
     
   return (
-    <Card className={cn("group overflow-hidden flex flex-col h-full transition-all duration-300 hover:shadow-lg border-0 shadow-none rounded-none bg-transparent", isOutOfStock && "opacity-60", className)}>
+    <Card className={cn("group overflow-hidden flex flex-col h-full transition-all duration-300 border-0 shadow-none rounded-none bg-transparent", isOutOfStock && "opacity-60", className)}>
+      {children}
       <CardHeader className="p-0 relative flex-grow">
         <Link href={`/product/${product.id}`} className={cn("block h-full", isOutOfStock && "pointer-events-none")}>
           <Image
@@ -34,18 +37,21 @@ const ProductCard = ({ product, className, imageClassName, textAlign = 'center' 
             className={cn("object-cover w-full h-full aspect-[3/4] transition-transform duration-300 group-hover:scale-105", imageClassName)}
           />
         </Link>
+        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+            <WishlistIcon productId={product.id} variant="button" />
+        </div>
          {isOutOfStock && (
             <Badge variant="secondary" className="absolute top-3 left-3 bg-gray-900 text-white border-0">
                 OUT OF STOCK
             </Badge>
         )}
         {hasDiscount && !isOutOfStock && (
-          <Badge variant="destructive" className="absolute top-3 right-3 bg-red-500 text-white border-0">
+          <Badge variant="destructive" className="absolute top-3 left-3 bg-red-500 text-white border-0">
             {discountPercentage}% OFF
           </Badge>
         )}
       </CardHeader>
-      <CardContent className={cn("p-4 pt-6", `text-${textAlign}`)}>
+      <CardContent className={cn("p-4", `text-${textAlign}`)}>
           <Link href={`/product/${product.id}`} className={cn(isOutOfStock && "pointer-events-none")}>
             <h3 className={cn("font-headline text-lg leading-tight hover:text-primary transition-colors", isOutOfStock && "line-through text-muted-foreground")}>{product.name}</h3>
           </Link>

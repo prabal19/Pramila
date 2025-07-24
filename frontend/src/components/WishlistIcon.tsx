@@ -7,6 +7,7 @@ import { Heart } from 'lucide-react';
 import { useWishlist } from '@/hooks/use-wishlist';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
 
 type WishlistIconProps = {
     productId?: string;
@@ -14,6 +15,7 @@ type WishlistIconProps = {
 }
 
 const WishlistIcon = ({ productId, variant = 'icon' }: WishlistIconProps) => {
+  const { user } = useAuth();
   const { wishlist, addToWishlist, removeFromWishlist } = useWishlist();
 
   const isWishlisted = useMemo(() => {
@@ -26,7 +28,7 @@ const WishlistIcon = ({ productId, variant = 'icon' }: WishlistIconProps) => {
     if (!productId) return;
     
     if (isWishlisted) {
-      removeFromWishlist(productId);
+      removeFromWishlist(productId, { showToast: true });
     } else {
       addToWishlist(productId);
     }
@@ -51,7 +53,7 @@ const WishlistIcon = ({ productId, variant = 'icon' }: WishlistIconProps) => {
     <Button asChild variant="ghost" size="icon" aria-label={`View your wishlist, ${wishlist.length} items`}>
       <Link href="/wishlist" className="relative">
         <Heart className="w-5 h-5" />
-        {wishlist.length > 0 && (
+        {user && wishlist.length > 0 && (
           <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs" aria-hidden="true">
             {wishlist.length}
           </span>
