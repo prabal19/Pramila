@@ -158,17 +158,17 @@ router.put('/:id/status', async (req, res) => {
             return res.status(404).json({ msg: 'Return request not found.' });
         }
         
+        // Update the return request status
         returnRequest.status = status;
         await returnRequest.save();
 
-        const order = await Order.findById(returnRequest.orderId);
-        if(order) {
-            const item = order.items.id(returnRequest.orderItemId);
-            if(item) {
-                item.returnStatus = status;
-                await order.save();
+        // Find the corresponding order and update the specific item's returnStatus
+        await Order.findOneAndUpdate(
+            { "_id": returnRequest.orderId, "items._id": returnRequest.orderItemId },
+            { 
+                "$set": { "items.$.returnStatus": status }
             }
-        }
+        );
         
         const query = Return.findById(req.params.id)
             .populate('userId', 'firstName lastName email')
