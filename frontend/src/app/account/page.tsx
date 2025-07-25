@@ -470,7 +470,7 @@ const OrdersView = () => {
 
             <div className="space-y-6 mt-6">
                 {filteredReturns.map(ret => (
-                     <Link key={ret._id} href={`/product/${ret.productId}`}className="border rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start gap-4 hover:bg-muted/50 transition-colors">
+                     <Link key={ret._id} href={`/product/${ret.productId.id}`}className="border rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start gap-4 hover:bg-muted/50 transition-colors">
                         <div className="flex gap-4">
                             {ret.productId.images?.[0] && (
                                 <div className="w-20 h-24 bg-muted rounded-md shrink-0 relative">
