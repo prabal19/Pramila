@@ -53,20 +53,23 @@ router.post('/', async (req, res) => {
 });
 
 const fetchAndPopulateReturns = async (query) => {
-    const returns = await query.lean(); // Use .lean() for plain JS objects
+    const returns = await query.lean();
+    if (!returns) return [];
     
-    // Get all unique product IDs from the returns
-    const productIds = [...new Set(returns.map(r => r.productId))];
+    const returnsArray = Array.isArray(returns) ? returns : [returns];
 
-    // Fetch all needed products in one go
+    const productIds = [...new Set(returnsArray.map(r => r.productId))];
+
     const products = await Product.find({ productId: { $in: productIds } }).lean();
-    const productMap = new Map(products.map(p => [p.productId, p]));
-
-    // Manually "populate" the product details
-    return returns.map(ret => ({
-        ...ret,
-        product: productMap.get(ret.productId) || { name: 'Product Not Found', images: [] },
-    }));
+    const productMap = new Map(products.map(p => [p.productId, { ...p, id: p.productId } ]));
+    
+    return returnsArray.map(ret => {
+        const productData = productMap.get(ret.productId);
+        return {
+            ...ret,
+            product: productData || null
+        }
+    });
 };
 
 
@@ -117,23 +120,20 @@ router.get('/admin', async (req, res) => {
 // @access  Private
 router.get('/:id', async (req, res) => {
     try {
-        const returnRequest = await Return.findById(req.params.id)
+        const query = Return.findById(req.params.id)
             .populate('userId', 'firstName lastName email')
             .populate({
                 path: 'orderId',
                 select: 'createdAt totalAmount'
-            })
-            .lean(); // Use lean for better performance
+            });
 
-        if (!returnRequest) {
+        const populatedReturns = await fetchAndPopulateReturns(query);
+        
+        if (!populatedReturns || populatedReturns.length === 0) {
             return res.status(404).json({ msg: 'Return request not found' });
         }
         
-        // Manual population for product
-        const product = await Product.findOne({ productId: returnRequest.productId }).lean();
-        returnRequest.product = product || { name: 'Product Not Found', images: [] };
-        
-        res.json(returnRequest);
+        res.json(populatedReturns[0]);
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
@@ -186,7 +186,7 @@ router.put('/:id/status', async (req, res) => {
             });
 
         const populatedReturns = await fetchAndPopulateReturns(query);
-        res.json(populatedReturns[0]); // fetchAndPopulateReturns returns an array
+        res.json(populatedReturns[0]);
 
     } catch (err) {
         console.error("Error in PUT /api/returns/:id/status:", err);
