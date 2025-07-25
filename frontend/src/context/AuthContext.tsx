@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useState, useEffect, useCallback } from 'react';
@@ -14,11 +15,13 @@ interface AuthContextType {
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 const AUTH_USER_KEY = 'pramila-auth-user';
+const SEEN_STATUS_KEY = 'pramila-seen-statuses';
+
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-
+  
   useEffect(() => {
     try {
       const storedUser = localStorage.getItem(AUTH_USER_KEY);
@@ -43,13 +46,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const logout = useCallback(() => {
+    const userKey = user ? `${SEEN_STATUS_KEY}-${user._id}` : null;
     setUser(null);
     try {
       localStorage.removeItem(AUTH_USER_KEY);
+      if (userKey) {
+          localStorage.removeItem(userKey);
+      }
     } catch (error) {
-      console.error("Failed to remove user from localStorage", error);
+      console.error("Failed to remove user data from localStorage", error);
     }
-  }, []);
+  }, [user]);
 
   const updateUser = useCallback((userData: User) => {
     setUser(userData);

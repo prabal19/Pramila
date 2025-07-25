@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useAuth } from '@/hooks/use-auth';
@@ -12,9 +13,7 @@ import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { updateUser as updateUserAction, addAddress, updateAddress as updateAddressAction, deleteAddress as deleteAddressAction, deleteUser as deleteUserAction } from '@/actions/auth';
 import { useToast } from '@/hooks/use-toast';
-import type { Address, Order ,Product, ReturnRequest} from '@/lib/types';
-import ReturnItemDialog from '@/components/ReturnItemDialog';
-import { getUserReturns } from '@/lib/returns';
+import type { Address, Order, Product, ReturnRequest } from '@/lib/types';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,8 +25,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { AlertTriangle, ShoppingBag , RefreshCw} from 'lucide-react';
+import { AlertTriangle, ShoppingBag, RefreshCw, LogOut } from 'lucide-react';
 import { getUserOrders } from '@/lib/orders';
+import { getUserReturns } from '@/lib/returns';
 import { getProductsByIds } from '@/lib/products';
 import { format } from 'date-fns';
 import { Separator } from '@/components/ui/separator';
@@ -37,17 +37,33 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import ReturnItemDialog from '@/components/ReturnItemDialog';
+import { useNotifications } from '@/hooks/use-notifications';
 
-
-// Sidebar component
 const AccountSidebar = ({ activeView, onNavigate, onLogout }: { activeView: string, onNavigate: (view: string) => void, onLogout: () => void }) => {
     const { user } = useAuth();
+    const { orderNotificationCount, returnNotificationCount, clearOrderNotifications, clearReturnNotifications } = useNotifications();
+
     const navItems = [
         { key: 'overview', name: 'Overview' },
-        { key: 'orders', name: 'Orders & Returns' },
+        { 
+            key: 'orders', 
+            name: 'Orders & Returns', 
+            notificationCount: orderNotificationCount + returnNotificationCount
+        },
         { key: 'addresses', name: 'Saved Addresses' },
         { key: 'delete', name: 'Delete Account' },
     ];
+    
+    const handleNavigation = (e: React.MouseEvent, view: string) => {
+        e.preventDefault();
+        onNavigate(view);
+        if (view === 'orders') {
+            clearOrderNotifications();
+            clearReturnNotifications();
+        }
+    }
+
     return (
         <aside className="w-full md:w-1/4 lg:w-1/5 pr-8 border-r">
             <div className="sticky top-28">
@@ -60,18 +76,25 @@ const AccountSidebar = ({ activeView, onNavigate, onLogout }: { activeView: stri
                     <ul className="space-y-3">
                         {navItems.map(item => (
                             <li key={item.key}>
-                                <a href="#" onClick={(e) => { e.preventDefault(); onNavigate(item.key); }} className={`text-sm ${activeView === item.key ? 'text-primary font-bold' : 'text-gray-700 hover:text-primary'}`}>
+                                <a href="#" onClick={(e) => handleNavigation(e, item.key)} className={`flex items-center justify-between text-sm ${activeView === item.key ? 'text-primary font-bold' : 'text-gray-700 hover:text-primary'}`}>
                                     {item.name}
+                                    {item.notificationCount && item.notificationCount > 0 && (
+                                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs">{item.notificationCount}</span>
+                                    )}
                                 </a>
                             </li>
                         ))}
                     </ul>
                 </nav>
-                 <Button onClick={onLogout} variant="outline" className="mt-8 w-full">Logout</Button>
+                 <Button onClick={onLogout} variant="outline" className="mt-8 w-full">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Logout
+                 </Button>
             </div>
         </aside>
     );
 };
+
 
 // Profile View Component (for Overview)
 const profileFormSchema = z.object({
@@ -325,14 +348,14 @@ function getStatusVariant(status: string) {
         case 'Pending': case 'Pending Approval': case 'Approved': case 'Item Picked Up': case 'Refunded': default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
 }
-
 const OrdersView = () => {
     const { user } = useAuth();
+    const { orderNotificationCount, returnNotificationCount, clearOrderNotifications, clearReturnNotifications } = useNotifications();
     const [orders, setOrders] = useState<Order[]>([]);
     const [returns, setReturns] = useState<ReturnRequest[]>([]);
     const [products, setProducts] = useState<Map<string, Product>>(new Map());
     const [loading, setLoading] = useState(true);
-    const [view, setView] = useState<'orders' | 'returns' | 'all'>('all');
+    const [view, setView] = useState<'orders' | 'returns'>('orders');
     const [returnItem, setReturnItem] = useState<{order: Order, item: Order['items'][0]} | null>(null);
 
     const fetchData = async () => {
@@ -358,6 +381,15 @@ const OrdersView = () => {
     useEffect(() => {
         fetchData();
     }, [user]);
+    
+    const handleViewChange = (newView: 'orders' | 'returns') => {
+        setView(newView);
+        if (newView === 'orders') {
+            clearOrderNotifications();
+        } else {
+            clearReturnNotifications();
+        }
+    }
 
     if (loading) {
         return (
@@ -388,60 +420,58 @@ const OrdersView = () => {
         )
     }
 
-    const filteredReturns = view === 'all' || view === 'returns' ? returns : [];
-    const filteredOrders = view === 'all' || view === 'orders' ? orders : [];
+    const filteredReturns = view === 'returns' ? returns : [];
+    const filteredOrders = view === 'orders' ? orders : [];
 
-        const renderReturnItem = (ret: ReturnRequest) => {
-      const commonClasses = "border rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start gap-4";
-      const hoverClasses = "hover:bg-muted/50 transition-colors";
-  
-      const content = (
-          <>
-              <div className="flex gap-4">
-                  {ret.product?.images?.[0] && (
-                      <div className="w-20 h-24 bg-muted rounded-md shrink-0 relative">
-                          <Image src={ret.product.images[0]} alt={ret.product.name} fill className="object-cover rounded-md" />
-                      </div>
-                  )}
-                  <div>
-                      <p className="font-bold text-sm">RETURN ID #{ret.returnId}</p>
-                      <p className="font-semibold">{ret.product?.name || 'Product Not Found'}</p>
-                      <p className="text-sm text-muted-foreground">Reason: {ret.reason}</p>
-                      <p className="text-xs text-muted-foreground">Requested on {format(new Date(ret.createdAt), 'PP')}</p>
-                  </div>
-              </div>
-              <Badge variant="outline" className={cn('capitalize self-end sm:self-center', getStatusVariant(ret.status))}>{ret.status}</Badge>
-          </>
-      );
-  
-      if (ret.product) {
-          return (
-              <Link href={`/product/${ret.product.productId}`} key={ret._id} className={cn(commonClasses, hoverClasses)}>
-                  {content}
-              </Link>
-          );
-      }
-  
-      return (
-          <div key={ret._id} className={commonClasses}>
-              {content}
-          </div>
-      );
-  };
+    const renderReturnItem = (ret: ReturnRequest) => {
+        const content = (
+            <div className="border rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start gap-4 hover:bg-muted/50 transition-colors">
+                <div className="flex gap-4">
+                    {ret.product?.images?.[0] && (
+                        <div className="w-20 h-24 bg-muted rounded-md shrink-0 relative">
+                            <Image src={ret.product.images[0]} alt={ret.product.name} fill className="object-cover rounded-md" />
+                        </div>
+                    )}
+                    <div>
+                        <p className="font-bold text-sm">RETURN ID #{ret.returnId}</p>
+                        <p className="font-semibold">{ret.product?.name || 'Product Not Found'}</p>
+                        <p className="text-sm text-muted-foreground">Reason: {ret.reason}</p>
+                        <p className="text-xs text-muted-foreground">Requested on {format(new Date(ret.createdAt), 'PP')}</p>
+                    </div>
+                </div>
+                <Badge variant="outline" className={cn('capitalize self-end sm:self-center', getStatusVariant(ret.status))}>{ret.status}</Badge>
+            </div>
+        );
+
+        if (ret.product) {
+            return (
+                <Link href={`/product/${ret.product.productId}`} key={ret._id}>
+                    {content}
+                </Link>
+            );
+        }
+
+        return <div key={ret._id}>{content}</div>;
+    };
 
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-xl font-bold">Orders & Returns</h1>
                 <div className="flex items-center gap-2">
-                    <Button variant={view === 'all' ? 'default' : 'outline'} onClick={() => setView('all')}>All</Button>
-                    <Button variant={view === 'orders' ? 'default' : 'outline'} onClick={() => setView('orders')}>My Orders</Button>
-                    <Button variant={view === 'returns' ? 'default' : 'outline'} onClick={() => setView('returns')}>My Returns</Button>
+                    <Button variant={view === 'orders' ? 'default' : 'outline'} onClick={() => handleViewChange('orders')} className="relative">
+                        My Orders
+                        {orderNotificationCount > 0 && <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs">{orderNotificationCount}</span>}
+                    </Button>
+                    <Button variant={view === 'returns' ? 'default' : 'outline'} onClick={() => handleViewChange('returns')} className="relative">
+                        My Returns
+                        {returnNotificationCount > 0 && <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs">{returnNotificationCount}</span>}
+                    </Button>
                 </div>
             </div>
 
             <div className="space-y-6">
-                {filteredOrders.map(order => (
+                {view === 'orders' && filteredOrders.map(order => (
                     <Accordion key={order._id} type="single" collapsible className="border rounded-lg">
                         <AccordionItem value={order._id} className="border-b-0">
                             <AccordionTrigger className="p-4 hover:no-underline hover:bg-muted/50 rounded-t-lg">
@@ -506,11 +536,9 @@ const OrdersView = () => {
                 ))}
             </div>
 
-
             <div className="space-y-6 mt-6">
-               {filteredReturns.map(renderReturnItem)}
+               {view === 'returns' && filteredReturns.map(renderReturnItem)}
             </div>
-
 
             {returnItem && (
                  <ReturnItemDialog
@@ -524,7 +552,6 @@ const OrdersView = () => {
         </div>
     );
 };
-
 
 
 // Delete Account View

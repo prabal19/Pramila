@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { getCategories } from '@/lib/categories';
 import type { Category } from '@/lib/types';
 import { Separator } from './ui/separator';
+import { useNotifications } from '@/hooks/use-notifications';
 
 
 const InstagramIcon = () => (
@@ -38,6 +39,7 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { cartCount, hasUnseenItems, markCartAsViewed } = useCart();
   const { user } = useAuth();
+    const { totalNotificationCount, clearAllNotifications } = useNotifications();
   const [collections, setCollections] = useState<Category[]>([]);
   const [accessories, setAccessories] = useState<Category[]>([]);
 
@@ -175,9 +177,12 @@ const Header = () => {
                   <Search className="w-5 h-5" />
               </Button>
               <div className="hidden md:block"><WishlistIcon /></div>
-              <Button asChild variant="ghost" size="icon">
+              <Button asChild variant="ghost" size="icon" className="relative" aria-label={user ? 'My Account' : 'Login'} onClick={clearAllNotifications}>
                 <Link href={user ? "/account" : "/login"}>
                   <User className="w-5 h-5" />
+                   {totalNotificationCount > 0 && (
+                     <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs">{totalNotificationCount}</span>
+                   )}
                 </Link>
               </Button>
               {/* <WishlistIcon />
