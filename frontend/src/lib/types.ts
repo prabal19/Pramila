@@ -165,18 +165,20 @@ export type Category = {
 
 export type ReturnStatus = 'Pending Approval' | 'Approved' | 'Rejected' | 'Item Picked Up' | 'Refunded';
 
+export type ReturnedProductInfo = {
+  _id: string;
+  productId: string;
+  name: string;
+  images: string[];
+}
+
 export type ReturnRequest = {
   _id: string;
   returnId: number;
   userId: string | PopulatedUser;
   orderId: string | { _id: string; totalAmount: number };
   orderItemId: string;
-  productId: {
-    id: string;
-    _id: string;
-    name: string;
-    images: string[];
-  };
+  product: ReturnedProductInfo;
   reason: string;
   description?: string;
   status: ReturnStatus;

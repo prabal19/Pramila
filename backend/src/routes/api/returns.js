@@ -65,7 +65,7 @@ const fetchAndPopulateReturns = async (query) => {
     // Manually "populate" the product details
     return returns.map(ret => ({
         ...ret,
-        productId: productMap.get(ret.productId) || { name: 'Product Not Found', images: [] },
+        product: productMap.get(ret.productId) || { name: 'Product Not Found', images: [] },
     }));
 };
 
@@ -131,7 +131,7 @@ router.get('/:id', async (req, res) => {
         
         // Manual population for product
         const product = await Product.findOne({ productId: returnRequest.productId }).lean();
-        returnRequest.productId = product || { name: 'Product Not Found', images: [] };
+        returnRequest.product = product || { name: 'Product Not Found', images: [] };
         
         res.json(returnRequest);
     } catch (err) {
@@ -157,38 +157,40 @@ router.put('/:id/status', async (req, res) => {
             return res.status(404).json({ msg: 'Return request not found.' });
         }
         
-        // Update status on Return document
+        const originalStatus = returnRequest.status;
         returnRequest.status = status;
         await returnRequest.save();
 
-        // Update status on the corresponding Order item
         const order = await Order.findById(returnRequest.orderId);
         if(order) {
             const item = order.items.id(returnRequest.orderItemId);
             if(item) {
-                // Keep the status consistent between the return request and the order item
                 item.returnStatus = status;
                 await order.save();
+                
+                // If item is refunded, add quantity back to stock
+                if (status === 'Refunded' && originalStatus !== 'Refunded') {
+                    await Product.findOneAndUpdate(
+                        { productId: item.productId },
+                        { $inc: { quantity: item.quantity } }
+                    );
+                }
             }
         }
         
-        // Fetch the fully populated updated document to send back
-        const populatedReturn = await Return.findById(req.params.id)
+        const query = Return.findById(req.params.id)
             .populate('userId', 'firstName lastName email')
             .populate({
                 path: 'orderId',
                 select: 'createdAt totalAmount'
-            })
-            .lean();
-        
-        const product = await Product.findOne({ productId: populatedReturn.productId }).lean();
-        populatedReturn.productId = product || { name: 'Product Not Found', images: [] };
+            });
 
-        res.json(populatedReturn);
+        const populatedReturns = await fetchAndPopulateReturns(query);
+        res.json(populatedReturns[0]); // fetchAndPopulateReturns returns an array
 
     } catch (err) {
         console.error("Error in PUT /api/returns/:id/status:", err);
-        return res.status(500).json({ msg: 'Server Error' });
+        return res.status(500).send('Server Error');
     }
 });
 

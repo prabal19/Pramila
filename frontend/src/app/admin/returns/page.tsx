@@ -82,10 +82,13 @@ export const columns = (onRefresh: () => void): ColumnDef<ReturnRequest>[] => [
         },
     },
     {
-        accessorKey: "productId",
+        accessorKey: "product",
         header: "Product",
         cell: ({ row }) => {
-            const product = row.original.productId;
+            const product = row.original.product;
+                        if (!product) {
+                return <span className="text-muted-foreground">Product not found</span>;
+            }
             return (
                 <div className="flex items-center gap-2">
                     {product.images?.[0] && <Image src={product.images[0]} alt={product.name} width={40} height={40} className="rounded-sm" />}

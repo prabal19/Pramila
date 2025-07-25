@@ -391,6 +391,44 @@ const OrdersView = () => {
     const filteredReturns = view === 'all' || view === 'returns' ? returns : [];
     const filteredOrders = view === 'all' || view === 'orders' ? orders : [];
 
+        const renderReturnItem = (ret: ReturnRequest) => {
+      const commonClasses = "border rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start gap-4";
+      const hoverClasses = "hover:bg-muted/50 transition-colors";
+  
+      const content = (
+          <>
+              <div className="flex gap-4">
+                  {ret.product?.images?.[0] && (
+                      <div className="w-20 h-24 bg-muted rounded-md shrink-0 relative">
+                          <Image src={ret.product.images[0]} alt={ret.product.name} fill className="object-cover rounded-md" />
+                      </div>
+                  )}
+                  <div>
+                      <p className="font-bold text-sm">RETURN ID #{ret.returnId}</p>
+                      <p className="font-semibold">{ret.product?.name || 'Product Not Found'}</p>
+                      <p className="text-sm text-muted-foreground">Reason: {ret.reason}</p>
+                      <p className="text-xs text-muted-foreground">Requested on {format(new Date(ret.createdAt), 'PP')}</p>
+                  </div>
+              </div>
+              <Badge variant="outline" className={cn('capitalize self-end sm:self-center', getStatusVariant(ret.status))}>{ret.status}</Badge>
+          </>
+      );
+  
+      if (ret.product) {
+          return (
+              <Link href={`/product/${ret.product.productId}`} key={ret._id} className={cn(commonClasses, hoverClasses)}>
+                  {content}
+              </Link>
+          );
+      }
+  
+      return (
+          <div key={ret._id} className={commonClasses}>
+              {content}
+          </div>
+      );
+  };
+
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
@@ -468,26 +506,11 @@ const OrdersView = () => {
                 ))}
             </div>
 
+
             <div className="space-y-6 mt-6">
-                {filteredReturns.map(ret => (
-                     <Link key={ret._id} href={`/product/${ret.productId.id}`}className="border rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start gap-4 hover:bg-muted/50 transition-colors">
-                        <div className="flex gap-4">
-                            {ret.productId.images?.[0] && (
-                                <div className="w-20 h-24 bg-muted rounded-md shrink-0 relative">
-                                    <Image src={ret.productId.images[0]} alt={ret.productId.name} fill className="object-cover rounded-md" />
-                                </div>
-                            )}
-                            <div>
-                                <p className="font-bold text-sm">RETURN ID #{ret.returnId}</p>
-                                <p className="font-semibold">{ret.productId.name}</p>
-                                <p className="text-sm text-muted-foreground">Reason: {ret.reason}</p>
-                                <p className="text-xs text-muted-foreground">Requested on {format(new Date(ret.createdAt), 'PP')}</p>
-                            </div>
-                        </div>
-                        <Badge variant="outline" className={cn('capitalize self-end sm:self-center', getStatusVariant(ret.status))}>{ret.status}</Badge>
-                     </Link>
-                ))}
+               {filteredReturns.map(renderReturnItem)}
             </div>
+
 
             {returnItem && (
                  <ReturnItemDialog

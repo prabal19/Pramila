@@ -20,7 +20,7 @@ export default function ReturnDetailsDialog({ returnRequest, open, onOpenChange 
     if (!returnRequest) return null;
 
     const user = returnRequest.userId as PopulatedUser;
-    const product = returnRequest.productId;
+    const product = returnRequest.product;
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
