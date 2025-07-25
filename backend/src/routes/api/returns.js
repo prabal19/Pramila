@@ -53,12 +53,12 @@ router.post('/', async (req, res) => {
 });
 
 const fetchAndPopulateReturns = async (query) => {
-    const returns = await query.lean();
-    if (!returns) return [];
-    
-    const returnsArray = Array.isArray(returns) ? returns : [returns];
-    if (returnsArray.length === 0) return [];
+    const returnsResult = await query.lean();
+    if (!returnsResult) return [];
 
+    const returnsArray = Array.isArray(returnsResult) ? returnsResult : [returnsResult];
+    if (returnsArray.length === 0) return [];
+    
     const productIds = [...new Set(returnsArray.map(r => r.productId))];
 
     const products = await Product.find({ productId: { $in: productIds } }).lean();
