@@ -57,6 +57,7 @@ const fetchAndPopulateReturns = async (query) => {
     if (!returns) return [];
     
     const returnsArray = Array.isArray(returns) ? returns : [returns];
+    if (returnsArray.length === 0) return [];
 
     const productIds = [...new Set(returnsArray.map(r => r.productId))];
 
@@ -157,7 +158,6 @@ router.put('/:id/status', async (req, res) => {
             return res.status(404).json({ msg: 'Return request not found.' });
         }
         
-        const originalStatus = returnRequest.status;
         returnRequest.status = status;
         await returnRequest.save();
 
@@ -167,14 +167,6 @@ router.put('/:id/status', async (req, res) => {
             if(item) {
                 item.returnStatus = status;
                 await order.save();
-                
-                // If item is refunded, add quantity back to stock
-                if (status === 'Refunded' && originalStatus !== 'Refunded') {
-                    await Product.findOneAndUpdate(
-                        { productId: item.productId },
-                        { $inc: { quantity: item.quantity } }
-                    );
-                }
             }
         }
         
